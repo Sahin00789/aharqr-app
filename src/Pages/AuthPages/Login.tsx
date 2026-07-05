@@ -49,7 +49,7 @@ export default function Login() {
           // Commit to your Zustand Store here
           // setAuth(data.accessToken, structuredUser);
           console.log("Login successful!", structuredUser);
-          navigate('/dashboard'); // Optional: redirect on success
+          navigate('/admin/dashboard'); // Optional: redirect on success
         }
       } catch (error) {
         console.error('Google Auth Pipeline Error:', error);

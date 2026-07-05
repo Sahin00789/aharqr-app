@@ -1,12 +1,12 @@
-import Navbar from "../components/marketing/navbar";
-// import Hero from "../components/marketing/Hero";
-// import Features from "../components/marketing/Features";
-// import DashboardPreview from "../components/marketing/DashboardPreview";
-// import Workflow from "../components/marketing/Workflow";
-// import Pricing from "../components/marketing/Pricing";
-// import Testimonials from "../components/marketing/Testimonials";
-// import FAQ from "../components/marketing/FAQ";
-// import Footer from "../components/marketing/Footer";
+import Navbar from "../components/marketing/Navbar";
+import Hero from "../components/marketing/Hero";
+ import Features from "../components/marketing/Features";
+ import DashboardPreview from "../components/marketing/DashboardPreview";
+import Workflow from "../components/marketing/Workflow";
+import Pricing from "../components/marketing/Pricing";
+import Testimonials from "../components/marketing/Testimonials";
+ import FAQ from "../components/marketing/FAQ";
+ import Footer from "../components/marketing/Footer";
 
 export default function Home() {
   return (
@@ -14,16 +14,16 @@ export default function Home() {
       <Navbar />
 
       <main>
-        {/* <Hero />
+         <Hero />
         <Features />
         <DashboardPreview />
         <Workflow />
         <Pricing />
         <Testimonials />
-        <FAQ /> */}
+        <FAQ /> 
       </main>
 
-      {/* <Footer /> */}
+       <Footer /> 
     </div>
   );
 }
