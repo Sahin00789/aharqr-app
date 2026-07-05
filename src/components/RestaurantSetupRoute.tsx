@@ -1,3 +1,6 @@
+import { useAuthStore } from "../store/authStore";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+
 export function RestaurantSetupRoute() {
   const user = useAuthStore((state) => state.user);
   const location = useLocation();
