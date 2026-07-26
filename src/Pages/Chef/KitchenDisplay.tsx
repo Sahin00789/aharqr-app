@@ -1,44 +1,150 @@
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChefHat, Clock, Check } from 'lucide-react';
+import { 
+  ChefHat, 
+  Clock, 
+  Flame, 
+  CheckCircle2, 
+  History, 
+  User, 
+  LogOut,
+  Camera
+} from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
+import { useWebhookRoom } from '../../utils/useWebhookRoom';
+import DashboardLayout from '../../components/layout/DashboardLayout';
+import ItemNoteModal from './modals/ItemNoteModal';
+import AttendanceScannerModal from '../../components/attendance/AttendanceScannerModal';
 
 export default function KitchenDisplay() {
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-6 md:p-10">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <ChefHat className="text-red-500" /> 
-            Kitchen Display
-          </h1>
-          <div className="bg-red-500/10 text-red-500 px-4 py-2 rounded-lg font-medium animate-pulse">
-            3 Active Tickets
-          </div>
-        </div>
+  const { user, clearAuth } = useAuthStore();
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Example Ticket */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
-            <div className="bg-slate-800/50 p-4 border-b border-slate-800 flex justify-between items-center">
-              <span className="font-bold text-white text-lg">Table 4</span>
-              <span className="flex items-center gap-1 text-yellow-500 text-sm font-medium">
-                <Clock className="w-4 h-4" /> 12m ago
-              </span>
+  const roomId = user?.restaurantId ? `restaurant-${user.restaurantId}` : 'chef-kds-room';
+  const { isConnected: isWsConnected } = useWebhookRoom(roomId);
+
+  const [activeTab, setActiveTab] = useState('kds');
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [isAttendanceScannerOpen, setIsAttendanceScannerOpen] = useState(false);
+
+  const [checkInTime] = useState<Date>(new Date(Date.now() - (4 * 3600 + 15 * 60 + 30) * 1000));
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const seconds = Math.floor((new Date().getTime() - checkInTime.getTime()) / 1000);
+      setElapsedSeconds(seconds);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [checkInTime]);
+
+  const [tickets, setTickets] = useState([
+    { id: '#KOT-201', table: 'Table 4', items: [{ name: '2x Butter Chicken', note: 'Medium Spicy' }, { name: '4x Garlic Naan', note: 'Extra Crispy' }], status: 'NEW', elapsedMin: 6 },
+    { id: '#KOT-202', table: 'Table 2', items: [{ name: '1x Paneer Tikka', note: 'No onions' }], status: 'PREPARING', elapsedMin: 14 },
+  ]);
+
+  const handleUpdateTicketStatus = (ticketId: string, nextStatus: string) => {
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: nextStatus } : t));
+  };
+
+  const chefNavItems = [
+    { id: 'kds', label: 'KDS Board', icon: Flame, badge: tickets.filter(t => t.status === 'NEW').length },
+    { id: 'scan-attendance', label: 'Scan QR Attendance', icon: Camera },
+    { id: 'preparing', label: 'Preparing', icon: Clock, badge: tickets.filter(t => t.status === 'PREPARING').length },
+    { id: 'history', label: 'History', icon: History },
+    { id: 'profile', label: 'Profile', icon: User },
+  ];
+
+  return (
+    <DashboardLayout
+      role="CHEF"
+      title={user?.name || 'Chef Staff'}
+      subtitle="Shift Active • Kitchen Display System"
+      navItems={chefNavItems}
+      activeTab={activeTab}
+      onTabChange={(id) => {
+        if (id === 'scan-attendance') setIsAttendanceScannerOpen(true);
+        else setActiveTab(id);
+      }}
+      checkInSeconds={elapsedSeconds}
+      isWsConnected={isWsConnected}
+    >
+      <AttendanceScannerModal
+        isOpen={isAttendanceScannerOpen}
+        onClose={() => setIsAttendanceScannerOpen(false)}
+        staffRole="CHEF"
+      />
+      <ItemNoteModal isOpen={isNoteModalOpen} onClose={() => setIsNoteModalOpen(false)} />
+
+      <main className="space-y-6">
+        {activeTab === 'kds' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Flame className="w-5 h-5 text-amber-400" /> Kitchen KDS Display
+              </h2>
+              <span className="text-xs text-slate-400">{tickets.length} Active Tickets</span>
             </div>
-            <div className="p-4 grow space-y-3">
-              <div className="flex justify-between items-start">
-                <span className="text-white font-medium">2x Butter Chicken</span>
-              </div>
-              <div className="flex justify-between items-start">
-                <span className="text-white font-medium">4x Garlic Naan</span>
-                <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded">No butter</span>
-              </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {tickets.map((t) => (
+                <div key={t.id} className="bg-slate-900 p-5 rounded-3xl border border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-extrabold text-amber-400">{t.id}</span>
+                    <span className="text-xs font-bold text-slate-300">{t.table}</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {t.items.map((item, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => setIsNoteModalOpen(true)}
+                        className="bg-slate-950 p-3 rounded-2xl border border-slate-800/80 cursor-pointer hover:border-amber-500/50 transition-all"
+                      >
+                        <p className="text-xs font-bold text-white">{item.name}</p>
+                        {item.note && <p className="text-[10px] text-amber-300 italic mt-0.5">Note: {item.note}</p>}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-[10px] text-slate-400 font-mono">{t.elapsedMin}m ago</span>
+                    <button
+                      onClick={() => handleUpdateTicketStatus(t.id, t.status === 'NEW' ? 'PREPARING' : 'READY')}
+                      className={`py-2 px-4 rounded-xl text-xs font-bold ${
+                        t.status === 'NEW'
+                          ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                          : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
+                      }`}
+                    >
+                      {t.status === 'NEW' ? 'Start Preparing' : 'Mark Ready'}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <button className="bg-green-600 hover:bg-green-500 text-white p-4 font-bold flex justify-center items-center gap-2 transition-colors">
-              <Check className="w-5 h-5" /> Mark Ready
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'profile' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 max-w-md mx-auto">
+            <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 text-center space-y-4">
+              <div className="w-16 h-16 rounded-3xl bg-amber-500/20 text-amber-400 font-extrabold text-xl flex items-center justify-center mx-auto border border-amber-500/30">
+                {user?.name ? user.name.slice(0, 2).toUpperCase() : 'CF'}
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">{user?.name || 'Chef Staff'}</h3>
+                <p className="text-xs text-slate-400">{user?.email}</p>
+              </div>
+              <button
+                onClick={() => clearAuth()}
+                className="w-full py-3 px-4 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold flex items-center justify-center gap-2 border border-red-500/20"
+              >
+                <LogOut className="w-4 h-4" /> Sign Out
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </main>
+    </DashboardLayout>
   );
 }

@@ -1,0 +1,129 @@
+// Prisma Database Schema for AHARQR Workforce Management
+// Staff Activity, Dynamic QR Attendance, Shifts & Holidays System
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum StaffRole {
+  CAPTAIN
+  CHEF
+  RESTAURANT_ADMIN
+}
+
+enum StaffStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum AttendanceAction {
+  CHECK_IN
+  CHECK_OUT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LEAVE
+  OFF_DAY
+  HOLIDAY
+}
+
+// 1. Staff Account & Roster Model
+model StaffMember {
+  id              String         @id @default(uuid())
+  restaurantId    String
+  name            String
+  email           String         @unique
+  passwordHash    String
+  phone           String?
+  role            StaffRole
+  employeeCode    String         @unique
+  kitchenStation  String?
+  status          StaffStatus    @default(ACTIVE)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  attendanceLogs  AttendanceLog[]
+  shiftConfigs    StaffShiftConfig[]
+
+  @@index([restaurantId, role])
+  @@index([employeeCode])
+}
+
+// 2. Attendance & QR Scan Verification Log Model
+model AttendanceLog {
+  id              String           @id @default(uuid())
+  staffId         String
+  restaurantId    String
+  date            DateTime         @db.Date
+  actionType      AttendanceAction
+  checkInTime     DateTime?
+  checkOutTime    DateTime?
+  status          AttendanceStatus @default(PRESENT)
+  overtimeHours   Float            @default(0.0)
+  qrTokenUsed     String
+  verifiedAt      DateTime         @default(now())
+  verifiedBy      String?
+
+  staff           StaffMember      @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, date])
+  @@index([restaurantId, date])
+}
+
+// 3. Restaurant Working Shift Template Model
+model ShiftTemplate {
+  id              String             @id @default(uuid())
+  restaurantId    String
+  shiftName       String
+  startTime       String             // e.g. "09:00 AM"
+  endTime         String             // e.g. "05:00 PM"
+  isNightShift    Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+
+  shiftConfigs    StaffShiftConfig[]
+
+  @@index([restaurantId])
+}
+
+// 4. Staff 7-Day Shift & Attendance Pay Configuration Model
+model StaffShiftConfig {
+  id              String             @id @default(uuid())
+  staffId         String
+  shiftId         String
+  dayOfWeek       Int                // 1 = Mon, 7 = Sun
+  enabled         Boolean            @default(true)
+  presentPay      Float              @default(600.0)
+  absentPay       Float              @default(0.0)
+  halfDayPay      Float              @default(300.0)
+  leavePay        Float              @default(600.0)
+  offDayPayment   Float              @default(750.0)  // Paid entitlement without working
+  holidayPayment  Float              @default(1000.0) // Paid entitlement without working
+
+  staff           StaffMember        @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  shift           ShiftTemplate      @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, dayOfWeek, shiftId])
+  @@index([staffId])
+}
+
+// 5. Universal Restaurant Holiday Model
+model Holiday {
+  id              String             @id @default(uuid())
+  restaurantId    String
+  name            String             // e.g. "Diwali Festival"
+  date            DateTime           @db.Date
+  isUniversalOff  Boolean            @default(true)
+  paidRate        Float?
+  createdAt       DateTime           @default(now())
+
+  @@index([restaurantId, date])
+}

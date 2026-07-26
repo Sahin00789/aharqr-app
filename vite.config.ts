@@ -1,10 +1,25 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react'; // (Or vue, svelte, etc.)
+import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(), // Add the Tailwind plugin here
+    tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/ws': {
+        target: 'http://localhost:3000',
+        ws: true,
+        changeOrigin: true,
+      },
+    },
+  },
 });
+

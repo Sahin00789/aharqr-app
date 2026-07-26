@@ -1,8 +1,12 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import { ProtectedRoute, PublicOnlyRoute } from "./components/ProtectedRoute";
-import { RoleProtectedRoute } from "./components/RoleProtectedRoute";
-import { RestaurantSetupRoute } from "./components/RestaurantSetupRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { 
+  AdminRoleLayout, 
+  CaptainRoleLayout, 
+  ChefRoleLayout, 
+  CustomerRoleLayout 
+} from "./components/layout/RoleLayoutOutlet";
 
 // Global Pages
 import Home from "./Pages/Home";
@@ -14,6 +18,16 @@ import Register from "./Pages/AuthPages/Register";
 // Admin Pages
 import AdminDashboard from "./Pages/Admin/Dashboard";
 import RestaurantOnboarding from "./Pages/Admin/RestaurantOnboarding";
+import ManageStaff from "./Pages/Admin/ManageStaff";
+import AdminSettings from "./Pages/Admin/Settings";
+import AdminSubscription from "./Pages/Admin/Subscription";
+import WorkingShiftsPage from "./Pages/Admin/WorkingShiftsPage";
+import HolidaysPage from "./Pages/Admin/HolidaysPage";
+import StaffRosterPage from "./Pages/Admin/StaffRosterPage";
+
+// Standalone Mobile App Screens (Outside Dashboard Layout with Back Button)
+import ProfileMenuPage from "./Pages/Account/ProfileMenuPage";
+import DevicesSessions from "./Pages/Account/DevicesSessions";
 
 // Captain Pages
 import CaptainFloorPlan from "./Pages/Captain/FloorPlan";
@@ -32,150 +46,89 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* -------------------------------- */}
-        {/* PUBLIC ROUTES */}
-        {/* -------------------------------- */}
-
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
 
-        <Route element={<PublicOnlyRoute />}>
+        <Route element={<ProtectedRoute publicOnly />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Route>
 
-        {/* -------------------------------- */}
-        {/* AUTHENTICATED ROUTES */}
-        {/* -------------------------------- */}
+        {/* STANDALONE MOBILE APP SCREENS (OUTSIDE DASHBOARD LAYOUT WITH BACK BUTTON) */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={["RESTAURANT_ADMIN", "CAPTAIN", "CHEF"]} />
+          }
+        >
+          <Route path="/account/menu" element={<ProfileMenuPage />} />
+          <Route path="/account/devices" element={<DevicesSessions />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/subscription" element={<AdminSubscription />} />
+          <Route path="/admin/staff-roster" element={<StaffRosterPage />} />
+          <Route path="/admin/shifts" element={<WorkingShiftsPage />} />
+          <Route path="/admin/holidays" element={<HolidaysPage />} />
+        </Route>
 
-        <Route element={<ProtectedRoute />}>
-          {/* ================================= */}
-          {/* RESTAURANT ADMIN */}
-          {/* ================================= */}
+        {/* 1. RESTAURANT ADMIN ROUTES (WRAPPED IN AdminRoleLayout OUTLET) */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={["RESTAURANT_ADMIN"]} />
+          }
+        >
+          <Route path="/onboarding" element={<RestaurantOnboarding />} />
 
-          <Route
-            element={
-              <RoleProtectedRoute
-                allowedRoles={["RESTAURANT_ADMIN"]}
-              />
-            }
-          >
-            {/* Restaurant onboarding */}
-            <Route path="/onboarding" element={<RestaurantOnboarding />} />
-
-            {/* All admin pages require restaurant setup */}
-            <Route element={<RestaurantSetupRoute />}>
-              <Route
-                path="/admin/dashboard"
-                element={<AdminDashboard />}
-              />
-
-              <Route
-                path="/admin/inventory"
-                element={<div>Manage Inventory</div>}
-              />
-
-              <Route
-                path="/admin/menu"
-                element={<div>Manage Menu</div>}
-              />
-
-              <Route
-                path="/admin/orders"
-                element={<div>Orders</div>}
-              />
-
-              <Route
-                path="/admin/tables"
-                element={<div>Tables</div>}
-              />
-
-              <Route
-                path="/admin/staff"
-                element={<div>Manage Staff</div>}
-              />
-
-              <Route
-                path="/admin/settings"
-                element={<div>Restaurant Settings</div>}
-              />
-            </Route>
-          </Route>
-
-          {/* ================================= */}
-          {/* CAPTAIN */}
-          {/* ================================= */}
-
-          <Route
-            element={
-              <RoleProtectedRoute allowedRoles={["CAPTAIN"]} />
-            }
-          >
-            <Route
-              path="/captain/tables"
-              element={<CaptainFloorPlan />}
-            />
-
-            <Route
-              path="/captain/orders"
-              element={<div>Active Orders</div>}
-            />
-          </Route>
-
-          {/* ================================= */}
-          {/* CHEF */}
-          {/* ================================= */}
-
-          <Route
-            element={
-              <RoleProtectedRoute allowedRoles={["CHEF"]} />
-            }
-          >
-            <Route
-              path="/chef/kds"
-              element={<KitchenDisplay />}
-            />
-
-            <Route
-              path="/chef/history"
-              element={<div>Completed Tickets</div>}
-            />
-          </Route>
-
-          {/* ================================= */}
-          {/* CUSTOMER */}
-          {/* ================================= */}
-
-          <Route
-            element={
-              <RoleProtectedRoute allowedRoles={["CUSTOMER"]}
-              />
-            }
-          >
-            <Route
-              path="/menu/:tableId"
-              element={<CustomerMenu />}
-            />
-
-            <Route
-              path="/checkout"
-              element={<div>Cart & Payment</div>}
-            />
+          <Route element={<AdminRoleLayout />}>
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/staff" element={<ManageStaff />} />
+            <Route path="/admin/tables" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Table Management (Coming Soon)</div>} />
+            <Route path="/admin/menu" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Menu Management (Coming Soon)</div>} />
+            <Route path="/admin/orders" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Orders Overview (Coming Soon)</div>} />
           </Route>
         </Route>
 
-        {/* -------------------------------- */}
-        {/* ERROR ROUTES */}
-        {/* -------------------------------- */}
-
+        {/* 2. CAPTAIN ROUTES (WRAPPED IN CaptainRoleLayout OUTLET) */}
         <Route
-          path="/unauthorized"
-          element={<Unauthorized />}
-        />
+          element={
+            <ProtectedRoute allowedRoles={["CAPTAIN"]} />
+          }
+        >
+          <Route element={<CaptainRoleLayout />}>
+            <Route path="/captain" element={<Navigate to="/captain/tables" replace />} />
+            <Route path="/captain/tables" element={<CaptainFloorPlan />} />
+            <Route path="/captain/orders" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Active KOT Orders (Coming Soon)</div>} />
+            <Route path="/captain/alerts" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Room Alerts (Coming Soon)</div>} />
+          </Route>
+        </Route>
 
+        {/* 3. CHEF ROUTES (WRAPPED IN ChefRoleLayout OUTLET) */}
         <Route
-          path="*"
-          element={<NotFound />}
-        />
+          element={
+            <ProtectedRoute allowedRoles={["CHEF"]} />
+          }
+        >
+          <Route element={<ChefRoleLayout />}>
+            <Route path="/chef" element={<Navigate to="/chef/kds" replace />} />
+            <Route path="/chef/kds" element={<KitchenDisplay />} />
+            <Route path="/chef/history" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Kitchen Order History (Coming Soon)</div>} />
+          </Route>
+        </Route>
+
+        {/* 4. CUSTOMER ROUTES (WRAPPED IN CustomerRoleLayout OUTLET) */}
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={["CUSTOMER"]} />
+          }
+        >
+          <Route element={<CustomerRoleLayout />}>
+            <Route path="/menu/:tableId" element={<CustomerMenu />} />
+            <Route path="/checkout" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Table Cart & Checkout (Coming Soon)</div>} />
+          </Route>
+        </Route>
+
+        {/* Error Fallback Routes */}
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
