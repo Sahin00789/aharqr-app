@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -18,6 +18,7 @@ import {
   LayoutDashboard
 } from 'lucide-react';
 import CreateShiftModal from './modals/CreateShiftModal';
+import { fetchWorkingShifts, createWorkingShift, deleteWorkingShift, type ShiftTemplate } from '../../api/staffApi';
 
 interface Shift {
   id: string;
@@ -42,86 +43,49 @@ export default function WorkingShiftsPage() {
   const [isCreateShiftModalOpen, setIsCreateShiftModalOpen] = useState(false);
   const [selectedDayForNewShift, setSelectedDayForNewShift] = useState<string | null>(null);
   const [editingShift, setEditingShift] = useState<Shift | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Initial 7 Days Schedule Data
+  // 7-Day Schedule Roster
   const [weeklySchedule, setWeeklySchedule] = useState<DaySchedule[]>([
-    {
-      dayId: 'mon',
-      dayName: 'Monday',
-      shortName: 'Mon',
-      isOpen: true,
-      operatingHours: '09:00 AM - 11:00 PM',
-      shifts: [
-        { id: 'shift-mon-1', name: 'Morning Shift', time: '09:00 → 17:00', duration: '8 Hours', grace: '15 Mins', icon: Sun },
-        { id: 'shift-mon-2', name: 'Lunch Shift', time: '11:00 → 19:00', duration: '8 Hours', grace: '15 Mins', icon: Coffee },
-        { id: 'shift-mon-3', name: 'Night Shift', time: '17:00 → 01:00', duration: '8 Hours', grace: '20 Mins', icon: Moon },
-      ],
-    },
-    {
-      dayId: 'tue',
-      dayName: 'Tuesday',
-      shortName: 'Tue',
-      isOpen: true,
-      operatingHours: '09:00 AM - 11:00 PM',
-      shifts: [
-        { id: 'shift-tue-1', name: 'Morning Shift', time: '09:00 → 17:00', duration: '8 Hours', grace: '15 Mins', icon: Sun },
-        { id: 'shift-tue-2', name: 'Night Shift', time: '17:00 → 01:00', duration: '8 Hours', grace: '20 Mins', icon: Moon },
-      ],
-    },
-    {
-      dayId: 'wed',
-      dayName: 'Wednesday',
-      shortName: 'Wed',
-      isOpen: true,
-      operatingHours: '09:00 AM - 11:00 PM',
-      shifts: [
-        { id: 'shift-wed-1', name: 'Morning Shift', time: '09:00 → 17:00', duration: '8 Hours', grace: '15 Mins', icon: Sun },
-        { id: 'shift-wed-2', name: 'Lunch Shift', time: '11:00 → 19:00', duration: '8 Hours', grace: '15 Mins', icon: Coffee },
-        { id: 'shift-wed-3', name: 'Night Shift', time: '17:00 → 01:00', duration: '8 Hours', grace: '20 Mins', icon: Moon },
-      ],
-    },
-    {
-      dayId: 'thu',
-      dayName: 'Thursday',
-      shortName: 'Thu',
-      isOpen: true,
-      operatingHours: '09:00 AM - 11:00 PM',
-      shifts: [
-        { id: 'shift-thu-1', name: 'Morning Shift', time: '09:00 → 17:00', duration: '8 Hours', grace: '15 Mins', icon: Sun },
-        { id: 'shift-thu-2', name: 'Night Shift', time: '17:00 → 01:00', duration: '8 Hours', grace: '20 Mins', icon: Moon },
-      ],
-    },
-    {
-      dayId: 'fri',
-      dayName: 'Friday',
-      shortName: 'Fri',
-      isOpen: true,
-      operatingHours: '09:00 AM - 11:00 PM',
-      shifts: [
-        { id: 'shift-fri-1', name: 'Morning Shift', time: '09:00 → 17:00', duration: '8 Hours', grace: '15 Mins', icon: Sun },
-        { id: 'shift-fri-2', name: 'Night Shift', time: '17:00 → 01:00', duration: '8 Hours', grace: '20 Mins', icon: Moon },
-        { id: 'shift-fri-3', name: 'Night Rush Shift', time: '18:00 → 02:00', duration: '8 Hours', grace: '15 Mins', icon: Moon },
-      ],
-    },
-    {
-      dayId: 'sat',
-      dayName: 'Saturday',
-      shortName: 'Sat',
-      isOpen: true,
-      operatingHours: '09:00 AM - 12:00 AM',
-      shifts: [
-        { id: 'shift-sat-1', name: 'Weekend Peak Shift', time: '16:00 → 01:00', duration: '9 Hours', grace: '15 Mins', icon: Moon },
-      ],
-    },
-    {
-      dayId: 'sun',
-      dayName: 'Sunday',
-      shortName: 'Sun',
-      isOpen: false,
-      operatingHours: 'Store Closed',
-      shifts: [],
-    },
+    { dayId: 'mon', dayName: 'Monday', shortName: 'Mon', isOpen: true, operatingHours: '09:00 AM - 11:00 PM', shifts: [] },
+    { dayId: 'tue', dayName: 'Tuesday', shortName: 'Tue', isOpen: true, operatingHours: '09:00 AM - 11:00 PM', shifts: [] },
+    { dayId: 'wed', dayName: 'Wednesday', shortName: 'Wed', isOpen: true, operatingHours: '09:00 AM - 11:00 PM', shifts: [] },
+    { dayId: 'thu', dayName: 'Thursday', shortName: 'Thu', isOpen: true, operatingHours: '09:00 AM - 11:00 PM', shifts: [] },
+    { dayId: 'fri', dayName: 'Friday', shortName: 'Fri', isOpen: true, operatingHours: '09:00 AM - 11:00 PM', shifts: [] },
+    { dayId: 'sat', dayName: 'Saturday', shortName: 'Sat', isOpen: true, operatingHours: '09:00 AM - 12:00 AM', shifts: [] },
+    { dayId: 'sun', dayName: 'Sunday', shortName: 'Sun', isOpen: false, operatingHours: 'Store Closed', shifts: [] },
   ]);
+
+  const loadShiftsData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchWorkingShifts();
+      if (res.success && res.shifts) {
+        const liveShifts: Shift[] = res.shifts.map((s: any) => ({
+          id: s.id,
+          name: s.shiftName,
+          time: `${s.startTime} → ${s.endTime}`,
+          duration: '8 Hours',
+          grace: '15 Mins',
+        }));
+
+        setWeeklySchedule((prev) =>
+          prev.map((day) => ({
+            ...day,
+            shifts: day.dayId !== 'sun' ? liveShifts : [],
+          }))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to load working shifts:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadShiftsData();
+  }, []);
 
   const openAddShiftModal = (dayId?: string) => {
     setSelectedDayForNewShift(dayId || 'mon');
@@ -134,52 +98,26 @@ export default function WorkingShiftsPage() {
     setIsCreateShiftModalOpen(true);
   };
 
-  const handleSaveShift = (shiftData: any) => {
-    if (editingShift) {
-      setWeeklySchedule((prev) =>
-        prev.map((day) => ({
-          ...day,
-          shifts: day.shifts.map((s) => (s.id === editingShift.id ? { ...s, ...shiftData } : s)),
-        }))
-      );
-    } else {
-      const targetDayId = selectedDayForNewShift || 'mon';
-      const newShiftObj: Shift = {
-        id: `shift-${targetDayId}-${Date.now()}`,
-        name: shiftData.name,
-        time: shiftData.time,
-        duration: shiftData.duration || '8 Hours',
-        grace: shiftData.grace || '15 Mins',
-        icon: Clock,
-      };
-
-      setWeeklySchedule((prev) =>
-        prev.map((day) => {
-          if (day.dayId === targetDayId) {
-            return {
-              ...day,
-              isOpen: true,
-              shifts: [...day.shifts, newShiftObj],
-            };
-          }
-          return day;
-        })
-      );
+  const handleSaveShift = async (shiftData: any) => {
+    try {
+      await createWorkingShift({
+        shiftName: shiftData.name,
+        startTime: shiftData.time?.split('→')[0]?.trim() || '09:00 AM',
+        endTime: shiftData.time?.split('→')[1]?.trim() || '05:00 PM',
+      });
+      loadShiftsData();
+    } catch (err) {
+      console.error('Failed to save shift:', err);
     }
   };
 
-  const handleDeleteShift = (dayId: string, shiftId: string) => {
-    setWeeklySchedule((prev) =>
-      prev.map((day) => {
-        if (day.dayId === dayId) {
-          return {
-            ...day,
-            shifts: day.shifts.filter((s) => s.id !== shiftId),
-          };
-        }
-        return day;
-      })
-    );
+  const handleDeleteShift = async (dayId: string, shiftId: string) => {
+    try {
+      await deleteWorkingShift(shiftId);
+      loadShiftsData();
+    } catch (err) {
+      console.error('Failed to delete shift:', err);
+    }
   };
 
   const getShiftIconStyle = (shiftName: string) => {
@@ -276,113 +214,119 @@ export default function WorkingShiftsPage() {
             </span>
           </div>
 
-          <div className="space-y-6">
-            {weeklySchedule.map((day) => (
-              <div
-                key={day.dayId}
-                className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-5 sm:p-6 space-y-4 hover:border-slate-700/80 transition-all shadow-xl backdrop-blur-xl"
-              >
-                {/* PARENT DAY CARD HEADER */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800/80">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-11 h-11 rounded-2xl font-black text-xs flex items-center justify-center border shadow-md ${
-                        day.isOpen
-                          ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
-                          : 'bg-slate-800 text-slate-500 border-slate-700'
-                      }`}
-                    >
-                      {day.shortName}
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-base sm:text-lg font-extrabold text-white">{day.dayName}</h4>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                            day.isOpen
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : 'bg-slate-800 text-slate-400 border-slate-700'
-                          }`}
-                        >
-                          {day.isOpen ? 'Active Day' : 'Closed / Off'}
-                        </span>
+          {loading ? (
+            <div className="p-8 text-center text-slate-400 text-sm animate-pulse">
+              Loading live working shifts from server...
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {weeklySchedule.map((day) => (
+                <div
+                  key={day.dayId}
+                  className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-5 sm:p-6 space-y-4 hover:border-slate-700/80 transition-all shadow-xl backdrop-blur-xl"
+                >
+                  {/* PARENT DAY CARD HEADER */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800/80">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-11 h-11 rounded-2xl font-black text-xs flex items-center justify-center border shadow-md ${
+                          day.isOpen
+                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                            : 'bg-slate-800 text-slate-500 border-slate-700'
+                        }`}
+                      >
+                        {day.shortName}
                       </div>
-                      <p className="text-xs text-slate-400">Store Hours: {day.operatingHours}</p>
-                    </div>
-                  </div>
 
-                  <button
-                    onClick={() => openAddShiftModal(day.dayId)}
-                    className="w-full sm:w-auto px-4 py-2 rounded-2xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> + Add Shift to {day.shortName}
-                  </button>
-                </div>
-
-                {/* NESTED CHILD SHIFT CARDS */}
-                {day.shifts.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
-                    {day.shifts.map((shift) => {
-                      const iconStyle = getShiftIconStyle(shift.name);
-                      const ShiftIcon = iconStyle.Icon;
-
-                      return (
-                        <div
-                          key={shift.id}
-                          className="bg-slate-950 p-4 rounded-2xl border border-slate-800/90 hover:border-slate-700 transition-all space-y-3 flex flex-col justify-between shadow-md group"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div className={`p-2 rounded-xl border shrink-0 ${iconStyle.bg}`}>
-                                <ShiftIcon className="w-4 h-4" />
-                              </div>
-                              <h5 className="text-xs sm:text-sm font-extrabold text-white truncate group-hover:text-blue-400 transition-colors">
-                                {shift.name}
-                              </h5>
-                            </div>
-
-                            <div className="flex items-center gap-1 shrink-0">
-                              <button
-                                onClick={() => openEditShiftModal(shift)}
-                                className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-colors"
-                                title="Edit Shift"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteShift(day.dayId, shift.id)}
-                                className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors"
-                                title="Delete Shift"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs font-mono">
-                            <span className="text-slate-400 font-semibold">Time:</span>
-                            <span className="text-blue-400 font-extrabold bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-500/20">
-                              {shift.time}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-900">
-                            <span>Duration: <strong className="text-slate-200">{shift.duration}</strong></span>
-                            <span>Grace: <strong className="text-amber-400">{shift.grace}</strong></span>
-                          </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-base sm:text-lg font-extrabold text-white">{day.dayName}</h4>
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                              day.isOpen
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                : 'bg-slate-800 text-slate-400 border-slate-700'
+                            }`}
+                          >
+                            {day.isOpen ? 'Active Day' : 'Closed / Off'}
+                          </span>
                         </div>
-                      );
-                    })}
+                        <p className="text-xs text-slate-400">Store Hours: {day.operatingHours}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => openAddShiftModal(day.dayId)}
+                      className="w-full sm:w-auto px-4 py-2 rounded-2xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> + Add Shift to {day.shortName}
+                    </button>
                   </div>
-                ) : (
-                  <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800/60 text-center text-xs text-slate-500">
-                    No active staff shifts configured for {day.dayName}.
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+
+                  {/* NESTED CHILD SHIFT CARDS */}
+                  {day.shifts.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+                      {day.shifts.map((shift) => {
+                        const iconStyle = getShiftIconStyle(shift.name);
+                        const ShiftIcon = iconStyle.Icon;
+
+                        return (
+                          <div
+                            key={shift.id}
+                            className="bg-slate-950 p-4 rounded-2xl border border-slate-800/90 hover:border-slate-700 transition-all space-y-3 flex flex-col justify-between shadow-md group"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className={`p-2 rounded-xl border shrink-0 ${iconStyle.bg}`}>
+                                  <ShiftIcon className="w-4 h-4" />
+                                </div>
+                                <h5 className="text-xs sm:text-sm font-extrabold text-white truncate group-hover:text-blue-400 transition-colors">
+                                  {shift.name}
+                                </h5>
+                              </div>
+
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                  onClick={() => openEditShiftModal(shift)}
+                                  className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-colors"
+                                  title="Edit Shift"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteShift(day.dayId, shift.id)}
+                                  className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors"
+                                  title="Delete Shift"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                              <span className="text-slate-400 font-semibold">Time:</span>
+                              <span className="text-blue-400 font-extrabold bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-500/20">
+                                {shift.time}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-900">
+                              <span>Duration: <strong className="text-slate-200">{shift.duration}</strong></span>
+                              <span>Grace: <strong className="text-amber-400">{shift.grace}</strong></span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800/60 text-center text-xs text-slate-500">
+                      No active staff shifts configured for {day.dayName}.
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
       </main>

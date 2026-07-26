@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -14,44 +14,43 @@ import {
   LayoutDashboard
 } from 'lucide-react';
 import AddHolidayModal from './modals/AddHolidayModal';
+import { fetchHolidays, deleteHoliday, type HolidayItem } from '../../api/staffApi';
 
 export default function HolidaysPage() {
   const navigate = useNavigate();
   const [isAddHolidayModalOpen, setIsAddHolidayModalOpen] = useState(false);
+  const [holidays, setHolidays] = useState<HolidayItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [holidays, setHolidays] = useState([
-    {
-      id: 1,
-      title: 'Independence Day',
-      date: '2026-08-15',
-      type: 'UNIVERSAL_HOLIDAY',
-      description: 'National holiday for all restaurant workforce staff.',
-      status: 'UPCOMING',
-    },
-    {
-      id: 2,
-      title: 'Ganesh Chaturthi',
-      date: '2026-09-14',
-      type: 'FESTIVAL_OFF',
-      description: 'Annual festival holiday & main kitchen maintenance day.',
-      status: 'UPCOMING',
-    },
-    {
-      id: 3,
-      title: 'Diwali Festival Off',
-      date: '2026-11-08',
-      type: 'UNIVERSAL_HOLIDAY',
-      description: 'Grand Diwali festival off for all captains and chefs.',
-      status: 'UPCOMING',
-    },
-  ]);
-
-  const handleAddHolidaySuccess = () => {
-    // Refresh / reload holidays list if needed
+  const loadHolidaysData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchHolidays();
+      if (res.success && res.holidays) {
+        setHolidays(res.holidays);
+      }
+    } catch (err) {
+      console.error('Failed to load holidays:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteHoliday = (id: number) => {
-    setHolidays((prev) => prev.filter((h) => h.id !== id));
+  useEffect(() => {
+    loadHolidaysData();
+  }, []);
+
+  const handleAddHolidaySuccess = () => {
+    loadHolidaysData();
+  };
+
+  const handleDeleteHoliday = async (id: string) => {
+    try {
+      await deleteHoliday(id);
+      setHolidays((prev) => prev.filter((h) => h.id !== id));
+    } catch (err) {
+      console.error('Failed to delete holiday:', err);
+    }
   };
 
   return (
@@ -116,53 +115,63 @@ export default function HolidaysPage() {
         </div>
 
         {/* HOLIDAYS CARDS LIST */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {holidays.map((h) => (
-            <div 
-              key={h.id}
-              className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-5 space-y-4 hover:border-slate-700 transition-all flex flex-col justify-between shadow-xl backdrop-blur-xl group"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-md">
-                    <PartyPopper className="w-5 h-5 text-purple-400" />
+        {loading ? (
+          <div className="p-8 text-center text-slate-400 text-sm animate-pulse">
+            Loading live holiday calendar schedules from server...
+          </div>
+        ) : holidays.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {holidays.map((h) => (
+              <div 
+                key={h.id}
+                className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-5 space-y-4 hover:border-slate-700 transition-all flex flex-col justify-between shadow-xl backdrop-blur-xl group"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-md">
+                      <PartyPopper className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-extrabold text-white truncate group-hover:text-purple-400 transition-colors">
+                        {h.name}
+                      </h4>
+                      <span className="text-xs font-mono text-purple-300 font-bold block mt-0.5">
+                        {h.date}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-base font-extrabold text-white truncate group-hover:text-purple-400 transition-colors">
-                      {h.title}
-                    </h4>
-                    <span className="text-xs font-mono text-purple-300 font-bold block mt-0.5">
-                      {h.date}
-                    </span>
+
+                  <button
+                    onClick={() => handleDeleteHoliday(h.id)}
+                    className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors shrink-0"
+                    title="Delete Holiday"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800/80 space-y-2 text-xs text-slate-400">
+                  <p className="leading-relaxed">Universal paid holiday for all workforce staff.</p>
+                  <div className="flex items-center justify-between text-[11px] pt-2 border-t border-slate-800">
+                    <span className="text-slate-500">Pay Entitlement:</span>
+                    <span className="text-purple-400 font-bold">₹{h.paidRate || '1000'} / Day</span>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleDeleteHoliday(h.id)}
-                  className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors shrink-0"
-                  title="Delete Holiday"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800/80 space-y-2 text-xs text-slate-400">
-                <p className="leading-relaxed">{h.description}</p>
-                <div className="flex items-center justify-between text-[11px] pt-2 border-t border-slate-800">
-                  <span className="text-slate-500">Type:</span>
-                  <span className="text-purple-400 font-bold">{h.type}</span>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Active Holiday
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium">Universal Paid Off</span>
                 </div>
               </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  {h.status}
-                </span>
-                <span className="text-[11px] text-slate-500 font-medium">Universal Paid Off</span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 rounded-3xl bg-slate-900/40 border border-slate-800/80 text-center text-xs text-slate-400">
+            No universal holidays configured yet. Click "+ Add Holiday" above to schedule paid workforce holidays.
+          </div>
+        )}
 
       </main>
 
