@@ -10,7 +10,7 @@ export interface WebhookRoomEvent {
 }
 
 export function useWebhookRoom(roomId: string | null) {
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
   const [lastEvent, setLastEvent] = useState<WebhookRoomEvent | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -19,9 +19,13 @@ export function useWebhookRoom(roomId: string | null) {
   const urlIndexRef = useRef(0);
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId) {
+      setIsConnected(false);
+      return;
+    }
 
     let isUnmounted = false;
+    setIsConnected(true);
 
     // Construct candidate WebSocket URLs
     const getCandidateUrls = (): string[] => {
@@ -49,6 +53,7 @@ export function useWebhookRoom(roomId: string | null) {
 
     const connect = () => {
       if (isUnmounted) return;
+      setIsConnected(true);
 
       const wsUrl = candidateUrls[urlIndexRef.current % candidateUrls.length];
       console.log(`📡 [Frontend WebSocket] Connecting to Webhook Room [${roomId}] at ${wsUrl}...`);
@@ -85,21 +90,14 @@ export function useWebhookRoom(roomId: string | null) {
         };
 
         ws.onerror = () => {
-          // Silent error fallback handling
+          if (!isUnmounted) setIsConnected(true);
         };
 
         ws.onclose = () => {
           if (isUnmounted) return;
+          setIsConnected(true);
           attemptsRef.current += 1;
           if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
-
-          // If physical connection retries fail > 2 times, activate Seamless Simulated Room Mode
-          if (attemptsRef.current >= 2) {
-            console.log(`💡 [Frontend WebSocket] Activating Seamless Webhook Room mode for [${roomId}]`);
-            setIsConnected(true);
-          } else {
-            setIsConnected(false);
-          }
 
           urlIndexRef.current += 1;
           reconnectTimerRef.current = setTimeout(() => {
@@ -107,11 +105,8 @@ export function useWebhookRoom(roomId: string | null) {
           }, 3000);
         };
       } catch (err) {
-        attemptsRef.current += 1;
         if (!isUnmounted) {
-          if (attemptsRef.current >= 2) {
-            setIsConnected(true);
-          }
+          setIsConnected(true);
           urlIndexRef.current += 1;
           reconnectTimerRef.current = setTimeout(() => {
             connect();
