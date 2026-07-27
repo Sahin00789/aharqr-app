@@ -28,6 +28,7 @@ import InventoryPage from "./Pages/Admin/InventoryPage";
 import MenuManagementPage from "./Pages/Admin/MenuManagementPage";
 import OrderManagementPage from "./Pages/Admin/OrderManagementPage";
 import PayrollHubPage from "./Pages/Admin/PayrollHubPage";
+import TablesManagementPage from "./Pages/Admin/TablesManagementPage";
 
 // Standalone Mobile App Screens (Outside Dashboard Layout with Back Button)
 import ProfileMenuPage from "./Pages/Account/ProfileMenuPage";
@@ -89,7 +90,7 @@ export default function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/inventory" element={<InventoryPage />} />
             <Route path="/admin/staff" element={<ManageStaff />} />
-            <Route path="/admin/tables" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Table Management</div>} />
+            <Route path="/admin/tables" element={<TablesManagementPage />} />
             <Route path="/admin/menu" element={<MenuManagementPage />} />
           </Route>
         </Route>
