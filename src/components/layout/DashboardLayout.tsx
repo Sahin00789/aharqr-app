@@ -1,13 +1,9 @@
 import React from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   UtensilsCrossed, 
   MapPin, 
   Clock, 
-  ChevronRight, 
-  LogOut,
-  Sparkles,
   type LucideIcon 
 } from 'lucide-react';
 import { useAuthStore, type AppRole } from '../../store/authStore';
@@ -96,11 +92,11 @@ export default function DashboardLayout({
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col md:flex-row">
       
-      {/* 1. DESKTOP & TABLET FIXED COLLAPSED SIDEBAR (w-20 / 80px) - NEVER EXPANDS */}
-      <aside className="hidden md:flex w-20 fixed inset-y-0 left-0 bg-slate-900 border-r border-slate-800 flex-col items-center justify-between py-5 z-40 shadow-2xl">
+      {/* 1. DESKTOP & TABLET FIXED COLLAPSED SIDEBAR (w-20 / 80px) - ONLY OPERATIONAL ITEMS */}
+      <aside className="hidden md:flex w-20 fixed inset-y-0 left-0 bg-slate-900 border-r border-slate-800 flex-col items-center py-5 z-40 shadow-2xl">
         <div className="flex flex-col items-center gap-6 w-full">
           {/* Logo */}
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 cursor-pointer active:scale-95 transition-transform" onClick={() => navigate('/account/menu')}>
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 cursor-pointer active:scale-95 transition-transform" onClick={() => navigate('/admin/dashboard')}>
             <UtensilsCrossed className="w-6 h-6" />
           </div>
 
@@ -140,17 +136,6 @@ export default function DashboardLayout({
             })}
           </nav>
         </div>
-
-        {/* Bottom Profile Avatar Link */}
-        <button
-          onClick={() => navigate('/account/menu')}
-          className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 hover:border-blue-400 text-slate-300 flex items-center justify-center transition-all active:scale-95 shadow-md"
-          title="Account Profile"
-        >
-          <div className={`w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center ${roleConfig.avatarBg}`}>
-            {user?.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
-          </div>
-        </button>
       </aside>
 
       {/* 2. MAIN CONTENT WRAPPER WITH LEFT PADDING ON DESKTOP (md:pl-20) */}
