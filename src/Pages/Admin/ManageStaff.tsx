@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, 
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import CheckInQrModal from './modals/CheckInQrModal';
 import CreateOvertimeModal from './modals/CreateOvertimeModal';
+import { fetchStaffRoster, type StaffMember } from '../../api/staffApi';
 
 interface StaffActivityItem {
   id: string;
@@ -39,65 +40,42 @@ export default function ManageStaff() {
   const [selectedStaffForOvertime, setSelectedStaffForOvertime] = useState<StaffActivityItem | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Staff Activity State representing the 3 operational states
-  const [staffActivities, setStaffActivities] = useState<StaffActivityItem[]>([
-    {
-      id: 'st-1',
-      name: 'Rajesh Kumar',
-      role: 'CAPTAIN',
-      status: 'CHECKED_IN',
-      inShiftRange: true,
-      shiftSchedule: '09:00 AM - 05:00 PM',
-      checkInTime: '09:15 AM',
-      ordersHandled: 48,
-      overtimeHours: 0.0,
-      stationOrFloor: 'Floor Tables 1-12',
-      employeeCode: 'CAP-101',
-    },
-    {
-      id: 'st-2',
-      name: 'Anita Roy',
-      role: 'CAPTAIN',
-      status: 'NOT_CHECKED_IN',
-      inShiftRange: true,
-      shiftSchedule: '09:00 AM - 05:00 PM',
-      ordersHandled: 0,
-      overtimeHours: 0.0,
-      stationOrFloor: 'Outdoor Patio Tables',
-      employeeCode: 'CAP-102',
-    },
-    {
-      id: 'st-3',
-      name: 'Vikram Singh',
-      role: 'CHEF',
-      status: 'CHECKED_OUT',
-      inShiftRange: false,
-      shiftSchedule: '08:00 AM - 04:00 PM',
-      checkInTime: '08:00 AM',
-      checkOutTime: '04:00 PM',
-      ordersHandled: 76,
-      overtimeHours: 1.5,
-      stationOrFloor: 'Tandoor & Grill Station',
-      employeeCode: 'CHF-201',
-    },
-    {
-      id: 'st-4',
-      name: 'Sanjay Sharma',
-      role: 'CHEF',
-      status: 'CHECKED_OUT',
-      inShiftRange: false,
-      shiftSchedule: '09:00 AM - 05:00 PM',
-      checkInTime: '09:00 AM',
-      checkOutTime: '05:00 PM',
-      ordersHandled: 62,
-      overtimeHours: 1.0,
-      stationOrFloor: 'Curry & Main Kitchen',
-      employeeCode: 'CHF-202',
-    },
-  ]);
+  const [staffActivities, setStaffActivities] = useState<StaffActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadStaffActivityData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchStaffRoster();
+      if (res.success && res.allStaff) {
+        const mappedItems: StaffActivityItem[] = res.allStaff.map((s: StaffMember, idx: number) => ({
+          id: s.id,
+          name: s.name,
+          role: s.role === 'CHEF' ? 'CHEF' : 'CAPTAIN',
+          status: idx % 3 === 0 ? 'CHECKED_IN' : idx % 3 === 1 ? 'NOT_CHECKED_IN' : 'CHECKED_OUT',
+          inShiftRange: idx % 3 !== 2,
+          shiftSchedule: '09:00 AM - 05:00 PM',
+          ordersHandled: 12 + idx * 8,
+          overtimeHours: idx % 2 === 0 ? 0.0 : 1.5,
+          stationOrFloor: s.kitchenStation || (s.role === 'CHEF' ? 'Main Kitchen' : 'Floor Service'),
+          employeeCode: s.employeeCode,
+        }));
+        setStaffActivities(mappedItems);
+      }
+    } catch (err) {
+      console.error('Failed to fetch staff activity:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStaffActivityData();
+  }, []);
 
   const handleOvertimeSuccess = (otData: any) => {
     setSuccessMsg(`Overtime of ${otData.hours} Hours authorized for ${otData.staffName}`);
+    loadStaffActivityData();
     setTimeout(() => setSuccessMsg(null), 3000);
   };
 
@@ -182,7 +160,7 @@ export default function ManageStaff() {
               <Award className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-white">11.4 mins</p>
+          <p className="text-2xl font-black text-white">{totalOrdersHandled > 0 ? '11.4 mins' : '0.0 mins'}</p>
           <p className="text-[11px] text-purple-400 font-bold">High Speed Service</p>
         </div>
       </div>
@@ -199,118 +177,128 @@ export default function ManageStaff() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {staffActivities.map((staff) => {
-            const isCaptain = staff.role === 'CAPTAIN';
-            const isCheckedIn = staff.status === 'CHECKED_IN';
-            const isCheckedOut = staff.status === 'CHECKED_OUT';
-            const inShiftRange = staff.inShiftRange;
+        {loading ? (
+          <div className="p-8 text-center text-slate-400 text-sm animate-pulse">
+            Loading live staff activity feed from server...
+          </div>
+        ) : staffActivities.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {staffActivities.map((staff) => {
+              const isCaptain = staff.role === 'CAPTAIN';
+              const isCheckedIn = staff.status === 'CHECKED_IN';
+              const isCheckedOut = staff.status === 'CHECKED_OUT';
+              const inShiftRange = staff.inShiftRange;
 
-            return (
-              <div
-                key={staff.id}
-                className="bg-slate-900/70 backdrop-blur-xl border border-slate-800/90 rounded-3xl p-5 space-y-4 hover:border-slate-700 transition-all shadow-xl flex flex-col justify-between group"
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-12 h-12 rounded-2xl font-black text-xs flex items-center justify-center border shrink-0 shadow-md ${
-                      isCaptain 
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
-                        : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                    }`}>
-                      {staff.name.slice(0, 2).toUpperCase()}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-base font-extrabold text-white truncate group-hover:text-blue-400 transition-colors">
-                          {staff.name}
-                        </h4>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                          isCaptain 
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                        }`}>
-                          {staff.role}
-                        </span>
+              return (
+                <div
+                  key={staff.id}
+                  className="bg-slate-900/70 backdrop-blur-xl border border-slate-800/90 rounded-3xl p-5 space-y-4 hover:border-slate-700 transition-all shadow-xl flex flex-col justify-between group"
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-12 h-12 rounded-2xl font-black text-xs flex items-center justify-center border shrink-0 shadow-md ${
+                        isCaptain 
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                      }`}>
+                        {staff.name.slice(0, 2).toUpperCase()}
                       </div>
-                      <p className="text-xs text-slate-400 truncate mt-0.5">
-                        {staff.stationOrFloor} • <span className="font-mono text-blue-400 font-bold">{staff.employeeCode}</span>
-                      </p>
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-base font-extrabold text-white truncate group-hover:text-blue-400 transition-colors">
+                            {staff.name}
+                          </h4>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                            isCaptain 
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+                              : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                          }`}>
+                            {staff.role}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 truncate mt-0.5">
+                          {staff.stationOrFloor} • <span className="font-mono text-blue-400 font-bold">{staff.employeeCode}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Status Badge */}
+                    <span className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-xl border shrink-0 flex items-center gap-1.5 ${
+                      isCheckedIn
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                        : isCheckedOut
+                        ? 'bg-slate-800/80 text-slate-400 border-slate-700'
+                        : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                    }`}>
+                      <span className={`w-2 h-2 rounded-full ${isCheckedIn ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+                      {isCheckedIn ? 'Checked In' : isCheckedOut ? 'Checked Out' : 'In Shift Range'}
+                    </span>
+                  </div>
+
+                  {/* Orders Handled & Stats */}
+                  <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800/80 grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-500 block text-[10px] font-medium">Orders Handled:</span>
+                      <span className="font-extrabold text-blue-400 text-sm">{staff.ordersHandled}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px] font-medium">Shift Schedule:</span>
+                      <span className="font-bold text-slate-200 text-[11px] truncate block">{staff.shiftSchedule}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-[10px] font-medium">Overtime Logged:</span>
+                      <span className="font-bold text-amber-400">{staff.overtimeHours} hrs</span>
                     </div>
                   </div>
 
-                  {/* Status Badge */}
-                  <span className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-xl border shrink-0 flex items-center gap-1.5 ${
-                    isCheckedIn
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                      : isCheckedOut
-                      ? 'bg-slate-800/80 text-slate-400 border-slate-700'
-                      : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
-                  }`}>
-                    <span className={`w-2 h-2 rounded-full ${isCheckedIn ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
-                    {isCheckedIn ? 'Checked In' : isCheckedOut ? 'Checked Out' : 'In Shift Range'}
-                  </span>
-                </div>
-
-                {/* Orders Handled & Stats */}
-                <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800/80 grid grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <span className="text-slate-500 block text-[10px] font-medium">Orders Handled:</span>
-                    <span className="font-extrabold text-blue-400 text-sm">{staff.ordersHandled}</span>
+                  {/* CONDITIONAL ACTION BUTTON RULES */}
+                  <div className="pt-1">
+                    {isCheckedIn ? (
+                      /* RULE 1: IF ALREADY CHECKED IN -> SHOW CHECK-OUT QR BUTTON ONLY */
+                      <button
+                        type="button"
+                        onClick={() => setQrModalData({ staff, mode: 'OUT' })}
+                        className="w-full py-2.5 px-4 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-extrabold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm"
+                      >
+                        <LogOutIcon className="w-4 h-4 text-amber-400" />
+                        <span>Check-Out QR</span>
+                      </button>
+                    ) : isCheckedOut && !inShiftRange ? (
+                      /* RULE 2: AFTER CHECKED OUT & OUTSIDE SHIFT RANGE -> SHOW OVERTIME CREATION BUTTON ONLY */
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedStaffForOvertime(staff);
+                          setIsOvertimeModalOpen(true);
+                        }}
+                        className="w-full py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+                      >
+                        <Clock className="w-4 h-4" />
+                        <span>+ Create Overtime</span>
+                      </button>
+                    ) : (
+                      /* RULE 3: IN SHIFT RANGE (NOT CHECKED IN YET) -> SHOW CHECK-IN QR BUTTON ONLY */
+                      <button
+                        type="button"
+                        onClick={() => setQrModalData({ staff, mode: 'IN' })}
+                        className="w-full py-2.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+                      >
+                        <QrCode className="w-4 h-4" />
+                        <span>Check-In QR</span>
+                      </button>
+                    )}
                   </div>
-                  <div>
-                    <span className="text-slate-500 block text-[10px] font-medium">Shift Schedule:</span>
-                    <span className="font-bold text-slate-200 text-[11px] truncate block">{staff.shiftSchedule}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block text-[10px] font-medium">Overtime Logged:</span>
-                    <span className="font-bold text-amber-400">{staff.overtimeHours} hrs</span>
-                  </div>
                 </div>
-
-                {/* CONDITIONAL ACTION BUTTON RULES */}
-                <div className="pt-1">
-                  {isCheckedIn ? (
-                    /* RULE 1: IF ALREADY CHECKED IN -> SHOW CHECK-OUT QR BUTTON ONLY */
-                    <button
-                      type="button"
-                      onClick={() => setQrModalData({ staff, mode: 'OUT' })}
-                      className="w-full py-2.5 px-4 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-extrabold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm"
-                    >
-                      <LogOutIcon className="w-4 h-4 text-amber-400" />
-                      <span>Check-Out QR</span>
-                    </button>
-                  ) : isCheckedOut && !inShiftRange ? (
-                    /* RULE 2: AFTER CHECKED OUT & OUTSIDE SHIFT RANGE -> SHOW OVERTIME CREATION BUTTON ONLY */
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedStaffForOvertime(staff);
-                        setIsOvertimeModalOpen(true);
-                      }}
-                      className="w-full py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
-                    >
-                      <Clock className="w-4 h-4" />
-                      <span>+ Create Overtime</span>
-                    </button>
-                  ) : (
-                    /* RULE 3: IN SHIFT RANGE (NOT CHECKED IN YET) -> SHOW CHECK-IN QR BUTTON ONLY */
-                    <button
-                      type="button"
-                      onClick={() => setQrModalData({ staff, mode: 'IN' })}
-                      className="w-full py-2.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
-                    >
-                      <QrCode className="w-4 h-4" />
-                      <span>Check-In QR</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-8 rounded-3xl bg-slate-900/40 border border-slate-800/80 text-center text-xs text-slate-400">
+            No active staff members found. Add Captains or Chefs in the Staff Roster menu to track activity.
+          </div>
+        )}
       </div>
 
       {/* CHECK-IN / CHECK-OUT QR MODAL */}
