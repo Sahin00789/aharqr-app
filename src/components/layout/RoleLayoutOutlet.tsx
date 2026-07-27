@@ -25,7 +25,7 @@ import { useWebhookRoom } from '../../utils/useWebhookRoom';
 
 /**
  * Restaurant Admin Master Layout Outlet
- * Exactly 5 High-Frequency Operational Navigation Items
+ * Single-Word Labels for Clean Premium UI
  */
 export function AdminRoleLayout() {
   const { user } = useAuthStore();
@@ -33,9 +33,9 @@ export function AdminRoleLayout() {
 
   const adminNavItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/admin/dashboard' },
-    { id: 'tables', label: 'Table Activity', icon: Utensils, to: '/admin/tables' },
-    { id: 'orders', label: 'Live Orders', icon: ClipboardList, to: '/admin/orders', badge: 18 },
-    { id: 'staff', label: 'Staff Roster', icon: UserPlus, to: '/admin/staff' },
+    { id: 'tables', label: 'Tables', icon: Utensils, to: '/admin/tables' },
+    { id: 'orders', label: 'Orders', icon: ClipboardList, to: '/admin/orders', badge: 18 },
+    { id: 'staff', label: 'Staff', icon: UserPlus, to: '/admin/staff' },
     { id: 'inventory', label: 'Inventory', icon: Boxes, to: '/admin/inventory' },
   ];
 
@@ -56,7 +56,7 @@ export function AdminRoleLayout() {
 
 /**
  * Captain Master Layout Outlet
- * Exactly 5 High-Frequency Operational Navigation Items
+ * Single-Word Labels for Clean Premium UI
  */
 export function CaptainRoleLayout() {
   const { user } = useAuthStore();
@@ -78,11 +78,11 @@ export function CaptainRoleLayout() {
   }, [checkInTime]);
 
   const captainNavItems: NavItem[] = [
-    { id: 'tables', label: 'Floor Plan', icon: Utensils, to: '/captain/tables' },
-    { id: 'orders', label: 'Active KOTs', icon: ClipboardList, to: '/captain/orders', badge: 3 },
-    { id: 'alerts', label: 'Room Alerts', icon: Bell, to: '/captain/alerts', badge: 2 },
-    { id: 'new-order', label: 'New Order', icon: PlusCircle, to: '/captain/tables' },
-    { id: 'status', label: 'Shift Status', icon: UserCheck, to: '/captain/tables' },
+    { id: 'tables', label: 'Tables', icon: Utensils, to: '/captain/tables' },
+    { id: 'orders', label: 'Orders', icon: ClipboardList, to: '/captain/orders', badge: 3 },
+    { id: 'alerts', label: 'Alerts', icon: Bell, to: '/captain/alerts', badge: 2 },
+    { id: 'new-order', label: 'Create', icon: PlusCircle, to: '/captain/tables' },
+    { id: 'status', label: 'Shift', icon: UserCheck, to: '/captain/tables' },
   ];
 
   const currentTab = captainNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'tables';
@@ -103,7 +103,7 @@ export function CaptainRoleLayout() {
 
 /**
  * Chef Master Layout Outlet
- * Exactly 5 High-Frequency Operational Navigation Items
+ * Single-Word Labels for Clean Premium UI
  */
 export function ChefRoleLayout() {
   const { user } = useAuthStore();
@@ -125,11 +125,11 @@ export function ChefRoleLayout() {
   }, [checkInTime]);
 
   const chefNavItems: NavItem[] = [
-    { id: 'kds', label: 'KDS Board', icon: Flame, to: '/chef/kds', badge: 4 },
-    { id: 'preparing', label: 'Preparing', icon: Clock, to: '/chef/kds' },
-    { id: 'ready', label: 'Ready KOTs', icon: CheckCircle2, to: '/chef/kds' },
+    { id: 'kds', label: 'Board', icon: Flame, to: '/chef/kds', badge: 4 },
+    { id: 'preparing', label: 'Cooking', icon: Clock, to: '/chef/kds' },
+    { id: 'ready', label: 'Ready', icon: CheckCircle2, to: '/chef/kds' },
     { id: 'history', label: 'History', icon: History, to: '/chef/history' },
-    { id: 'status', label: 'Chef Profile', icon: ChefHat, to: '/chef/kds' },
+    { id: 'status', label: 'Profile', icon: ChefHat, to: '/chef/kds' },
   ];
 
   const currentTab = chefNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'kds';
@@ -150,18 +150,18 @@ export function ChefRoleLayout() {
 
 /**
  * Customer Master Layout Outlet
- * Exactly 5 High-Frequency Operational Navigation Items
+ * Single-Word Labels for Clean Premium UI
  */
 export function CustomerRoleLayout() {
   const { tableId } = useParams();
   const location = useLocation();
 
   const customerNavItems: NavItem[] = [
-    { id: 'menu', label: 'QR Menu', icon: Utensils, to: `/menu/${tableId || 'table-1'}` },
+    { id: 'menu', label: 'Menu', icon: Utensils, to: `/menu/${tableId || 'table-1'}` },
     { id: 'favorites', label: 'Favorites', icon: Heart, to: `/menu/${tableId || 'table-1'}` },
-    { id: 'cart', label: 'My Cart', icon: ShoppingBag, to: '/checkout', badge: 2 },
-    { id: 'status', label: 'Order Status', icon: Clock, to: '/checkout' },
-    { id: 'profile', label: 'Guest', icon: User, to: `/menu/${tableId || 'table-1'}` },
+    { id: 'cart', label: 'Cart', icon: ShoppingBag, to: '/checkout', badge: 2 },
+    { id: 'status', label: 'Status', icon: Clock, to: '/checkout' },
+    { id: 'profile', label: 'Profile', icon: User, to: `/menu/${tableId || 'table-1'}` },
   ];
 
   const currentTab = customerNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'menu';
