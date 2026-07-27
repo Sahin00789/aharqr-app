@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Boxes, 
   Plus, 
@@ -8,7 +9,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   History,
-  TrendingDown
+  TrendingDown,
+  X
 } from 'lucide-react';
 import { 
   fetchCurrentInventory, 
@@ -54,13 +56,13 @@ export default function InventoryPage() {
     try {
       setLoading(true);
       const stockRes = await fetchCurrentInventory();
-      if (stockRes.success) setInventory(stockRes.inventory);
+      if (stockRes && stockRes.inventory) setInventory(stockRes.inventory);
       
       const ledgerRes = await fetchInventoryLedger();
-      if (ledgerRes.success) setLedger(ledgerRes.ledger);
+      if (ledgerRes && ledgerRes.ledger) setLedger(ledgerRes.ledger);
     } catch (err) {
       console.error('Inventory load error:', err);
-    } finally {
+    } fontinally: {
       setLoading(false);
     }
   };
@@ -73,7 +75,7 @@ export default function InventoryPage() {
     e.preventDefault();
     if (!newIngredientName.trim()) return;
     await createIngredient({ name: newIngredientName, ingredientType: newIngredientType, defaultUnit: newDefaultUnit });
-    setSuccessMsg('New ingredient master created!');
+    setSuccessMsg('New ingredient master created successfully!');
     setIsAddIngredientOpen(false);
     setNewIngredientName('');
     loadData();
@@ -91,7 +93,7 @@ export default function InventoryPage() {
       invoiceNumber,
       remarks,
     });
-    setSuccessMsg('Stock purchase recorded successfully!');
+    setSuccessMsg('Stock purchase transaction recorded successfully!');
     setIsPurchaseOpen(false);
     loadData();
   };
@@ -125,6 +127,9 @@ export default function InventoryPage() {
     setIsResaleOpen(false);
     loadData();
   };
+
+  const safeInventory = inventory || [];
+  const safeLedger = ledger || [];
 
   return (
     <div className="space-y-6">
@@ -170,7 +175,7 @@ export default function InventoryPage() {
             activeTab === 'STOCK' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white bg-slate-900/60'
           }`}
         >
-          <Boxes className="w-4 h-4" /> Current Stock Levels ({inventory.length})
+          <Boxes className="w-4 h-4" /> Current Stock Levels ({safeInventory.length})
         </button>
         <button
           onClick={() => setActiveTab('LEDGER')}
@@ -178,14 +183,14 @@ export default function InventoryPage() {
             activeTab === 'LEDGER' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white bg-slate-900/60'
           }`}
         >
-          <History className="w-4 h-4" /> Transaction Ledger ({ledger.length})
+          <History className="w-4 h-4" /> Transaction Ledger ({safeLedger.length})
         </button>
       </div>
 
       {/* TAB CONTENT: STOCK */}
       {activeTab === 'STOCK' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {inventory.map((item) => {
+          {safeInventory.map((item) => {
             const isOut = item.stockStatus === 'OUT_OF_STOCK';
             const isLow = item.stockStatus === 'LOW_STOCK';
             return (
@@ -201,7 +206,7 @@ export default function InventoryPage() {
                     isOut ? 'bg-red-500/10 text-red-400 border-red-500/20' : isLow ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                   }`}>
                     {isOut ? <AlertTriangle className="w-3 h-3" /> : isLow ? <TrendingDown className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
-                    {item.stockStatus}
+                    {item.stockStatus || 'HEALTHY'}
                   </span>
                 </div>
 
@@ -233,7 +238,7 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                {ledger.map((tx) => (
+                {safeLedger.map((tx) => (
                   <tr key={tx.id} className="hover:bg-slate-800/30 transition-colors">
                     <td className="p-4">
                       <span className={`px-2 py-0.5 text-[10px] font-black rounded-lg border ${
@@ -257,6 +262,77 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL: ADD INGREDIENT */}
+      <AnimatePresence>
+        {isAddIngredientOpen && (
+          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-4">
+              <button onClick={() => setIsAddIngredientOpen(false)} className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+              <h3 className="text-base font-extrabold text-white">Create New Ingredient Master</h3>
+              <form onSubmit={handleAddIngredient} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Ingredient Name</label>
+                  <input type="text" value={newIngredientName} onChange={(e) => setNewIngredientName(e.target.value)} placeholder="E.g., Basmati Rice" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Type</label>
+                  <select value={newIngredientType} onChange={(e) => setNewIngredientType(e.target.value as any)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    <option value="SOLID">SOLID (Gram, Kg)</option>
+                    <option value="LIQUID">LIQUID (ML, Litre)</option>
+                    <option value="COUNT">COUNT (Piece, Packet, Egg)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Default Unit</label>
+                  <input type="text" value={newDefaultUnit} onChange={(e) => setNewDefaultUnit(e.target.value)} placeholder="kg, litre, piece" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
+                </div>
+                <button type="submit" className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold">Save Ingredient</button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL: RECORD PURCHASE */}
+      <AnimatePresence>
+        {isPurchaseOpen && (
+          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-4">
+              <button onClick={() => setIsPurchaseOpen(false)} className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+              <h3 className="text-base font-extrabold text-white">Record Stock Purchase</h3>
+              <form onSubmit={handlePurchase} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Select Ingredient</label>
+                  <select value={selectedIngredientId} onChange={(e) => setSelectedIngredientId(e.target.value)} required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                    <option value="">Select Ingredient...</option>
+                    {safeInventory.map((ing) => (
+                      <option key={ing.id} value={ing.id}>{ing.name} ({ing.defaultUnit})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Quantity Purchased</label>
+                  <input type="number" step="0.01" value={actionQty} onChange={(e) => setActionQty(e.target.value)} required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Unit Cost (₹)</label>
+                  <input type="number" step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Supplier Name</label>
+                  <input type="text" value={supplierName} onChange={(e) => setSupplierName(e.target.value)} placeholder="Metro Cash & Carry" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
+                </div>
+                <button type="submit" className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold">Record Stock Purchase</button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

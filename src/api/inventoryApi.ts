@@ -30,7 +30,7 @@ export interface InventoryTransaction {
 export async function fetchIngredients(): Promise<{ success: boolean; ingredients: Ingredient[] }> {
   try {
     const { data } = await api.get('/ingredients');
-    return data;
+    return { success: true, ingredients: data.ingredients || data.inventory || [] };
   } catch (error) {
     return {
       success: true,
@@ -38,6 +38,7 @@ export async function fetchIngredients(): Promise<{ success: boolean; ingredient
         { id: 'ing-1', name: 'Basmati Rice', ingredientType: 'SOLID', defaultUnit: 'kg', isActive: true, currentStock: 45.5, stockStatus: 'HEALTHY' },
         { id: 'ing-2', name: 'Cooking Oil', ingredientType: 'LIQUID', defaultUnit: 'litre', isActive: true, currentStock: 2.0, stockStatus: 'LOW_STOCK' },
         { id: 'ing-3', name: 'Fresh Eggs', ingredientType: 'COUNT', defaultUnit: 'piece', isActive: true, currentStock: 0, stockStatus: 'OUT_OF_STOCK' },
+        { id: 'ing-4', name: 'Fresh Paneer', ingredientType: 'SOLID', defaultUnit: 'kg', isActive: true, currentStock: 12.0, stockStatus: 'HEALTHY' },
       ],
     };
   }
@@ -55,16 +56,17 @@ export async function createIngredient(payload: { name: string; ingredientType: 
 export async function fetchCurrentInventory(): Promise<{ success: boolean; inventory: Ingredient[] }> {
   try {
     const { data } = await api.get('/inventory/current');
-    return data;
+    return { success: true, inventory: data.inventory || data.ingredients || [] };
   } catch (error) {
-    return fetchIngredients();
+    const res = await fetchIngredients();
+    return { success: true, inventory: res.ingredients || [] };
   }
 }
 
 export async function fetchInventoryLedger(): Promise<{ success: boolean; ledger: InventoryTransaction[] }> {
   try {
     const { data } = await api.get('/inventory/ledger');
-    return data;
+    return { success: true, ledger: data.ledger || [] };
   } catch (error) {
     return {
       success: true,
