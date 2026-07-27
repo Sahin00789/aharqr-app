@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, 
   ChefHat, 
@@ -17,166 +17,155 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../../store/authStore';
 import AttendanceScannerModal from '../../../components/attendance/AttendanceScannerModal';
+import DishAvailabilityModal from './modals/DishAvailabilityModal';
 
-export default function ChefProfileMenu() {
+interface ChefMenuListProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function ChefMenuList({ isOpen, onClose }: ChefMenuListProps) {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
 
   const [isAttendanceScannerOpen, setIsAttendanceScannerOpen] = useState(false);
+  const [isDishAvailabilityOpen, setIsDishAvailabilityOpen] = useState(false);
 
   const handleSignOut = () => {
     clearAuth();
     navigate('/login');
   };
 
+  if (!isOpen) return null;
+
   return (
-    <motion.div 
-      initial={{ x: '100%', opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: '100%', opacity: 0 }}
-      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-2xl text-slate-200 font-sans flex flex-col overflow-y-auto selection:bg-amber-500/30"
-    >
-      {/* SUBMODALS */}
-      <AttendanceScannerModal isOpen={isAttendanceScannerOpen} onClose={() => setIsAttendanceScannerOpen(false)} />
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex">
+        {/* BACKDROP OVERLAY */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl"
+        />
 
-      {/* TOP HEADER WITH SINGLE BACK BUTTON */}
-      <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-2xl">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="py-2 px-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 text-white border border-slate-700/70 transition-all flex items-center gap-2 text-xs font-extrabold active:scale-95 shadow-md group"
-          >
-            <ArrowLeft className="w-4 h-4 text-slate-300 group-hover:-translate-x-0.5 transition-transform" />
-            <span>Back</span>
-          </button>
-        </div>
+        {/* IN-PLACE MODALS ATTACHED TO CHEF MENU */}
+        <AttendanceScannerModal 
+          isOpen={isAttendanceScannerOpen} 
+          onClose={() => setIsAttendanceScannerOpen(false)} 
+          staffRole="CHEF"
+        />
+        <DishAvailabilityModal
+          isOpen={isDishAvailabilityOpen}
+          onClose={() => setIsDishAvailabilityOpen(false)}
+        />
 
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-extrabold text-amber-400 uppercase tracking-wider bg-amber-500/10 px-3 py-1 rounded-xl border border-amber-500/20 flex items-center gap-1.5">
-            <ChefHat className="w-3.5 h-3.5" /> Chef Kitchen Hub
-          </span>
-        </div>
-      </header>
+        {/* MODAL SLIDE FROM LEFT ON DESKTOP & FULLVIEW ON MOBILE */}
+        <motion.div 
+          initial={{ x: '-100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '-100%', opacity: 0 }}
+          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          className="relative z-10 w-full lg:w-[480px] h-full bg-slate-950/95 border-r border-slate-800 text-slate-200 font-sans flex flex-col overflow-y-auto selection:bg-amber-500/30 shadow-2xl"
+        >
+          {/* TOP HEADER WITH SINGLE BACK BUTTON */}
+          <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-2xl">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onClose}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 text-xs font-bold text-slate-200 border border-slate-700/60 transition-all active:scale-95 group"
+              >
+                <ArrowLeft className="w-4 h-4 text-slate-300 group-hover:-translate-x-0.5 transition-transform" />
+                <span>Back</span>
+              </button>
+            </div>
 
-      {/* MAIN BODY */}
-      <main className="flex-1 p-5 sm:p-6 max-w-2xl mx-auto w-full space-y-6">
-        
-        {/* CHEF PROFILE BANNER */}
-        <div className="bg-linear-to-br from-slate-900 via-slate-900 to-amber-950/40 p-5 rounded-3xl border border-slate-800 shadow-xl flex items-center justify-between gap-4">
-          {!user ? (
-            <div className="flex items-center gap-4 min-w-0 w-full">
-              <div className="w-14 h-14 rounded-2xl bg-slate-800 animate-pulse shrink-0" />
-              <div className="space-y-2 min-w-0 flex-1">
-                <div className="h-4 w-36 bg-slate-800 rounded-lg animate-pulse" />
-                <div className="h-3 w-48 bg-slate-800/60 rounded-lg animate-pulse" />
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-extrabold text-amber-300 uppercase tracking-wider bg-amber-500/20 px-3 py-1 rounded-xl border border-amber-500/30">
+                Chef Kitchen Operations
+              </span>
+            </div>
+          </header>
+
+          {/* MAIN BODY */}
+          <main className="flex-1 p-5 sm:p-6 space-y-6 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-800">
+            {/* CHEF PROFILE BANNER */}
+            <div className="bg-linear-to-br from-slate-900 via-slate-900 to-amber-950/40 p-5 rounded-3xl border border-slate-800 shadow-xl flex items-center justify-between gap-4">
+              {!user ? (
+                <div className="flex items-center gap-4 min-w-0 w-full">
+                  <div className="w-14 h-14 rounded-2xl bg-slate-800 animate-pulse shrink-0" />
+                  <div className="space-y-2 min-w-0 flex-1">
+                    <div className="h-4 w-36 bg-slate-800 rounded-lg animate-pulse" />
+                    <div className="h-3 w-48 bg-slate-800/60 rounded-lg animate-pulse" />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-amber-500 to-orange-600 font-extrabold text-white text-lg flex items-center justify-center border border-amber-400/40 shadow-lg shadow-amber-500/20 shrink-0">
+                    {user.name ? user.name.slice(0, 2).toUpperCase() : 'CF'}
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-base sm:text-lg font-extrabold text-white truncate">{user.name}</h2>
+                    <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      CHEF • KITCHEN MASTER
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={handleSignOut}
+                className="px-3.5 py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-extrabold flex items-center gap-1.5 active:scale-95 transition-all shrink-0"
+              >
+                <LogOut className="w-4 h-4" /> Sign Out
+              </button>
+            </div>
+
+            {/* CONTROLS & MODALS LIST */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider px-1">
+                Kitchen Operations & Controls
+              </h3>
+
+              <div className="grid grid-cols-1 gap-3">
+                <button
+                  onClick={() => setIsDishAvailabilityOpen(true)}
+                  className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-left flex items-center justify-between group transition-all"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all">
+                      <Flame className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-extrabold text-white">86'd Dish Availability</h4>
+                      <p className="text-[11px] text-slate-400">Toggle live dish stock & recipe breakdown</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+
+                <button
+                  onClick={() => setIsAttendanceScannerOpen(true)}
+                  className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500/40 text-left flex items-center justify-between group transition-all"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all">
+                      <Camera className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-extrabold text-white">Scan QR Attendance</h4>
+                      <p className="text-[11px] text-slate-400">Scan kitchen shift attendance QR</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
+                </button>
               </div>
             </div>
-          ) : (
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-amber-500 to-orange-600 font-extrabold text-white text-lg flex items-center justify-center border border-amber-400/40 shadow-lg shadow-amber-500/20 shrink-0">
-                {user.name ? user.name.slice(0, 2).toUpperCase() : 'CF'}
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-base sm:text-lg font-extrabold text-white truncate">{user.name}</h2>
-                <p className="text-xs text-slate-400 truncate">{user.email}</p>
-                <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  CHEF • KITCHEN MASTER
-                </span>
-              </div>
-            </div>
-          )}
-
-          <button
-            onClick={handleSignOut}
-            className="px-3.5 py-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-extrabold flex items-center gap-1.5 active:scale-95 transition-all shrink-0"
-          >
-            <LogOut className="w-4 h-4" /> Sign Out
-          </button>
-        </div>
-
-        {/* CONTROLS & SUBMODALS LIST */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider px-1">
-            Kitchen Operations & Submodals
-          </h3>
-
-          <div className="grid grid-cols-1 gap-3">
-            {/* KITCHEN MENU & DISH AVAILABILITY (86ing) MODAL TRIGGER */}
-            <button
-              onClick={() => navigate('/chef/menu')}
-              className="w-full bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 p-4 rounded-3xl flex items-center justify-between text-left transition-all active:scale-[0.99] group shadow-lg"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
-                  <UtensilsCrossed className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-extrabold text-white">Kitchen Menu & Dish Availability (86)</h4>
-                  <p className="text-xs text-slate-400">Toggle out-of-stock items & view ingredient recipe breakdowns</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-500 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            {/* SCAN QR ATTENDANCE SUBMODAL TRIGGER */}
-            <button
-              onClick={() => setIsAttendanceScannerOpen(true)}
-              className="w-full bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 p-4 rounded-3xl flex items-center justify-between text-left transition-all active:scale-[0.99] group shadow-lg"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                  <Camera className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-extrabold text-white">Scan QR Shift Attendance</h4>
-                  <p className="text-xs text-slate-400">Clock-in or clock-out via QR camera scanner submodal</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-500 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            {/* LOGGED IN DEVICES */}
-            <button
-              onClick={() => navigate('/account/devices')}
-              className="w-full bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 p-4 rounded-3xl flex items-center justify-between text-left transition-all active:scale-[0.99] group shadow-lg"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
-                  <Smartphone className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-extrabold text-white">Logged-In Devices & Sessions</h4>
-                  <p className="text-xs text-slate-400">View active logins & revoke lost device tokens</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-500 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            {/* SECURITY SETTINGS */}
-            <button
-              onClick={() => navigate('/admin/settings')}
-              className="w-full bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 p-4 rounded-3xl flex items-center justify-between text-left transition-all active:scale-[0.99] group shadow-lg"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-                  <SettingsIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-extrabold text-white">Security & Password Credentials</h4>
-                  <p className="text-xs text-slate-400">Configure email password for offline login access</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-500 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        </div>
-
-        <footer className="pt-4 text-center text-[11px] text-slate-500 flex items-center justify-center gap-1">
-          <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-          <span>AHARQR Chef KDS Engine v2.0 • Session Encrypted</span>
-        </footer>
-      </main>
-    </motion.div>
+          </main>
+        </motion.div>
+      </div>
+    </AnimatePresence>
   );
 }
