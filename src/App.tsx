@@ -24,6 +24,10 @@ import AdminSubscription from "./Pages/Admin/Subscription";
 import WorkingShiftsPage from "./Pages/Admin/WorkingShiftsPage";
 import HolidaysPage from "./Pages/Admin/HolidaysPage";
 import StaffRosterPage from "./Pages/Admin/StaffRosterPage";
+import InventoryPage from "./Pages/Admin/InventoryPage";
+import MenuManagementPage from "./Pages/Admin/MenuManagementPage";
+import OrderManagementPage from "./Pages/Admin/OrderManagementPage";
+import PayrollHubPage from "./Pages/Admin/PayrollHubPage";
 
 // Standalone Mobile App Screens (Outside Dashboard Layout with Back Button)
 import ProfileMenuPage from "./Pages/Account/ProfileMenuPage";
@@ -67,6 +71,10 @@ export default function App() {
           <Route path="/admin/staff-roster" element={<StaffRosterPage />} />
           <Route path="/admin/shifts" element={<WorkingShiftsPage />} />
           <Route path="/admin/holidays" element={<HolidaysPage />} />
+          <Route path="/admin/inventory" element={<InventoryPage />} />
+          <Route path="/admin/menu-management" element={<MenuManagementPage />} />
+          <Route path="/admin/orders" element={<OrderManagementPage />} />
+          <Route path="/admin/payroll" element={<PayrollHubPage />} />
         </Route>
 
         {/* 1. RESTAURANT ADMIN ROUTES (WRAPPED IN AdminRoleLayout OUTLET) */}
@@ -81,9 +89,8 @@ export default function App() {
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/staff" element={<ManageStaff />} />
-            <Route path="/admin/tables" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Table Management (Coming Soon)</div>} />
-            <Route path="/admin/menu" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Menu Management (Coming Soon)</div>} />
-            <Route path="/admin/orders" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Orders Overview (Coming Soon)</div>} />
+            <Route path="/admin/tables" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Table Management</div>} />
+            <Route path="/admin/menu" element={<MenuManagementPage />} />
           </Route>
         </Route>
 
@@ -96,8 +103,8 @@ export default function App() {
           <Route element={<CaptainRoleLayout />}>
             <Route path="/captain" element={<Navigate to="/captain/tables" replace />} />
             <Route path="/captain/tables" element={<CaptainFloorPlan />} />
-            <Route path="/captain/orders" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Active KOT Orders (Coming Soon)</div>} />
-            <Route path="/captain/alerts" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Room Alerts (Coming Soon)</div>} />
+            <Route path="/captain/orders" element={<OrderManagementPage />} />
+            <Route path="/captain/alerts" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Room Alerts</div>} />
           </Route>
         </Route>
 
@@ -110,7 +117,7 @@ export default function App() {
           <Route element={<ChefRoleLayout />}>
             <Route path="/chef" element={<Navigate to="/chef/kds" replace />} />
             <Route path="/chef/kds" element={<KitchenDisplay />} />
-            <Route path="/chef/history" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Kitchen Order History (Coming Soon)</div>} />
+            <Route path="/chef/history" element={<OrderManagementPage />} />
           </Route>
         </Route>
 
@@ -122,7 +129,7 @@ export default function App() {
         >
           <Route element={<CustomerRoleLayout />}>
             <Route path="/menu/:tableId" element={<CustomerMenu />} />
-            <Route path="/checkout" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Table Cart & Checkout (Coming Soon)</div>} />
+            <Route path="/checkout" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Table Cart & Checkout</div>} />
           </Route>
         </Route>
 
