@@ -23,7 +23,7 @@ import { useWebhookRoom } from '../../utils/useWebhookRoom';
 
 /**
  * Restaurant Admin Master Layout Outlet
- * High-Frequency Operational Navigation Items (Includes Stock & Inventory)
+ * High-Frequency Operational Navigation Items (Includes Table Activity)
  */
 export function AdminRoleLayout() {
   const { user } = useAuthStore();
@@ -31,9 +31,9 @@ export function AdminRoleLayout() {
 
   const adminNavItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/admin/dashboard' },
-    { id: 'inventory', label: 'Inventory', icon: Boxes, to: '/admin/inventory' },
+    { id: 'tables', label: 'Table Activity', icon: Utensils, to: '/admin/tables' },
     { id: 'orders', label: 'Live Orders', icon: ClipboardList, to: '/admin/orders', badge: 18 },
-    { id: 'staff', label: 'Staff Roster', icon: UserPlus, to: '/admin/staff' },
+    { id: 'inventory', label: 'Inventory', icon: Boxes, to: '/admin/inventory' },
   ];
 
   const currentTab = adminNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'dashboard';
