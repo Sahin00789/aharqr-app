@@ -6,7 +6,7 @@ export default function Hero() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-8">
           The modern way to <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-indigo-500">
             build your startup
           </span>
         </h1>

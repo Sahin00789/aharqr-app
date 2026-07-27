@@ -1,5 +1,5 @@
 import axios, {
- type AxiosError,
+  type AxiosError,
   type InternalAxiosRequestConfig,
 } from "axios";
 import { toast } from "react-hot-toast";
@@ -12,10 +12,32 @@ declare module "axios" {
 }
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_API_URL ?? "/api",
   withCredentials: true,
   timeout: 15000,
 });
+
+/* --------------------------------------------------------
+ * MUTEX QUEUE FOR CONCURRENT REFRESH CALLS
+ * ------------------------------------------------------*/
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (error: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else if (token) {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+import { getDeviceInfo } from "../utils/device.util";
 
 /* --------------------------------------------------------
  * REQUEST INTERCEPTOR
@@ -28,13 +50,19 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    const device = getDeviceInfo();
+    config.headers["X-Device-Fingerprint"] = device.fingerprint;
+    config.headers["X-Device-Name"] = device.deviceName;
+    config.headers["X-Device-Platform"] = device.platform;
+    config.headers["X-Device-Browser"] = device.browser;
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
 /* --------------------------------------------------------
- * RESPONSE INTERCEPTOR
+ * RESPONSE INTERCEPTOR WITH THREAD-SAFE TOKEN REFRESH
  * ------------------------------------------------------*/
 api.interceptors.response.use(
   (response) => response,
@@ -43,51 +71,79 @@ api.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig;
 
     /**
-     * No response received
-     * Backend down, network error, timeout, CORS, etc.
+     * No response received (Network failure / server down)
      */
     if (!error.response) {
       toast.error(
         "Unable to connect to the server. Please try again later."
       );
-
       return Promise.reject(error);
     }
 
     const status = error.response.status;
 
     /**
-     * Don't try refreshing the refresh endpoint itself.
+     * Handle 401 Unauthorized & Token Expiry Refresh Logic
      */
-    if (originalRequest?.url?.includes("/auth/refresh")) {
-      useAuthStore.getState().clearAuth();
-      window.location.replace("/login");
+    if (status === 401 && originalRequest) {
+      const url = originalRequest.url ?? "";
+      const isAuthActionEndpoint =
+        url.includes("/auth/login") ||
+        url.includes("/auth/google") ||
+        url.includes("/auth/register") ||
+        url.includes("/auth/customer/qr-login") ||
+        url.includes("/auth/refresh");
 
-      return Promise.reject(error);
-    }
+      // Do NOT trigger refresh logic for auth endpoints (login, google, register, refresh itself)
+      if (isAuthActionEndpoint) {
+        if (url.includes("/auth/refresh")) {
+          useAuthStore.getState().setInitialized(true);
+        }
+        return Promise.reject(error);
+      }
 
-    /**
-     * Access token expired
-     */
-    if (status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+      // If token refresh is already in progress, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({
+            resolve: (token: string) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(api(originalRequest));
+            },
+            reject: (err: any) => {
+              reject(err);
+            },
+          });
+        });
+      }
 
-      try {
-        const { data } = await api.post("/auth/refresh");
+      // First request to encounter 401 triggers token re-issuance
+      if (!originalRequest._retry) {
+        originalRequest._retry = true;
+        isRefreshing = true;
 
-        const { accessToken, user } = data;
-
-        useAuthStore.getState().setAuth(accessToken, user);
-
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-
-        return api(originalRequest);
-      } catch (refreshError) {
-        useAuthStore.getState().clearAuth();
-
-        window.location.replace("/login");
-
-        return Promise.reject(refreshError);
+        return new Promise((resolve, reject) => {
+          api.post("/auth/refresh")
+            .then(({ data }) => {
+              if (data.success && data.accessToken) {
+                const { accessToken, user } = data;
+                useAuthStore.getState().setAuth(accessToken, user);
+                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                processQueue(null, accessToken);
+                resolve(api(originalRequest));
+              } else {
+                throw new Error("Invalid token refresh response.");
+              }
+            })
+            .catch((refreshErr) => {
+              processQueue(refreshErr, null);
+              useAuthStore.getState().clearAuth();
+              reject(refreshErr);
+            })
+            .finally(() => {
+              isRefreshing = false;
+            });
+        });
       }
     }
 
