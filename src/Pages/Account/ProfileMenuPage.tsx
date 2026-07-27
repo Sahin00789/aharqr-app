@@ -65,11 +65,11 @@ export default function ProfileMenuPage() {
 
   return (
     <motion.div 
-      initial={{ x: '-100%', opacity: 0 }} 
+      initial={{ x: '100%', opacity: 0 }} 
       animate={{ x: 0, opacity: 1 }} 
-      exit={{ x: '-100%', opacity: 0 }} 
+      exit={{ x: '100%', opacity: 0 }} 
       transition={{ type: 'spring', damping: 26, stiffness: 210 }}
-      className="min-h-[100dvh] bg-slate-950 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col"
+      className="min-h-[100dvh] bg-slate-950 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col overflow-x-hidden"
     >
       {/* HEADER WITH BACK TO DASHBOARD & CLOSE (X) BUTTON */}
       <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/90 px-4 py-3 flex items-center justify-between shadow-2xl">
