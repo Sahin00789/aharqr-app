@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
@@ -8,18 +8,15 @@ import {
   DollarSign, 
   UserPlus, 
   Settings as SettingsIcon, 
-  Crown,
   Utensils,
   ChevronRight,
   Flame,
   Boxes
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import CreateStaffModal from './modals/CreateStaffModal';
 
 export default function AdminDashboard() {
   const { user } = useAuthStore();
-  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
 
   const stats = [
     { label: "Today's Total Revenue", value: "₹24,500", icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-500/10" },
@@ -28,34 +25,20 @@ export default function AdminDashboard() {
   ];
 
   const quickActions = [
-    { label: "Staff Management", subtext: "Add Captains & Chefs", to: "/admin/staff", icon: UserPlus, color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10" },
+    { label: "Staff Management", subtext: "Captains & Chefs Accounts", to: "/admin/staff", icon: UserPlus, color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10" },
     { label: "Stock & Inventory", subtext: "Purchases, Wastage & Ledger", to: "/admin/inventory", icon: Boxes, color: "text-amber-400 border-amber-500/20 bg-amber-500/10" },
     { label: "Account Settings", subtext: "Password & Credentials", to: "/admin/settings", icon: SettingsIcon, color: "text-blue-400 border-blue-500/20 bg-blue-500/10" },
   ];
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-      <CreateStaffModal 
-        isOpen={isStaffModalOpen} 
-        onClose={() => setIsStaffModalOpen(false)} 
-        onSuccess={() => {}} 
-      />
-
-      {/* Main Title & Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
-            <LayoutDashboard className="w-7 h-7 text-blue-500" /> 
-            Admin Operations Dashboard
-          </h2>
-          <p className="text-slate-400 text-xs sm:text-sm">Welcome back. Here is what is happening today in your restaurant.</p>
-        </div>
-        <button
-          onClick={() => setIsStaffModalOpen(true)}
-          className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all self-start sm:self-auto"
-        >
-          <UserPlus className="w-4 h-4" /> Add Staff Member
-        </button>
+      {/* Main Header */}
+      <div>
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
+          <LayoutDashboard className="w-7 h-7 text-blue-500" /> 
+          Admin Operations Dashboard
+        </h2>
+        <p className="text-slate-400 text-xs sm:text-sm">Welcome back. Here is what is happening today in your restaurant.</p>
       </div>
 
       {/* Stats Grid */}
