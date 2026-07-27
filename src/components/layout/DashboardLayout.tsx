@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { 
   LogOut, 
   Clock, 
   UtensilsCrossed, 
   Menu, 
+  MapPin,
+  Building2,
   type LucideIcon 
 } from 'lucide-react';
 import { useAuthStore, type AppRole } from '../../store/authStore';
@@ -46,6 +47,10 @@ export default function DashboardLayout({
   const roomId = user?.restaurantId ? `restaurant-${user.restaurantId}` : 'default-room';
   const { isConnected: isWsConnected } = useWebhookRoom(roomId);
 
+  const restaurantName = 'The Royal Spice Bistro';
+  const restaurantAddress = '124 Park Street, Kolkata • Main Branch';
+  const restaurantLogoUrl = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100&auto=format&fit=crop';
+
   const handleLogout = () => {
     clearAuth();
     navigate('/login');
@@ -62,7 +67,6 @@ export default function DashboardLayout({
     RESTAURANT_ADMIN: {
       label: 'ADMIN',
       portalName: 'Management Console',
-      icon: UtensilsCrossed,
       badgeStyle: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
       activeTabStyle: 'bg-blue-500/15 border-blue-500/40 text-blue-400 shadow-blue-500/10',
       activeBottomStyle: 'text-blue-400 font-bold',
@@ -72,7 +76,6 @@ export default function DashboardLayout({
     CAPTAIN: {
       label: 'CAPTAIN',
       portalName: 'Floor Terminal',
-      icon: UtensilsCrossed,
       badgeStyle: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
       activeTabStyle: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 shadow-emerald-500/10',
       activeBottomStyle: 'text-emerald-400 font-bold',
@@ -82,7 +85,6 @@ export default function DashboardLayout({
     CHEF: {
       label: 'CHEF',
       portalName: 'Kitchen Terminal',
-      icon: UtensilsCrossed,
       badgeStyle: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
       activeTabStyle: 'bg-amber-500/15 border-amber-500/40 text-amber-400 shadow-amber-500/10',
       activeBottomStyle: 'text-amber-400 font-bold',
@@ -92,7 +94,6 @@ export default function DashboardLayout({
     CUSTOMER: {
       label: 'GUEST',
       portalName: 'Table Ordering',
-      icon: UtensilsCrossed,
       badgeStyle: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
       activeTabStyle: 'bg-rose-500/15 border-rose-500/40 text-rose-400 shadow-rose-500/10',
       activeBottomStyle: 'text-rose-400 font-bold',
@@ -107,14 +108,14 @@ export default function DashboardLayout({
       {/* 1. TABLET / DESKTOP SIDEBAR (VISIBLE ON MD AND ABOVE >= 768px) */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-40 bg-slate-900/90 backdrop-blur-2xl border-r border-slate-800/90 p-5 justify-between">
         <div>
-          {/* Brand Header */}
-          <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-800/80">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">
-              <UtensilsCrossed className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-sm font-extrabold text-white tracking-tight block leading-none">AharQR OS</span>
-              <span className="text-[10px] text-slate-400 font-medium leading-none mt-1 block">{roleConfig.portalName}</span>
+          {/* Brand & Restaurant Info Header */}
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800/80">
+            <img src={restaurantLogoUrl} alt="Restaurant Logo" className="w-10 h-10 rounded-2xl object-cover border border-slate-700 shadow-md shrink-0" />
+            <div className="overflow-hidden min-w-0">
+              <span className="text-xs font-extrabold text-white tracking-tight block truncate">{restaurantName}</span>
+              <span className="text-[10px] text-slate-400 font-medium truncate block flex items-center gap-1 mt-0.5">
+                <MapPin className="w-2.5 h-2.5 text-blue-400 shrink-0" /> {restaurantAddress}
+              </span>
             </div>
           </div>
 
@@ -132,7 +133,7 @@ export default function DashboardLayout({
             </div>
           </div>
 
-          {/* Navigation Links */}
+          {/* High-Frequency Navigation Links */}
           <nav className="space-y-1.5">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -203,32 +204,27 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      {/* 2. MAIN CONTAINER CONTENT (MD:PL-64 MARGIN FOR SIDEBAR ON TABLET/DESKTOP) */}
+      {/* 2. MAIN CONTAINER CONTENT */}
       <div className="flex-1 md:pl-64 flex flex-col min-h-[100dvh] pb-24 md:pb-6">
         
-        {/* Topbar Header */}
+        {/* TOPBAR HEADER WITH RESTAURANT LOGO, NAME, ADDRESS */}
         <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/80 px-4 md:px-8 py-3 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-3">
-            <div 
-              onClick={() => navigate('/account/menu')}
-              className={`md:hidden w-9 h-9 rounded-xl font-bold flex items-center justify-center border text-xs cursor-pointer ${roleConfig.avatarBg}`}
-            >
-              {user?.name ? user.name.slice(0, 2).toUpperCase() : role.slice(0, 2)}
-            </div>
+            <img src={restaurantLogoUrl} alt="Restaurant Logo" className="w-9 h-9 rounded-xl object-cover border border-slate-700 shadow-sm shrink-0" />
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-sm md:text-base font-bold text-white tracking-tight">{title}</h1>
-                <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${roleConfig.badgeStyle}`}>
+                <h1 className="text-xs md:text-sm font-extrabold text-white tracking-tight">{restaurantName}</h1>
+                <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded border ${roleConfig.badgeStyle}`}>
                   {roleConfig.label}
                 </span>
               </div>
-              {subtitle && <p className="text-xs text-slate-400 leading-none mt-0.5">{subtitle}</p>}
+              <p className="text-[10px] text-slate-400 leading-none mt-0.5 truncate max-w-[200px] sm:max-w-xs">{restaurantAddress}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             {checkInSeconds !== undefined && (
-              <div className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl flex items-center gap-2">
+              <div className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl hidden sm:flex items-center gap-2">
                 <Clock className="w-3.5 h-3.5 text-emerald-400" />
                 <div className="text-right">
                   <p className="text-[9px] text-slate-400 uppercase font-medium leading-none">Shift</p>
@@ -240,10 +236,11 @@ export default function DashboardLayout({
             )}
             <button
               onClick={() => navigate('/account/menu')}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all"
+              className="p-2 px-3 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 font-extrabold text-xs transition-all flex items-center gap-1.5 active:scale-95 shadow-sm"
               title="Menu & Settings Hub"
             >
               <Menu className="w-4 h-4" />
+              <span className="hidden sm:inline">Profile Menu</span>
             </button>
           </div>
         </header>
@@ -254,7 +251,7 @@ export default function DashboardLayout({
         </main>
       </div>
 
-      {/* 3. MOBILE BOTTOM NAVIGATION BAR (5 ITEMS WITH CENTER HERO PRIORITY BUTTON AT INDEX 2) */}
+      {/* 3. MOBILE BOTTOM NAVIGATION BAR */}
       <nav className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-slate-900/95 backdrop-blur-2xl border-t border-slate-800/80 px-2 py-2 shadow-2xl">
         <div className="flex items-end justify-around max-w-md mx-auto relative">
           {navItems.map((item, index) => {
