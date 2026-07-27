@@ -21,9 +21,9 @@ export default function ChildPageLayout({
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
-  const restaurantName = 'The Royal Spice Bistro';
-  const restaurantAddress = '124 Park Street, Kolkata • Main Branch';
-  const restaurantLogoUrl = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100&auto=format&fit=crop';
+  const restaurantName = user?.restaurantName || 'Royal Spice Bistro';
+  const restaurantAddress = user?.restaurantAddress || '124 Park Street, Kolkata • Main Branch';
+  const restaurantLogoUrl = user?.restaurantLogoUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100&auto=format&fit=crop';
 
   const getDashboardRoute = () => {
     switch (user?.role) {
@@ -43,7 +43,7 @@ export default function ChildPageLayout({
 
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-slate-200 font-sans flex flex-col">
-      {/* BRAND & LOCATION TOPBAR WITH CLEAN SPACING */}
+      {/* BRAND & LOCATION TOPBAR WITH DYNAMIC RESTAURANT NAME */}
       <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/90 px-4 py-3 flex items-center justify-between gap-3 shadow-2xl">
         <div className="flex items-center gap-2.5 min-w-0 overflow-hidden">
           <button

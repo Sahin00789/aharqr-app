@@ -15,6 +15,9 @@ export interface User {
   picture?: string;
   role: AppRole;
   restaurantId: string | null;
+  restaurantName?: string | null;
+  restaurantAddress?: string | null;
+  restaurantLogoUrl?: string | null;
 }
 
 interface AuthState {
