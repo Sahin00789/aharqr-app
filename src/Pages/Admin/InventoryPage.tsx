@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Boxes, 
-  Plus, 
   ShoppingCart, 
   Trash2, 
   DollarSign, 
@@ -15,7 +14,6 @@ import {
 import { 
   fetchCurrentInventory, 
   fetchInventoryLedger, 
-  createIngredient, 
   recordPurchase, 
   recordWastage, 
   recordResale, 
@@ -30,16 +28,11 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
 
   // Modals
-  const [isAddIngredientOpen, setIsAddIngredientOpen] = useState(false);
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
   const [isWastageOpen, setIsWastageOpen] = useState(false);
   const [isResaleOpen, setIsResaleOpen] = useState(false);
 
   // Form states
-  const [newIngredientName, setNewIngredientName] = useState('');
-  const [newIngredientType, setNewIngredientType] = useState<'SOLID' | 'LIQUID' | 'COUNT'>('SOLID');
-  const [newDefaultUnit, setNewDefaultUnit] = useState('kg');
-
   const [selectedIngredientId, setSelectedIngredientId] = useState('');
   const [actionQty, setActionQty] = useState('');
   const [actionUnit, setActionUnit] = useState('kg');
@@ -62,7 +55,7 @@ export default function InventoryPage() {
       if (ledgerRes && ledgerRes.ledger) setLedger(ledgerRes.ledger);
     } catch (err) {
       console.error('Inventory load error:', err);
-    } fontinally: {
+    } finally {
       setLoading(false);
     }
   };
@@ -70,16 +63,6 @@ export default function InventoryPage() {
   useEffect(() => {
     loadData();
   }, []);
-
-  const handleAddIngredient = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newIngredientName.trim()) return;
-    await createIngredient({ name: newIngredientName, ingredientType: newIngredientType, defaultUnit: newDefaultUnit });
-    setSuccessMsg('New ingredient master created successfully!');
-    setIsAddIngredientOpen(false);
-    setNewIngredientName('');
-    loadData();
-  };
 
   const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,9 +128,6 @@ export default function InventoryPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setIsAddIngredientOpen(true)} className="px-3.5 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center gap-1.5 border border-slate-700 active:scale-95 transition-all">
-            <Plus className="w-4 h-4 text-blue-400" /> Ingredient
-          </button>
           <button onClick={() => setIsPurchaseOpen(true)} className="px-3.5 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-md">
             <ShoppingCart className="w-4 h-4" /> + Purchase
           </button>
@@ -262,39 +242,6 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
-
-      {/* MODAL: ADD INGREDIENT */}
-      <AnimatePresence>
-        {isAddIngredientOpen && (
-          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-4">
-              <button onClick={() => setIsAddIngredientOpen(false)} className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-              <h3 className="text-base font-extrabold text-white">Create New Ingredient Master</h3>
-              <form onSubmit={handleAddIngredient} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Ingredient Name</label>
-                  <input type="text" value={newIngredientName} onChange={(e) => setNewIngredientName(e.target.value)} placeholder="E.g., Basmati Rice" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Type</label>
-                  <select value={newIngredientType} onChange={(e) => setNewIngredientType(e.target.value as any)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                    <option value="SOLID">SOLID (Gram, Kg)</option>
-                    <option value="LIQUID">LIQUID (ML, Litre)</option>
-                    <option value="COUNT">COUNT (Piece, Packet, Egg)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Default Unit</label>
-                  <input type="text" value={newDefaultUnit} onChange={(e) => setNewDefaultUnit(e.target.value)} placeholder="kg, litre, piece" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
-                </div>
-                <button type="submit" className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold">Save Ingredient</button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* MODAL: RECORD PURCHASE */}
       <AnimatePresence>
