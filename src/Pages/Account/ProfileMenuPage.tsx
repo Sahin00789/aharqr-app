@@ -15,9 +15,7 @@ import {
   Calendar,
   Clock,
   Users,
-  Boxes,
   UtensilsCrossed,
-  ClipboardList,
   Coins
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
@@ -129,23 +127,6 @@ export default function ProfileMenuPage() {
 
           {(user?.role === 'RESTAURANT_ADMIN' || user?.role === 'PLATFORM_ADMIN') && (
             <>
-              {/* Ingredients & Inventory Ledger */}
-              <Link
-                to="/admin/inventory"
-                className="p-4 rounded-3xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 flex items-center justify-between transition-all group shadow-md"
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 group-hover:scale-105 transition-transform">
-                    <Boxes className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-white block">Ingredients & Inventory Ledger</span>
-                    <span className="text-xs text-slate-400">Stock Purchases, Wastage & Bulk Resale</span>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
-              </Link>
-
               {/* Menu & Recipe Builder */}
               <Link
                 to="/admin/menu-management"
@@ -158,23 +139,6 @@ export default function ProfileMenuPage() {
                   <div>
                     <span className="text-sm font-bold text-white block">Menu & Recipe Builder</span>
                     <span className="text-xs text-slate-400">Cloudinary Menu Images & Ingredient Recipes</span>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
-              </Link>
-
-              {/* Order Operations */}
-              <Link
-                to="/admin/orders"
-                className="p-4 rounded-3xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 flex items-center justify-between transition-all group shadow-md"
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="p-2.5 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:scale-105 transition-transform">
-                    <ClipboardList className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-white block">Dine-In & Takeaway Orders</span>
-                    <span className="text-xs text-slate-400">Status Workflows & Timeline Audit</span>
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
