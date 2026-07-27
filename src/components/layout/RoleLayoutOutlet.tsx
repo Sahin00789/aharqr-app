@@ -14,8 +14,7 @@ import {
   History, 
   ShoppingBag, 
   Heart, 
-  CreditCard,
-  ChefHat
+  Boxes
 } from 'lucide-react';
 
 import DashboardLayout, { type NavItem } from './DashboardLayout';
@@ -24,7 +23,7 @@ import { useWebhookRoom } from '../../utils/useWebhookRoom';
 
 /**
  * Restaurant Admin Master Layout Outlet
- * High-Frequency Operational Navigation Items
+ * High-Frequency Operational Navigation Items (Includes Stock & Inventory)
  */
 export function AdminRoleLayout() {
   const { user } = useAuthStore();
@@ -32,9 +31,9 @@ export function AdminRoleLayout() {
 
   const adminNavItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/admin/dashboard' },
+    { id: 'inventory', label: 'Inventory', icon: Boxes, to: '/admin/inventory' },
     { id: 'orders', label: 'Live Orders', icon: ClipboardList, to: '/admin/orders', badge: 18 },
     { id: 'staff', label: 'Staff Roster', icon: UserPlus, to: '/admin/staff' },
-    { id: 'tables', label: 'Tables', icon: Utensils, to: '/admin/tables' },
   ];
 
   const currentTab = adminNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'dashboard';

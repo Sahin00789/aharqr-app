@@ -5,7 +5,6 @@ import {
   Clock, 
   UtensilsCrossed, 
   MapPin,
-  User,
   type LucideIcon 
 } from 'lucide-react';
 import { useAuthStore, type AppRole } from '../../store/authStore';
@@ -113,7 +112,7 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        {/* RIGHT: USER AVATAR, USER NAME, USER ROLE, DIRECT PROFILE PAGE BUTTON */}
+        {/* RIGHT: USER AVATAR IMAGE & NAME (DIRECT PROFILE PAGE BUTTON) */}
         <div className="flex items-center gap-3">
           {checkInSeconds !== undefined && (
             <div className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-2xl hidden md:flex items-center gap-2">
@@ -127,10 +126,10 @@ export default function DashboardLayout({
             </div>
           )}
 
-          {/* DIRECT PROFILE PAGE BUTTON IN TOPBAR */}
+          {/* USER AVATAR PROFILE BUTTON (CLEAN AVATAR IMAGE/INITIAL ONLY) */}
           <button
             onClick={() => navigate('/account/menu')}
-            className="flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800/90 border border-slate-800 transition-all active:scale-95 shadow-md group"
+            className="flex items-center gap-2.5 p-1 pr-3 rounded-2xl bg-slate-900 hover:bg-slate-800/90 border border-slate-800 transition-all active:scale-95 shadow-md group"
             title="Open Profile Page"
           >
             <div className={`w-9 h-9 rounded-xl font-black text-xs flex items-center justify-center shadow-md border ${roleConfig.avatarBg}`}>
@@ -140,11 +139,10 @@ export default function DashboardLayout({
               <span className="text-xs font-extrabold text-white block leading-none group-hover:text-blue-400 transition-colors">
                 {user?.name || 'Account User'}
               </span>
-              <span className="text-[9px] font-bold text-blue-400 uppercase block mt-0.5">
-                Profile & Settings →
+              <span className="text-[9px] font-bold text-slate-400 uppercase block mt-0.5">
+                Profile & Settings
               </span>
             </div>
-            <User className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors sm:hidden" />
           </button>
         </div>
       </header>
@@ -224,7 +222,7 @@ export default function DashboardLayout({
         </main>
       </div>
 
-      {/* MOBILE BOTTOM NAVIGATION BAR (HIGH-FREQUENCY OPERATIONAL ITEMS ONLY, NO PROFILE ITEM) */}
+      {/* MOBILE BOTTOM NAVIGATION BAR (INCLUDES INVENTORY, LIVE ORDERS, DASHBOARD, STAFF) */}
       <nav className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-slate-900/95 backdrop-blur-2xl border-t border-slate-800/90 px-2 py-2 shadow-2xl">
         <div className="flex items-center justify-around max-w-md mx-auto">
           {navItems.map((item) => {
