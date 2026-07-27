@@ -11,6 +11,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import CaptainMenuList from './menu/CaptainMenuList';
 
 // Re-export Captain Tabs & Menu List for clean App.tsx imports
 export { default as CaptainFloorPlan } from './tabs/FloorPlanTab';
@@ -22,6 +23,7 @@ export default function CaptainDashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isInitialized } = useAuthStore();
+  const [isMenuListOpen, setIsMenuListOpen] = useState(false);
 
   // Live Shift Timer
   const [checkInTime] = useState<Date>(new Date(Date.now() - (3 * 3600 + 42 * 60) * 1000));
@@ -46,13 +48,19 @@ export default function CaptainDashboardLayout() {
     { id: 'tables', label: 'Tables', icon: Utensils, to: '/captain/tables' },
     { id: 'orders', label: 'Orders', icon: ClipboardList, to: '/captain/orders', badge: 3 },
     { id: 'alerts', label: 'Alerts', icon: Bell, to: '/captain/alerts', badge: 2 },
-    { id: 'create', label: 'Create KOT', icon: PlusCircle, to: '/captain/account/menu' },
-    { id: 'profile', label: 'Shift', icon: UserCheck, to: '/captain/account/menu' },
+    { id: 'create', label: 'Create KOT', icon: PlusCircle, action: () => setIsMenuListOpen(true) },
+    { id: 'profile', label: 'Shift Roster', icon: UserCheck, action: () => setIsMenuListOpen(true) },
   ];
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex selection:bg-emerald-500/30">
       
+      {/* PARENT CAPTAIN MENU LIST MODAL (CONTROLLED BY STATE, NO URL CHANGE) */}
+      <CaptainMenuList 
+        isOpen={isMenuListOpen} 
+        onClose={() => setIsMenuListOpen(false)} 
+      />
+
       {/* 1. LARGE SCREEN COLLAPSED SIDENAV (DESKTOP) */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-20 bg-slate-900 border-r border-slate-800/80 p-3 flex-col justify-between z-40 shadow-2xl">
         <div className="space-y-6">
@@ -67,11 +75,11 @@ export default function CaptainDashboardLayout() {
           <nav className="space-y-3">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname.startsWith(item.to);
+              const isActive = item.to ? location.pathname.startsWith(item.to) : false;
               return (
                 <button
                   key={item.id}
-                  onClick={() => navigate(item.to)}
+                  onClick={() => item.action ? item.action() : item.to && navigate(item.to)}
                   title={item.label}
                   className={`w-full flex flex-col items-center justify-center p-2.5 rounded-2xl transition-all active:scale-95 relative group ${
                     isActive
@@ -99,7 +107,7 @@ export default function CaptainDashboardLayout() {
           <div className="w-11 h-11 bg-slate-800 rounded-2xl animate-pulse mx-auto" />
         ) : (
           <button
-            onClick={() => navigate('/captain/account/menu')}
+            onClick={() => setIsMenuListOpen(true)}
             title="Captain Hub & Menu"
             className="w-full flex flex-col items-center justify-center p-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 transition-all active:scale-95"
           >
@@ -149,7 +157,7 @@ export default function CaptainDashboardLayout() {
               <div className="w-10 h-10 rounded-2xl bg-slate-800 animate-pulse shrink-0" />
             ) : (
               <button
-                onClick={() => navigate('/captain/account/menu')}
+                onClick={() => setIsMenuListOpen(true)}
                 className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 transition-all active:scale-95 shrink-0"
               >
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 font-extrabold text-white text-xs flex items-center justify-center border border-emerald-400/40">
@@ -175,11 +183,11 @@ export default function CaptainDashboardLayout() {
         <div className="max-w-md mx-auto flex items-center justify-around">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname.startsWith(item.to);
+            const isActive = item.to ? location.pathname.startsWith(item.to) : false;
             return (
               <button
                 key={item.id}
-                onClick={() => navigate(item.to)}
+                onClick={() => item.action ? item.action() : item.to && navigate(item.to)}
                 className={`relative flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition-all active:scale-95 ${
                   isActive ? 'text-emerald-400 font-extrabold' : 'text-slate-400 hover:text-slate-200'
                 }`}

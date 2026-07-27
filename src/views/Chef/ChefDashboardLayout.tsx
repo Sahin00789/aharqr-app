@@ -8,6 +8,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import ChefMenuList from './menu/ChefMenuList';
 
 // Re-export Chef Tabs & Menu List for clean App.tsx imports
 export { default as KitchenDisplay } from './tabs/KitchenDisplayTab';
@@ -20,6 +21,7 @@ export default function ChefDashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isInitialized } = useAuthStore();
+  const [isMenuListOpen, setIsMenuListOpen] = useState(false);
 
   // Live Shift Timer
   const [checkInTime] = useState<Date>(new Date(Date.now() - (4 * 3600 + 15 * 60) * 1000));
@@ -44,55 +46,48 @@ export default function ChefDashboardLayout() {
     { id: 'kds', label: 'KDS Board', icon: Flame, to: '/chef/kds', badge: 4 },
     { id: 'preparing', label: 'Cooking Orders', icon: Clock, to: '/chef/preparing' },
     { id: 'history', label: 'Completed History', icon: History, to: '/chef/history' },
-    { id: 'profile', label: 'Kitchen Roster', icon: ChefHat, to: '/chef/account/menu' },
+    { id: 'profile', label: 'Kitchen Roster', icon: ChefHat, action: () => setIsMenuListOpen(true) },
   ];
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex selection:bg-amber-500/30">
       
-      {/* 1. LARGE SCREEN VERTICAL SIDENAV (DESKTOP) */}
-      <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-20 xl:w-60 bg-slate-900 border-r border-slate-800/80 p-3 xl:p-4 flex-col justify-between z-40 shadow-2xl transition-all">
+      {/* PARENT CHEF MENU LIST MODAL (CONTROLLED BY STATE, NO URL CHANGE) */}
+      <ChefMenuList 
+        isOpen={isMenuListOpen} 
+        onClose={() => setIsMenuListOpen(false)} 
+      />
+
+      {/* 1. LARGE SCREEN COLLAPSED SIDENAV (DESKTOP) */}
+      <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-20 bg-slate-900 border-r border-slate-800/80 p-3 flex-col justify-between z-40 shadow-2xl">
         <div className="space-y-6">
           {/* BRAND ICON */}
-          <div className="flex items-center gap-3 px-1 pt-1 justify-center xl:justify-start">
+          <div className="flex items-center justify-center pt-2">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/20 shrink-0">
               <ChefHat className="w-5 h-5" />
             </div>
-            {!user || !isInitialized ? (
-              <div className="hidden xl:block space-y-1 min-w-0 flex-1">
-                <div className="h-4 w-28 bg-slate-800 rounded-lg animate-pulse" />
-                <div className="h-3 w-32 bg-slate-800/60 rounded-lg animate-pulse" />
-              </div>
-            ) : (
-              <div className="hidden xl:block min-w-0">
-                <h1 className="text-xs font-extrabold text-white truncate">{user.restaurantName || user.name}</h1>
-                <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  CHEF KDS SIDENAV
-                </span>
-              </div>
-            )}
           </div>
 
-          {/* VERTICAL SIDENAV LINKS */}
-          <nav className="space-y-2">
-            <p className="hidden xl:block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-2 mb-1">Navigation</p>
+          {/* COLLAPSED SIDENAV LINKS */}
+          <nav className="space-y-3">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname.startsWith(item.to);
+              const isActive = item.to ? location.pathname.startsWith(item.to) : false;
               return (
                 <button
                   key={item.id}
-                  onClick={() => navigate(item.to)}
-                  className={`w-full flex items-center justify-center xl:justify-start gap-3 p-3 xl:px-4 xl:py-3 rounded-2xl text-xs font-bold transition-all active:scale-95 relative group ${
+                  onClick={() => item.action ? item.action() : item.to && navigate(item.to)}
+                  title={item.label}
+                  className={`w-full flex flex-col items-center justify-center p-2.5 rounded-2xl transition-all active:scale-95 relative group ${
                     isActive
                       ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                   }`}
                 >
-                  <Icon className="w-5 h-5 shrink-0" />
-                  <span className="hidden xl:inline truncate">{item.label}</span>
+                  <Icon className="w-5 h-5" />
+                  <span className="text-[10px] font-bold mt-1 tracking-tight truncate max-w-[60px]">{item.label}</span>
                   {item.badge !== undefined && (
-                    <span className={`absolute top-2 right-2 xl:static px-1.5 py-0.5 rounded-full text-[9px] font-extrabold ${
+                    <span className={`absolute top-1 right-1 w-4 h-4 rounded-full text-[9px] font-extrabold flex items-center justify-center ${
                       isActive ? 'bg-slate-950 text-amber-400' : 'bg-amber-500 text-slate-950'
                     }`}>
                       {item.badge}
@@ -104,30 +99,25 @@ export default function ChefDashboardLayout() {
           </nav>
         </div>
 
-        {/* BOTTOM SIDENAV USER BUTTON */}
+        {/* BOTTOM SIDENAV USER PROFILE BUTTON */}
         {!user || !isInitialized ? (
-          <div className="w-11 h-11 xl:w-full xl:h-12 bg-slate-800 rounded-2xl animate-pulse mx-auto" />
+          <div className="w-11 h-11 bg-slate-800 rounded-2xl animate-pulse mx-auto" />
         ) : (
           <button
-            onClick={() => navigate('/chef/account/menu')}
-            className="w-full flex items-center justify-center xl:justify-between p-2.5 xl:p-3 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 transition-all active:scale-95 text-left"
+            onClick={() => setIsMenuListOpen(true)}
+            title="Kitchen Hub & Menu"
+            className="w-full flex flex-col items-center justify-center p-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 transition-all active:scale-95"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 font-extrabold text-white text-xs flex items-center justify-center border border-amber-400/40 shrink-0">
-                {user.name ? user.name.slice(0, 2).toUpperCase() : 'CF'}
-              </div>
-              <div className="hidden xl:block min-w-0">
-                <p className="text-xs font-extrabold text-white truncate leading-tight">{user.name}</p>
-                <p className="text-[10px] text-slate-400 truncate leading-tight">Kitchen Hub</p>
-              </div>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 font-extrabold text-white text-xs flex items-center justify-center border border-amber-400/40 shrink-0">
+              {user.name ? user.name.slice(0, 2).toUpperCase() : 'CF'}
             </div>
-            <Settings className="hidden xl:block w-4 h-4 text-slate-400 shrink-0" />
+            <span className="text-[9px] font-extrabold text-slate-300 mt-1 truncate max-w-[60px]">Menu</span>
           </button>
         )}
       </aside>
 
       {/* MAIN LAYOUT WRAPPER */}
-      <div className="flex-1 flex flex-col lg:pl-20 xl:pl-60 min-w-0">
+      <div className="flex-1 flex flex-col lg:pl-20 min-w-0">
         
         {/* SMALL SCREEN TOP HEADER (MOBILE / TABLET) */}
         <header className="lg:hidden sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/80 px-4 py-3 shadow-xl">
@@ -164,7 +154,7 @@ export default function ChefDashboardLayout() {
               <div className="w-10 h-10 rounded-2xl bg-slate-800 animate-pulse shrink-0" />
             ) : (
               <button
-                onClick={() => navigate('/chef/account/menu')}
+                onClick={() => setIsMenuListOpen(true)}
                 className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 transition-all active:scale-95 shrink-0"
               >
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 font-extrabold text-white text-xs flex items-center justify-center border border-amber-400/40">
@@ -190,11 +180,11 @@ export default function ChefDashboardLayout() {
         <div className="max-w-md mx-auto flex items-center justify-around">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname.startsWith(item.to);
+            const isActive = item.to ? location.pathname.startsWith(item.to) : false;
             return (
               <button
                 key={item.id}
-                onClick={() => navigate(item.to)}
+                onClick={() => item.action ? item.action() : item.to && navigate(item.to)}
                 className={`relative flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl transition-all active:scale-95 ${
                   isActive ? 'text-amber-400 font-extrabold' : 'text-slate-400 hover:text-slate-200'
                 }`}
