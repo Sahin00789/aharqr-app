@@ -6,12 +6,9 @@ import {
   TrendingUp, 
   Users, 
   DollarSign, 
-  UserPlus, 
-  Settings as SettingsIcon, 
   Utensils,
   ChevronRight,
-  Flame,
-  Boxes
+  Flame
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -22,12 +19,6 @@ export default function AdminDashboard() {
     { label: "Today's Total Revenue", value: "₹24,500", icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-500/10" },
     { label: "Active Live Orders", value: "18 Orders", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Staff Members on Duty", value: "6 Staff", icon: Users, color: "text-purple-500", bg: "bg-purple-500/10" },
-  ];
-
-  const quickActions = [
-    { label: "Staff Management", subtext: "Captains & Chefs Accounts", to: "/admin/staff", icon: UserPlus, color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10" },
-    { label: "Stock & Inventory", subtext: "Purchases, Wastage & Ledger", to: "/admin/inventory", icon: Boxes, color: "text-amber-400 border-amber-500/20 bg-amber-500/10" },
-    { label: "Account Settings", subtext: "Password & Credentials", to: "/admin/settings", icon: SettingsIcon, color: "text-blue-400 border-blue-500/20 bg-blue-500/10" },
   ];
 
   return (
@@ -85,31 +76,6 @@ export default function AdminDashboard() {
             <span>Floor Tables Matrix</span>
             <ChevronRight className="w-4 h-4" />
           </Link>
-        </div>
-      </div>
-
-      {/* Quick Actions Navigation */}
-      <div>
-        <h3 className="text-base font-extrabold text-white mb-4">Quick Dashboard Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {quickActions.map((action, idx) => {
-            const Icon = action.icon;
-            return (
-              <Link
-                key={idx}
-                to={action.to}
-                className="group bg-slate-900/60 hover:bg-slate-800/60 border border-slate-800/80 rounded-3xl p-6 transition-all duration-200 flex items-start gap-4 shadow-xl"
-              >
-                <div className={`p-3.5 rounded-2xl border ${action.color} group-hover:scale-105 transition-transform`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="text-base font-extrabold text-white group-hover:text-blue-400 transition-colors">{action.label}</h4>
-                  <p className="text-xs text-slate-400 mt-1">{action.subtext}</p>
-                </div>
-              </Link>
-            );
-          })}
         </div>
       </div>
     </motion.div>
