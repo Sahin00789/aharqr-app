@@ -3,8 +3,6 @@ import { Outlet, useLocation, useParams } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   UserPlus, 
-  Settings as SettingsIcon, 
-  Crown, 
   Utensils, 
   ClipboardList, 
   PlusCircle, 
@@ -16,10 +14,8 @@ import {
   History, 
   ShoppingBag, 
   Heart, 
-  Coffee, 
-  UserCheck, 
-  ChefHat,
-  Boxes
+  CreditCard,
+  ChefHat
 } from 'lucide-react';
 
 import DashboardLayout, { type NavItem } from './DashboardLayout';
@@ -28,18 +24,17 @@ import { useWebhookRoom } from '../../utils/useWebhookRoom';
 
 /**
  * Restaurant Admin Master Layout Outlet
- * 5 High-Frequency Operational Items (Live Orders at Position 3 / Center Hero)
+ * High-Frequency Operational Navigation Items
  */
 export function AdminRoleLayout() {
   const { user } = useAuthStore();
   const location = useLocation();
 
   const adminNavItems: NavItem[] = [
-    { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, to: '/admin/dashboard' },
-    { id: 'inventory', label: 'Stock & Ledger', icon: Boxes, to: '/admin/inventory' },
-    { id: 'orders', label: 'Live Orders', icon: ClipboardList, to: '/admin/orders', badge: 18 }, // CENTER HERO
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/admin/dashboard' },
+    { id: 'orders', label: 'Live Orders', icon: ClipboardList, to: '/admin/orders', badge: 18 },
     { id: 'staff', label: 'Staff Roster', icon: UserPlus, to: '/admin/staff' },
-    { id: 'menu', label: 'Menu Catalog', icon: Coffee, to: '/admin/menu' },
+    { id: 'tables', label: 'Tables', icon: Utensils, to: '/admin/tables' },
   ];
 
   const currentTab = adminNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'dashboard';
@@ -59,7 +54,7 @@ export function AdminRoleLayout() {
 
 /**
  * Captain Master Layout Outlet
- * 5 Operational Items (Active KOTs at Position 3 / Center Hero)
+ * High-Frequency Operational Navigation Items
  */
 export function CaptainRoleLayout() {
   const { user } = useAuthStore();
@@ -82,10 +77,9 @@ export function CaptainRoleLayout() {
 
   const captainNavItems: NavItem[] = [
     { id: 'tables', label: 'Floor Plan', icon: Utensils, to: '/captain/tables' },
+    { id: 'orders', label: 'Active KOTs', icon: ClipboardList, to: '/captain/orders', badge: 3 },
     { id: 'alerts', label: 'Room Alerts', icon: Bell, to: '/captain/alerts', badge: 2 },
-    { id: 'orders', label: 'Active KOTs', icon: ClipboardList, to: '/captain/orders', badge: 3 }, // CENTER HERO
     { id: 'new-order', label: 'New Order', icon: PlusCircle, to: '/captain/tables' },
-    { id: 'status', label: 'Shift Status', icon: UserCheck, to: '/captain/tables' },
   ];
 
   const currentTab = captainNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'tables';
@@ -98,7 +92,6 @@ export function CaptainRoleLayout() {
       navItems={captainNavItems}
       activeTab={currentTab}
       checkInSeconds={elapsedSeconds}
-      isWsConnected={isWsConnected}
     >
       <Outlet />
     </DashboardLayout>
@@ -107,7 +100,7 @@ export function CaptainRoleLayout() {
 
 /**
  * Chef Master Layout Outlet
- * 5 Operational Items (KDS Display at Position 3 / Center Hero)
+ * High-Frequency Operational Navigation Items
  */
 export function ChefRoleLayout() {
   const { user } = useAuthStore();
@@ -129,11 +122,10 @@ export function ChefRoleLayout() {
   }, [checkInTime]);
 
   const chefNavItems: NavItem[] = [
+    { id: 'kds', label: 'KDS Board', icon: Flame, to: '/chef/kds', badge: 4 },
     { id: 'preparing', label: 'Preparing', icon: Clock, to: '/chef/kds' },
     { id: 'ready', label: 'Ready KOTs', icon: CheckCircle2, to: '/chef/kds' },
-    { id: 'kds', label: 'KDS Board', icon: Flame, to: '/chef/kds', badge: 4 }, // CENTER HERO
-    { id: 'history', label: 'Order History', icon: History, to: '/chef/history' },
-    { id: 'status', label: 'Chef Profile', icon: ChefHat, to: '/chef/kds' },
+    { id: 'history', label: 'History', icon: History, to: '/chef/history' },
   ];
 
   const currentTab = chefNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'kds';
@@ -146,7 +138,6 @@ export function ChefRoleLayout() {
       navItems={chefNavItems}
       activeTab={currentTab}
       checkInSeconds={elapsedSeconds}
-      isWsConnected={isWsConnected}
     >
       <Outlet />
     </DashboardLayout>
@@ -155,7 +146,7 @@ export function ChefRoleLayout() {
 
 /**
  * Customer Master Layout Outlet
- * 5 Operational Items (My Cart at Position 3 / Center Hero)
+ * High-Frequency Operational Navigation Items
  */
 export function CustomerRoleLayout() {
   const { tableId } = useParams();
@@ -164,9 +155,8 @@ export function CustomerRoleLayout() {
   const customerNavItems: NavItem[] = [
     { id: 'menu', label: 'QR Menu', icon: Utensils, to: `/menu/${tableId || 'table-1'}` },
     { id: 'favorites', label: 'Favorites', icon: Heart, to: `/menu/${tableId || 'table-1'}` },
-    { id: 'cart', label: 'My Cart', icon: ShoppingBag, to: '/checkout', badge: 2 }, // CENTER HERO
+    { id: 'cart', label: 'My Cart', icon: ShoppingBag, to: '/checkout', badge: 2 },
     { id: 'status', label: 'Order Status', icon: Clock, to: '/checkout' },
-    { id: 'profile', label: 'Guest', icon: User, to: `/menu/${tableId || 'table-1'}` },
   ];
 
   const currentTab = customerNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'menu';
