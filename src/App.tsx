@@ -71,7 +71,6 @@ export default function App() {
           <Route path="/admin/staff-roster" element={<StaffRosterPage />} />
           <Route path="/admin/shifts" element={<WorkingShiftsPage />} />
           <Route path="/admin/holidays" element={<HolidaysPage />} />
-          <Route path="/admin/inventory" element={<InventoryPage />} />
           <Route path="/admin/menu-management" element={<MenuManagementPage />} />
           <Route path="/admin/orders" element={<OrderManagementPage />} />
           <Route path="/admin/payroll" element={<PayrollHubPage />} />
@@ -88,6 +87,7 @@ export default function App() {
           <Route element={<AdminRoleLayout />}>
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/inventory" element={<InventoryPage />} />
             <Route path="/admin/staff" element={<ManageStaff />} />
             <Route path="/admin/tables" element={<div className="p-6 bg-slate-900 border border-slate-800 rounded-3xl text-white">Table Management</div>} />
             <Route path="/admin/menu" element={<MenuManagementPage />} />

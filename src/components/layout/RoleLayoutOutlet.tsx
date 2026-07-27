@@ -18,7 +18,8 @@ import {
   Heart, 
   Coffee, 
   UserCheck, 
-  ChefHat 
+  ChefHat,
+  Boxes
 } from 'lucide-react';
 
 import DashboardLayout, { type NavItem } from './DashboardLayout';
@@ -27,7 +28,7 @@ import { useWebhookRoom } from '../../utils/useWebhookRoom';
 
 /**
  * Restaurant Admin Master Layout Outlet
- * 5 Operational Items (Live Orders at Position 3 / Center Hero)
+ * 5 High-Frequency Operational Items (Live Orders at Position 3 / Center Hero)
  */
 export function AdminRoleLayout() {
   const { user } = useAuthStore();
@@ -35,9 +36,9 @@ export function AdminRoleLayout() {
 
   const adminNavItems: NavItem[] = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, to: '/admin/dashboard' },
-    { id: 'staff', label: 'Staff Roster', icon: UserPlus, to: '/admin/staff' },
+    { id: 'inventory', label: 'Stock & Ledger', icon: Boxes, to: '/admin/inventory' },
     { id: 'orders', label: 'Live Orders', icon: ClipboardList, to: '/admin/orders', badge: 18 }, // CENTER HERO
-    { id: 'tables', label: 'Tables', icon: Utensils, to: '/admin/tables' },
+    { id: 'staff', label: 'Staff Roster', icon: UserPlus, to: '/admin/staff' },
     { id: 'menu', label: 'Menu Catalog', icon: Coffee, to: '/admin/menu' },
   ];
 
