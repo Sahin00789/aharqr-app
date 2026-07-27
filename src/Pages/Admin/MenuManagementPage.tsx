@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
   UtensilsCrossed, 
   Plus, 
@@ -6,8 +7,12 @@ import {
   Clock, 
   DollarSign 
 } from 'lucide-react';
+import ChildPageLayout from '../../components/layout/ChildPageLayout';
 
 export default function MenuManagementPage() {
+  const location = useLocation();
+  const isStandalone = location.pathname.includes('menu-management');
+
   const [categories] = useState([
     { id: 'cat-1', name: 'Main Course & Biryani' },
     { id: 'cat-2', name: 'Starters & Tandoor' },
@@ -44,22 +49,32 @@ export default function MenuManagementPage() {
     },
   ]);
 
-  return (
+  const content = (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
-            <UtensilsCrossed className="w-7 h-7 text-emerald-500" />
-            Menu & Recipe Master
-          </h2>
-          <p className="text-slate-400 text-xs sm:text-sm">
-            Configure dishes, Cloudinary menu image URLs, selling prices, and ingredient recipe breakdowns.
-          </p>
+      {!isStandalone && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
+              <UtensilsCrossed className="w-7 h-7 text-emerald-500" />
+              Menu & Recipe Master
+            </h2>
+            <p className="text-slate-400 text-xs sm:text-sm">
+              Configure dishes, Cloudinary menu image URLs, selling prices, and ingredient recipe breakdowns.
+            </p>
+          </div>
+          <button className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all self-start sm:self-auto">
+            <Plus className="w-4 h-4" /> + Add New Dish
+          </button>
         </div>
-        <button className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all self-start sm:self-auto">
-          <Plus className="w-4 h-4" /> + Add New Dish
-        </button>
-      </div>
+      )}
+
+      {isStandalone && (
+        <div className="flex justify-end">
+          <button className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
+            <Plus className="w-4 h-4" /> + Add New Dish
+          </button>
+        </div>
+      )}
 
       {/* DISH CARDS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -103,4 +118,19 @@ export default function MenuManagementPage() {
       </div>
     </div>
   );
+
+  if (isStandalone) {
+    return (
+      <ChildPageLayout
+        title="Menu & Recipe Builder"
+        subtitle="Configure dishes, Cloudinary menu image URLs, selling prices, and ingredient recipes."
+        icon={UtensilsCrossed}
+        iconColor="text-emerald-500"
+      >
+        {content}
+      </ChildPageLayout>
+    );
+  }
+
+  return content;
 }
