@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -14,12 +14,22 @@ import {
   Calendar,
   Clock,
   Users,
-  UtensilsCrossed,
   Coins,
   ArrowLeft,
 } from "lucide-react";
 import { useAuthStore } from "../../../store/authStore";
 import { useWebhookRoom } from "../../../utils/useWebhookRoom";
+
+// Full-Page Modals Attached to AdminMenuList
+import Settings from "./modals/Settings";
+import Subscription from "./modals/Subscription";
+import DevicesSessions from "./modals/DevicesSessions";
+import StaffRoster from "./modals/StaffRoster";
+import WorkingShifts from "./modals/WorkingShifts";
+import Holidays from "./modals/Holidays";
+import PayrollHub from "./modals/PayrollHub";
+
+// Submodals attached to AdminMenuList
 import AddHolidayModal from "./submodals/AddHolidayModal";
 import WorkingDaysModal from "./submodals/WorkingDaysModal";
 
@@ -28,10 +38,21 @@ interface AdminMenuListProps {
   onClose: () => void;
 }
 
+type ActiveAdminModal = 
+  | 'SETTINGS' 
+  | 'SUBSCRIPTION' 
+  | 'DEVICES' 
+  | 'STAFF_ROSTER' 
+  | 'SHIFTS' 
+  | 'HOLIDAYS' 
+  | 'PAYROLL' 
+  | null;
+
 export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
 
+  const [activeModal, setActiveModal] = useState<ActiveAdminModal>(null);
   const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false);
   const [isWorkingDaysModalOpen, setIsWorkingDaysModalOpen] = useState(false);
 
@@ -61,7 +82,34 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
           className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl"
         />
 
-        {/* MODAL SLIDE FROM LEFT ON DESKTOP & FULLVIEW ON MOBILE */}
+        {/* FULL-PAGE MODALS ATTACHED IN-PLACE TO ADMIN MENU (NO URL CHANGE) */}
+        {activeModal === 'SETTINGS' && (
+          <Settings isOpen={true} onClose={() => setActiveModal(null)} />
+        )}
+        {activeModal === 'SUBSCRIPTION' && (
+          <Subscription isOpen={true} onClose={() => setActiveModal(null)} />
+        )}
+        {activeModal === 'DEVICES' && (
+          <DevicesSessions isOpen={true} onClose={() => setActiveModal(null)} />
+        )}
+        {activeModal === 'STAFF_ROSTER' && (
+          <StaffRoster isOpen={true} onClose={() => setActiveModal(null)} />
+        )}
+        {activeModal === 'SHIFTS' && (
+          <WorkingShifts isOpen={true} onClose={() => setActiveModal(null)} />
+        )}
+        {activeModal === 'HOLIDAYS' && (
+          <Holidays isOpen={true} onClose={() => setActiveModal(null)} />
+        )}
+        {activeModal === 'PAYROLL' && (
+          <PayrollHub isOpen={true} onClose={() => setActiveModal(null)} />
+        )}
+
+        {/* SUBMODALS ATTACHED TO PARENT MODAL */}
+        <AddHolidayModal isOpen={isHolidayModalOpen} onClose={() => setIsHolidayModalOpen(false)} />
+        <WorkingDaysModal isOpen={isWorkingDaysModalOpen} onClose={() => setIsWorkingDaysModalOpen(false)} />
+
+        {/* PARENT ADMIN MENU MODAL SLIDE FROM LEFT ON DESKTOP & FULLVIEW ON MOBILE */}
         <motion.div
           initial={{ x: "-100%", opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -83,7 +131,7 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
 
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider bg-slate-800/80 px-3 py-1 rounded-xl border border-slate-700/60">
-                Account & Menu Hub
+                Admin Account & Menu Hub
               </span>
             </div>
           </header>
@@ -125,7 +173,7 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
               </button>
             </div>
 
-            {/* CONTROLS SECTION */}
+            {/* CONTROLS SECTION (ALL OPENS MODALS IN-PLACE VIA STATE) */}
             <div className="space-y-3">
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-blue-400" />
@@ -133,10 +181,9 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
               </h3>
 
               <div className="grid grid-cols-1 gap-2.5">
-                <Link
-                  to="/admin/settings"
-                  onClick={onClose}
-                  className="p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
+                <button
+                  onClick={() => setActiveModal('SETTINGS')}
+                  className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all">
@@ -148,12 +195,11 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                </button>
 
-                <Link
-                  to="/admin/subscription"
-                  onClick={onClose}
-                  className="p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
+                <button
+                  onClick={() => setActiveModal('SUBSCRIPTION')}
+                  className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 group-hover:bg-amber-500 group-hover:text-slate-950 transition-all">
@@ -165,12 +211,11 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                </button>
 
-                <Link
-                  to="/account/devices"
-                  onClick={onClose}
-                  className="p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
+                <button
+                  onClick={() => setActiveModal('DEVICES')}
+                  className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 group-hover:bg-purple-500 group-hover:text-white transition-all">
@@ -182,11 +227,11 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                </button>
               </div>
             </div>
 
-            {/* MANAGEMENT PAGES */}
+            {/* MANAGEMENT MODALS (OPENS MODALS IN-PLACE VIA STATE) */}
             <div className="space-y-3 pt-2">
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1 flex items-center gap-2">
                 <LayoutDashboard className="w-4 h-4 text-indigo-400" />
@@ -194,10 +239,9 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
               </h3>
 
               <div className="grid grid-cols-1 gap-2.5">
-                <Link
-                  to="/admin/staff-roster"
-                  onClick={onClose}
-                  className="p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
+                <button
+                  onClick={() => setActiveModal('STAFF_ROSTER')}
+                  className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all">
@@ -209,12 +253,11 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                </button>
 
-                <Link
-                  to="/admin/shifts"
-                  onClick={onClose}
-                  className="p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
+                <button
+                  onClick={() => setActiveModal('SHIFTS')}
+                  className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 group-hover:bg-teal-500 group-hover:text-slate-950 transition-all">
@@ -226,12 +269,11 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                </button>
 
-                <Link
-                  to="/admin/holidays"
-                  onClick={onClose}
-                  className="p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
+                <button
+                  onClick={() => setActiveModal('HOLIDAYS')}
+                  className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 group-hover:bg-rose-500 group-hover:text-white transition-all">
@@ -243,12 +285,11 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                </button>
 
-                <Link
-                  to="/admin/payroll"
-                  onClick={onClose}
-                  className="p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
+                <button
+                  onClick={() => setActiveModal('PAYROLL')}
+                  className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="p-2.5 rounded-xl bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 group-hover:bg-yellow-500 group-hover:text-slate-950 transition-all">
@@ -260,7 +301,7 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                </button>
               </div>
             </div>
 
@@ -289,10 +330,6 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                 </button>
               </div>
             </div>
-
-            {/* SUBMODALS */}
-            <AddHolidayModal isOpen={isHolidayModalOpen} onClose={() => setIsHolidayModalOpen(false)} />
-            <WorkingDaysModal isOpen={isWorkingDaysModalOpen} onClose={() => setIsWorkingDaysModalOpen(false)} />
           </div>
         </motion.div>
       </div>

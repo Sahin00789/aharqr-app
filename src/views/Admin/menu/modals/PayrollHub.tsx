@@ -23,7 +23,12 @@ import {
   type PayrollRecord 
 } from '../../../../api/payrollApi';
 
-export default function PayrollHubPage() {
+interface PayrollHubProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function PayrollHubPage({ isOpen = true, onClose }: PayrollHubProps) {
   const navigate = useNavigate();
   const [livePayroll, setLivePayroll] = useState<LivePayroll | null>(null);
   const [history, setHistory] = useState<PayrollRecord[]>([]);

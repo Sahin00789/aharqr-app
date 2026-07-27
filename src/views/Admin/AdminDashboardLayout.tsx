@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -11,6 +11,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import AdminMenuList from './menu/AdminMenuList';
 
 // Re-export all Admin Tab Views & Menu Lists for simple App.tsx imports
 export { default as AdminDashboard } from './tabs/DashboardTab';
@@ -33,6 +34,7 @@ export default function AdminDashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isInitialized } = useAuthStore();
+  const [isMenuListOpen, setIsMenuListOpen] = useState(false);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/admin/dashboard' },
@@ -45,6 +47,12 @@ export default function AdminDashboardLayout() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex selection:bg-blue-500/30">
       
+      {/* PARENT MENU LIST MODAL (CONTROLLED BY STATE, NO URL CHANGE) */}
+      <AdminMenuList 
+        isOpen={isMenuListOpen} 
+        onClose={() => setIsMenuListOpen(false)} 
+      />
+
       {/* 1. LARGE SCREEN COLLAPSED SIDENAV (DESKTOP) */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-20 bg-slate-900 border-r border-slate-800/80 p-3 flex-col justify-between z-40 shadow-2xl">
         <div className="space-y-6">
@@ -86,13 +94,13 @@ export default function AdminDashboardLayout() {
           </nav>
         </div>
 
-        {/* BOTTOM SIDENAV USER PROFILE BUTTON (SLIDES MENU FROM LEFT ON CLICK) */}
+        {/* BOTTOM SIDENAV USER PROFILE BUTTON (OPENS MENU MODAL VIA STATE) */}
         {!user || !isInitialized ? (
           <div className="w-11 h-11 bg-slate-800 rounded-2xl animate-pulse mx-auto" />
         ) : (
           <button
-            onClick={() => navigate('/account/menu')}
-            title="Profile & Settings"
+            onClick={() => setIsMenuListOpen(true)}
+            title="Profile & Menu Hub"
             className="w-full flex flex-col items-center justify-center p-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 transition-all active:scale-95"
           >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 font-extrabold text-white text-xs flex items-center justify-center border border-blue-400/40 shrink-0">
@@ -143,7 +151,7 @@ export default function AdminDashboardLayout() {
               <div className="w-10 h-10 rounded-2xl bg-slate-800 animate-pulse shrink-0" />
             ) : (
               <button
-                onClick={() => navigate('/account/menu')}
+                onClick={() => setIsMenuListOpen(true)}
                 className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 transition-all active:scale-95 shrink-0"
               >
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 font-extrabold text-white text-xs flex items-center justify-center border border-blue-400/40">

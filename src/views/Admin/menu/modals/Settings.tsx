@@ -14,7 +14,12 @@ import {
 import { api } from '../../../../api/client';
 import { useAuthStore } from '../../../../store/authStore';
 
-export default function Settings() {
+interface SettingsProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Settings({ isOpen = true, onClose }: SettingsProps) {
   const navigate = useNavigate();
   const { user, updateUser } = useAuthStore();
 
@@ -61,11 +66,13 @@ export default function Settings() {
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <motion.div 
-      initial={{ y: '100%', opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: '100%', opacity: 0 }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
       transition={{ type: 'spring', damping: 28, stiffness: 280 }}
       className="fixed inset-0 z-50 bg-slate-950 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col overflow-y-auto"
     >
@@ -73,7 +80,7 @@ export default function Settings() {
       {/* TOPBAR HEADER WITH SINGLE BACK BUTTON */}
       <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-xl">
         <button
-          onClick={() => navigate(-1)}
+          onClick={onClose || (() => navigate(-1))}
           className="py-2 px-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 text-white border border-slate-700/70 transition-all flex items-center gap-2 text-xs font-extrabold active:scale-95 shadow-md group"
         >
           <ArrowLeft className="w-4 h-4 text-slate-300 group-hover:-translate-x-0.5 transition-transform" />
