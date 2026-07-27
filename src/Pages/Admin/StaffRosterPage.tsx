@@ -19,23 +19,9 @@ import {
   X,
   LayoutDashboard
 } from 'lucide-react';
-import { api } from '../../api/client';
 import CreateStaffModal from './modals/CreateStaffModal';
 import AssignShiftSalaryModal from './modals/AssignShiftSalaryModal';
-
-interface StaffMember {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  kitchenStation?: string;
-  status: string;
-  createdAt: string;
-  employeeCode?: string;
-  assignedShift?: string;
-  salaryStructure?: string;
-  otRate?: string;
-}
+import { fetchStaffRoster, type StaffMember } from '../../api/staffApi';
 
 interface StaffMemberWithRole extends StaffMember {
   role: 'CAPTAIN' | 'CHEF';
@@ -52,80 +38,31 @@ export default function StaffRosterPage() {
   // Unified Assign Shift & Config Salary Modal State
   const [unifiedModalStaff, setUnifiedModalStaff] = useState<StaffMemberWithRole | null>(null);
 
-  // Default Fallback Roster with Full Details
-  const defaultCaptains: StaffMember[] = [
-    { 
-      id: 'cap-1', 
-      name: 'Rajesh Kumar', 
-      email: 'rajesh.captain@aharqr.com', 
-      phone: '+91 98765 43210', 
-      employeeCode: 'CAP-101', 
-      status: 'ACTIVE', 
-      createdAt: new Date().toISOString(),
-      assignedShift: 'Mon-Sat (Morning 09:00 - 17:00)',
-      salaryStructure: 'Present: ₹600 • Off-Day: ₹750 • Holiday: ₹1000'
-    },
-    { 
-      id: 'cap-2', 
-      name: 'Anita Roy', 
-      email: 'anita.captain@aharqr.com', 
-      phone: '+91 98765 43211', 
-      employeeCode: 'CAP-102', 
-      status: 'ACTIVE', 
-      createdAt: new Date().toISOString(),
-      assignedShift: 'Mon-Sat (Lunch 11:00 - 19:00)',
-      salaryStructure: 'Present: ₹650 • Off-Day: ₹800 • Holiday: ₹1100'
-    }
-  ];
-
-  const defaultChefs: StaffMember[] = [
-    { 
-      id: 'chef-1', 
-      name: 'Vikram Singh', 
-      email: 'vikram.chef@aharqr.com', 
-      phone: '+91 98765 43212', 
-      kitchenStation: 'Main Tandoor & Grill', 
-      employeeCode: 'CHF-201', 
-      status: 'ACTIVE', 
-      createdAt: new Date().toISOString(),
-      assignedShift: 'Mon-Sat (Night 17:00 - 01:00)',
-      salaryStructure: 'Present: ₹800 • Off-Day: ₹1000 • Holiday: ₹1300'
-    },
-    { 
-      id: 'chef-2', 
-      name: 'Sanjay Sharma', 
-      email: 'sanjay.chef@aharqr.com', 
-      phone: '+91 98765 43213', 
-      kitchenStation: 'Curry & Main Course', 
-      employeeCode: 'CHF-202', 
-      status: 'ACTIVE', 
-      createdAt: new Date().toISOString(),
-      assignedShift: 'Mon-Sat (Morning 09:00 - 17:00)',
-      salaryStructure: 'Present: ₹750 • Off-Day: ₹950 • Holiday: ₹1200'
-    }
-  ];
-
-  const [captains, setCaptains] = useState<StaffMember[]>(defaultCaptains);
-  const [chefs, setChefs] = useState<StaffMember[]>(defaultChefs);
+  const [captains, setCaptains] = useState<StaffMember[]>([]);
+  const [chefs, setChefs] = useState<StaffMember[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const fetchStaff = async () => {
+  const loadStaffData = async () => {
     try {
-      const { data } = await api.get('/restaurant/staff');
-      if (data.success && (data.captains?.length || data.chefs?.length)) {
-        setCaptains(data.captains);
-        setChefs(data.chefs);
+      setLoading(true);
+      const data = await fetchStaffRoster();
+      if (data.success) {
+        setCaptains(data.captains || []);
+        setChefs(data.chefs || []);
       }
     } catch (err: any) {
-      console.error('Fetch staff error:', err);
+      console.error('Fetch staff roster error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchStaff();
+    loadStaffData();
   }, []);
 
   const openCreateModal = (role: 'CAPTAIN' | 'CHEF' = 'CAPTAIN') => {
@@ -135,7 +72,7 @@ export default function StaffRosterPage() {
 
   const handleModalSuccess = () => {
     setSuccessMsg('Staff member account created successfully!');
-    fetchStaff();
+    loadStaffData();
   };
 
   const handleUnifiedSuccess = (data: { staffName: string }) => {
@@ -143,8 +80,8 @@ export default function StaffRosterPage() {
     setTimeout(() => setSuccessMsg(null), 3000);
   };
 
-  const captainsWithRole: StaffMemberWithRole[] = captains.map((c) => ({ ...c, role: 'CAPTAIN' }));
-  const chefsWithRole: StaffMemberWithRole[] = chefs.map((c) => ({ ...c, role: 'CHEF' }));
+  const captainsWithRole: StaffMemberWithRole[] = captains.map((c) => ({ ...c, role: 'CAPTAIN' as const }));
+  const chefsWithRole: StaffMemberWithRole[] = chefs.map((c) => ({ ...c, role: 'CHEF' as const }));
   const allStaff: StaffMemberWithRole[] = [...captainsWithRole, ...chefsWithRole];
 
   const filteredStaff = allStaff.filter((s) => {
@@ -327,100 +264,110 @@ export default function StaffRosterPage() {
           </div>
 
           {/* STAFF ROSTER CARDS WITH ALL DETAILS & SINGLE UNIFIED BUTTON */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredStaff.map((staff) => {
-              const isCaptain = staff.role === 'CAPTAIN';
-              return (
-                <div 
-                  key={`${staff.role}-${staff.id}`} 
-                  className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-5 space-y-4 hover:border-slate-700 transition-all flex flex-col justify-between shadow-xl group"
-                >
-                  {/* Header with Name, Email & Role */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-12 h-12 rounded-2xl font-black text-xs flex items-center justify-center border shrink-0 shadow-md ${
+          {loading ? (
+            <div className="p-8 text-center text-slate-400 text-sm animate-pulse">
+              Loading live staff roster from server...
+            </div>
+          ) : filteredStaff.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredStaff.map((staff) => {
+                const isCaptain = staff.role === 'CAPTAIN';
+                return (
+                  <div 
+                    key={`${staff.role}-${staff.id}`} 
+                    className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-5 space-y-4 hover:border-slate-700 transition-all flex flex-col justify-between shadow-xl group"
+                  >
+                    {/* Header with Name, Email & Role */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-12 h-12 rounded-2xl font-black text-xs flex items-center justify-center border shrink-0 shadow-md ${
+                          isCaptain 
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          {staff.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-base font-extrabold text-white truncate group-hover:text-blue-400 transition-colors">
+                            {staff.name}
+                          </h4>
+                          <p className="text-xs text-slate-400 truncate">
+                            {staff.email}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-xl border shrink-0 flex items-center gap-1 ${
                         isCaptain 
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
                           : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                       }`}>
-                        {staff.name.slice(0, 2).toUpperCase()}
+                        {isCaptain ? <UserCheck className="w-3 h-3" /> : <ChefHat className="w-3 h-3" />}
+                        {staff.role}
+                      </span>
+                    </div>
+
+                    {/* FULL DETAILS ON CARD */}
+                    <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 space-y-2.5 text-xs">
+                      {/* Phone & Emp ID */}
+                      <div className="flex items-center justify-between text-slate-400">
+                        <div className="flex items-center gap-1.5">
+                          <Phone className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <span className="truncate">{staff.phone || '+91 98765 00000'}</span>
+                        </div>
+                        <span className="font-mono text-blue-400 font-bold bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-lg text-[11px]">
+                          {staff.employeeCode || 'EMP-100'}
+                        </span>
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="text-base font-extrabold text-white truncate group-hover:text-blue-400 transition-colors">
-                          {staff.name}
-                        </h4>
-                        <p className="text-xs text-slate-400 truncate">
-                          {staff.email}
-                        </p>
+
+                      {/* Department / Station */}
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[11px]">
+                        <span className="text-slate-500 flex items-center gap-1">
+                          <Briefcase className="w-3 h-3 text-slate-400" /> Station:
+                        </span>
+                        <span className="text-slate-300 font-semibold truncate max-w-[150px]">
+                          {isCaptain ? 'Floor & Table Service' : (staff.kitchenStation || 'Main Kitchen')}
+                        </span>
+                      </div>
+
+                      {/* Assigned Shift Summary */}
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-blue-400" /> Shift:
+                        </span>
+                        <span className="text-blue-400 font-bold truncate max-w-[150px]">
+                          Mon-Sat (Regular Shift)
+                        </span>
+                      </div>
+
+                      {/* Configured Pay Breakdown */}
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-500 flex items-center gap-1">
+                          <DollarSign className="w-3 h-3 text-emerald-400" /> Pay Rates:
+                        </span>
+                        <span className="text-emerald-400 font-bold truncate max-w-[150px]">
+                          Present: ₹600 • Off-Day: ₹750
+                        </span>
                       </div>
                     </div>
 
-                    <span className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-xl border shrink-0 flex items-center gap-1 ${
-                      isCaptain 
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                    }`}>
-                      {isCaptain ? <UserCheck className="w-3 h-3" /> : <ChefHat className="w-3 h-3" />}
-                      {staff.role}
-                    </span>
+                    {/* SINGLE UNIFIED BUTTON: ASSIGN SHIFT & CONFIG SALARY */}
+                    <button
+                      type="button"
+                      onClick={() => setUnifiedModalStaff(staff)}
+                      className="w-full py-3 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+                    >
+                      <Coins className="w-4 h-4" /> Assign Shift & Config Salary
+                    </button>
                   </div>
-
-                  {/* FULL DETAILS ON CARD */}
-                  <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800/80 space-y-2.5 text-xs">
-                    {/* Phone & Emp ID */}
-                    <div className="flex items-center justify-between text-slate-400">
-                      <div className="flex items-center gap-1.5">
-                        <Phone className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                        <span className="truncate">{staff.phone || '+91 98765 00000'}</span>
-                      </div>
-                      <span className="font-mono text-blue-400 font-bold bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-lg text-[11px]">
-                        {staff.employeeCode || 'EMP-100'}
-                      </span>
-                    </div>
-
-                    {/* Department / Station */}
-                    <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[11px]">
-                      <span className="text-slate-500 flex items-center gap-1">
-                        <Briefcase className="w-3 h-3 text-slate-400" /> Station:
-                      </span>
-                      <span className="text-slate-300 font-semibold truncate max-w-[150px]">
-                        {isCaptain ? 'Floor & Table Service' : (staff.kitchenStation || 'Main Kitchen')}
-                      </span>
-                    </div>
-
-                    {/* Assigned Shift Summary */}
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-blue-400" /> Shift:
-                      </span>
-                      <span className="text-blue-400 font-bold truncate max-w-[150px]">
-                        {staff.assignedShift || 'Mon-Sat (Morning 09:00 - 17:00)'}
-                      </span>
-                    </div>
-
-                    {/* Configured Pay Breakdown */}
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500 flex items-center gap-1">
-                        <DollarSign className="w-3 h-3 text-emerald-400" /> Pay Rates:
-                      </span>
-                      <span className="text-emerald-400 font-bold truncate max-w-[150px]">
-                        {staff.salaryStructure || 'Present: ₹600 • Off-Day: ₹750'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* SINGLE UNIFIED BUTTON: ASSIGN SHIFT & CONFIG SALARY */}
-                  <button
-                    type="button"
-                    onClick={() => setUnifiedModalStaff(staff)}
-                    className="w-full py-3 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
-                  >
-                    <Coins className="w-4 h-4" /> Assign Shift & Config Salary
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="p-8 rounded-3xl bg-slate-900/40 border border-slate-800/80 text-center text-xs text-slate-400">
+              No staff members found. Click "+ Add Staff Member" above to create Captain or Chef accounts.
+            </div>
+          )}
         </div>
 
       </main>
