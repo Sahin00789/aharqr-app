@@ -14,7 +14,9 @@ import {
   History, 
   ShoppingBag, 
   Heart, 
-  Boxes
+  Boxes,
+  UserCheck,
+  ChefHat
 } from 'lucide-react';
 
 import DashboardLayout, { type NavItem } from './DashboardLayout';
@@ -23,7 +25,7 @@ import { useWebhookRoom } from '../../utils/useWebhookRoom';
 
 /**
  * Restaurant Admin Master Layout Outlet
- * High-Frequency Operational Navigation Items (Includes Table Activity)
+ * Exactly 5 High-Frequency Operational Navigation Items
  */
 export function AdminRoleLayout() {
   const { user } = useAuthStore();
@@ -33,6 +35,7 @@ export function AdminRoleLayout() {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/admin/dashboard' },
     { id: 'tables', label: 'Table Activity', icon: Utensils, to: '/admin/tables' },
     { id: 'orders', label: 'Live Orders', icon: ClipboardList, to: '/admin/orders', badge: 18 },
+    { id: 'staff', label: 'Staff Roster', icon: UserPlus, to: '/admin/staff' },
     { id: 'inventory', label: 'Inventory', icon: Boxes, to: '/admin/inventory' },
   ];
 
@@ -53,7 +56,7 @@ export function AdminRoleLayout() {
 
 /**
  * Captain Master Layout Outlet
- * High-Frequency Operational Navigation Items
+ * Exactly 5 High-Frequency Operational Navigation Items
  */
 export function CaptainRoleLayout() {
   const { user } = useAuthStore();
@@ -79,6 +82,7 @@ export function CaptainRoleLayout() {
     { id: 'orders', label: 'Active KOTs', icon: ClipboardList, to: '/captain/orders', badge: 3 },
     { id: 'alerts', label: 'Room Alerts', icon: Bell, to: '/captain/alerts', badge: 2 },
     { id: 'new-order', label: 'New Order', icon: PlusCircle, to: '/captain/tables' },
+    { id: 'status', label: 'Shift Status', icon: UserCheck, to: '/captain/tables' },
   ];
 
   const currentTab = captainNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'tables';
@@ -99,7 +103,7 @@ export function CaptainRoleLayout() {
 
 /**
  * Chef Master Layout Outlet
- * High-Frequency Operational Navigation Items
+ * Exactly 5 High-Frequency Operational Navigation Items
  */
 export function ChefRoleLayout() {
   const { user } = useAuthStore();
@@ -125,6 +129,7 @@ export function ChefRoleLayout() {
     { id: 'preparing', label: 'Preparing', icon: Clock, to: '/chef/kds' },
     { id: 'ready', label: 'Ready KOTs', icon: CheckCircle2, to: '/chef/kds' },
     { id: 'history', label: 'History', icon: History, to: '/chef/history' },
+    { id: 'status', label: 'Chef Profile', icon: ChefHat, to: '/chef/kds' },
   ];
 
   const currentTab = chefNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'kds';
@@ -145,7 +150,7 @@ export function ChefRoleLayout() {
 
 /**
  * Customer Master Layout Outlet
- * High-Frequency Operational Navigation Items
+ * Exactly 5 High-Frequency Operational Navigation Items
  */
 export function CustomerRoleLayout() {
   const { tableId } = useParams();
@@ -156,6 +161,7 @@ export function CustomerRoleLayout() {
     { id: 'favorites', label: 'Favorites', icon: Heart, to: `/menu/${tableId || 'table-1'}` },
     { id: 'cart', label: 'My Cart', icon: ShoppingBag, to: '/checkout', badge: 2 },
     { id: 'status', label: 'Order Status', icon: Clock, to: '/checkout' },
+    { id: 'profile', label: 'Guest', icon: User, to: `/menu/${tableId || 'table-1'}` },
   ];
 
   const currentTab = customerNavItems.find(item => item.to && location.pathname.startsWith(item.to))?.id || 'menu';
