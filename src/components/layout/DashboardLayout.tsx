@@ -1,22 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogOut, 
   Clock, 
   UtensilsCrossed, 
   MapPin,
   User,
-  ChevronDown,
-  Boxes,
-  Utensils,
-  Coins,
-  Settings as SettingsIcon,
-  Crown,
-  Smartphone,
-  Calendar,
-  Users,
-  ShieldCheck,
   type LucideIcon 
 } from 'lucide-react';
 import { useAuthStore, type AppRole } from '../../store/authStore';
@@ -52,12 +41,10 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
 
   const restaurantName = 'The Royal Spice Bistro';
   const restaurantAddress = '124 Park Street, Kolkata • Main Branch';
-  const restaurantLogoUrl = 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100&auto=format&fit=crop';
 
   const handleLogout = () => {
     clearAuth();
@@ -102,12 +89,6 @@ export default function DashboardLayout({
     },
   }[role];
 
-  // Guarantee exactly 5 items for mobile navigation (5th is always Profile)
-  const mobileNavItems: NavItem[] = [
-    ...navItems.slice(0, 4),
-    { id: 'profile', label: 'Profile', icon: User, to: '/account/menu' },
-  ];
-
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col relative">
       
@@ -132,7 +113,7 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        {/* RIGHT: USER AVATAR, USER NAME, USER ROLE, PROFILE DROPDOWN */}
+        {/* RIGHT: USER AVATAR, USER NAME, USER ROLE, DIRECT PROFILE PAGE BUTTON */}
         <div className="flex items-center gap-3">
           {checkInSeconds !== undefined && (
             <div className="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-2xl hidden md:flex items-center gap-2">
@@ -146,84 +127,25 @@ export default function DashboardLayout({
             </div>
           )}
 
-          {/* USER PROFILE DROPDOWN TRIGGER */}
-          <div className="relative">
-            <button
-              onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              className="flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-all active:scale-95 shadow-md"
-            >
-              <div className={`w-9 h-9 rounded-xl font-black text-xs flex items-center justify-center shadow-md border ${roleConfig.avatarBg}`}>
-                {user?.name ? user.name.slice(0, 2).toUpperCase() : role.slice(0, 2)}
-              </div>
-              <div className="text-left hidden lg:block">
-                <span className="text-xs font-extrabold text-white block leading-none">{user?.name || 'Account User'}</span>
-                <span className="text-[9px] font-bold text-blue-400 uppercase block mt-0.5">{roleConfig.label}</span>
-              </div>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* LOW-FREQUENCY CONFIGURATION PROFILE DROPDOWN MENU */}
-            <AnimatePresence>
-              {isProfileDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-2xl border border-slate-800 rounded-3xl p-3 shadow-2xl z-50 space-y-2"
-                >
-                  <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800/80">
-                    <span className="text-xs font-extrabold text-white block truncate">{user?.name || 'User Account'}</span>
-                    <span className="text-[10px] text-slate-400 block truncate">{user?.email || 'user@aharqr.com'}</span>
-                  </div>
-
-                  <div className="space-y-1 text-xs font-bold text-slate-300">
-                    {role === 'RESTAURANT_ADMIN' && (
-                      <>
-                        <Link to="/admin/inventory" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors">
-                          <Boxes className="w-4 h-4 text-amber-400" /> Ingredients & Inventory Ledger
-                        </Link>
-                        <Link to="/admin/menu-management" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors">
-                          <Utensils className="w-4 h-4 text-emerald-400" /> Menu & Recipe Builder
-                        </Link>
-                        <Link to="/admin/payroll" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors">
-                          <Coins className="w-4 h-4 text-purple-400" /> Shift Payroll & Disbursements
-                        </Link>
-                        <Link to="/admin/staff-roster" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors">
-                          <Users className="w-4 h-4 text-blue-400" /> Staff Roster & Accounts
-                        </Link>
-                        <Link to="/admin/shifts" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors">
-                          <Clock className="w-4 h-4 text-emerald-400" /> Working Days & Shifts
-                        </Link>
-                        <Link to="/admin/holidays" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors">
-                          <Calendar className="w-4 h-4 text-rose-400" /> Universal Holidays
-                        </Link>
-                      </>
-                    )}
-
-                    <Link to="/account/devices" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors">
-                      <Smartphone className="w-4 h-4 text-indigo-400" /> Active Devices & Sessions
-                    </Link>
-                    <Link to="/admin/settings" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors">
-                      <SettingsIcon className="w-4 h-4 text-slate-400" /> Account Security & Credentials
-                    </Link>
-                    <Link to="/admin/subscription" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors">
-                      <Crown className="w-4 h-4 text-amber-400" /> Subscription & Plan
-                    </Link>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-800">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" /> Sign Out
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* DIRECT PROFILE PAGE BUTTON IN TOPBAR */}
+          <button
+            onClick={() => navigate('/account/menu')}
+            className="flex items-center gap-2.5 p-1.5 pr-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800/90 border border-slate-800 transition-all active:scale-95 shadow-md group"
+            title="Open Profile Page"
+          >
+            <div className={`w-9 h-9 rounded-xl font-black text-xs flex items-center justify-center shadow-md border ${roleConfig.avatarBg}`}>
+              {user?.name ? user.name.slice(0, 2).toUpperCase() : role.slice(0, 2)}
+            </div>
+            <div className="text-left hidden sm:block">
+              <span className="text-xs font-extrabold text-white block leading-none group-hover:text-blue-400 transition-colors">
+                {user?.name || 'Account User'}
+              </span>
+              <span className="text-[9px] font-bold text-blue-400 uppercase block mt-0.5">
+                Profile & Settings →
+              </span>
+            </div>
+            <User className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors sm:hidden" />
+          </button>
         </div>
       </header>
 
@@ -296,18 +218,18 @@ export default function DashboardLayout({
           </div>
         </aside>
 
-        {/* MAIN OPERATIONAL CONTENT CANVAS (MD:PL-20 MARGIN FOR PERMANENT COLLAPSED SIDEBAR) */}
+        {/* MAIN OPERATIONAL CONTENT CANVAS */}
         <main className="flex-1 md:pl-20 p-4 md:p-8 max-w-6xl mx-auto w-full min-h-[calc(100dvh-65px)] pb-24 md:pb-8">
           {children}
         </main>
       </div>
 
-      {/* MOBILE BOTTOM NAVIGATION BAR (EXACTLY 5 ITEMS, 5TH IS ALWAYS PROFILE) */}
+      {/* MOBILE BOTTOM NAVIGATION BAR (HIGH-FREQUENCY OPERATIONAL ITEMS ONLY, NO PROFILE ITEM) */}
       <nav className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-slate-900/95 backdrop-blur-2xl border-t border-slate-800/90 px-2 py-2 shadow-2xl">
         <div className="flex items-center justify-around max-w-md mx-auto">
-          {mobileNavItems.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
-            const isSelected = activeTab === item.id || (item.id === 'profile' && window.location.pathname.startsWith('/account'));
+            const isSelected = activeTab === item.id;
 
             const itemContent = (
               <div className={`flex flex-col items-center py-1 px-3 rounded-2xl transition-all ${
