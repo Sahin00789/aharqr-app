@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, X, LayoutDashboard, MapPin, Menu, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, X, LayoutDashboard, MapPin, type LucideIcon } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 interface ChildPageLayoutProps {
@@ -43,20 +43,20 @@ export default function ChildPageLayout({
 
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-slate-200 font-sans flex flex-col">
-      {/* BRAND & LOCATION TOPBAR */}
-      <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/90 px-4 py-3 flex items-center justify-between shadow-2xl">
-        <div className="flex items-center gap-3">
+      {/* BRAND & LOCATION TOPBAR WITH CLEAN SPACING */}
+      <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/90 px-4 py-3 flex items-center justify-between gap-3 shadow-2xl">
+        <div className="flex items-center gap-2.5 min-w-0 overflow-hidden">
           <button
             onClick={() => navigate('/account/menu')}
-            className="p-2 px-3 rounded-2xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 transition-all flex items-center gap-2 text-xs font-extrabold active:scale-95 shadow-md group"
+            className="p-2 px-3 rounded-2xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 transition-all flex items-center gap-1.5 text-xs font-extrabold active:scale-95 shadow-md shrink-0 group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            <span>Profile Menu</span>
+            <span className="hidden sm:inline">Profile Menu</span>
           </button>
           
-          <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-800">
+          <div className="flex items-center gap-2 pl-2.5 border-l border-slate-800 min-w-0 overflow-hidden">
             <img src={restaurantLogoUrl} alt="Logo" className="w-7 h-7 rounded-lg object-cover border border-slate-700 shrink-0" />
-            <div className="overflow-hidden">
+            <div className="overflow-hidden min-w-0">
               <span className="text-xs font-extrabold text-white leading-none block truncate">{restaurantName}</span>
               <span className="text-[9px] text-slate-400 flex items-center gap-0.5 truncate leading-none mt-0.5">
                 <MapPin className="w-2.5 h-2.5 text-blue-400 shrink-0" /> {restaurantAddress}
@@ -65,20 +65,21 @@ export default function ChildPageLayout({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => navigate(getDashboardRoute())}
-            className="p-2 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all hidden md:flex items-center gap-2 text-xs font-bold active:scale-95 shadow-md"
+            className="p-2 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all hidden md:flex items-center gap-2 text-xs font-bold active:scale-95 shadow-md shrink-0"
           >
             <LayoutDashboard className="w-4 h-4 text-blue-400" />
             <span>Dashboard</span>
           </button>
           <button
             onClick={() => navigate(-1)}
-            className="p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/70 transition-all active:scale-95 flex items-center justify-center shadow-md"
-            title="Close"
+            className="p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/70 transition-all active:scale-95 flex items-center justify-center shadow-md shrink-0"
+            title="Close Page"
+            aria-label="Close Page"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-slate-300 hover:text-white" />
           </button>
         </div>
       </header>
@@ -87,8 +88,8 @@ export default function ChildPageLayout({
       <main className="flex-1 p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-6">
         <div className="border-b border-slate-800/80 pb-4">
           <div className="flex items-center gap-3">
-            {Icon && <Icon className={`w-8 h-8 ${iconColor}`} />}
-            <div>
+            {Icon && <Icon className={`w-8 h-8 ${iconColor} shrink-0`} />}
+            <div className="pr-12">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">{title}</h2>
               {subtitle && <p className="text-slate-400 text-xs sm:text-sm mt-0.5">{subtitle}</p>}
             </div>

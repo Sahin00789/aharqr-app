@@ -10,7 +10,6 @@ import {
   Boxes,
   X,
   CheckCircle2,
-  ListFilter,
   PackageCheck
 } from 'lucide-react';
 import ChildPageLayout from '../../components/layout/ChildPageLayout';
@@ -40,12 +39,6 @@ export default function MenuManagementPage() {
   useEffect(() => {
     loadIngredients();
   }, []);
-
-  const [categories] = useState([
-    { id: 'cat-1', name: 'Main Course & Biryani' },
-    { id: 'cat-2', name: 'Starters & Tandoor' },
-    { id: 'cat-3', name: 'Beverages & Soft Drinks' },
-  ]);
 
   const [menuItems] = useState([
     {
@@ -105,7 +98,7 @@ export default function MenuManagementPage() {
               onClick={() => setIsIngredientsModalOpen(true)}
               className="px-3.5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center gap-2 border border-slate-700 active:scale-95 transition-all shadow-md"
             >
-              <Boxes className="w-4 h-4 text-blue-400" /> View Ingredients Directory ({ingredients.length})
+              <Boxes className="w-4 h-4 text-blue-400" /> Ingredients Directory ({ingredients.length})
             </button>
             <button className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
               <Plus className="w-4 h-4" /> + Add New Dish
@@ -120,7 +113,7 @@ export default function MenuManagementPage() {
             onClick={() => setIsIngredientsModalOpen(true)}
             className="px-3.5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center gap-2 border border-slate-700 active:scale-95 transition-all shadow-md"
           >
-            <Boxes className="w-4 h-4 text-blue-400" /> View Ingredients Directory ({ingredients.length})
+            <Boxes className="w-4 h-4 text-blue-400" /> Ingredients Directory ({ingredients.length})
           </button>
           <button className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
             <Plus className="w-4 h-4" /> + Add New Dish
@@ -181,17 +174,19 @@ export default function MenuManagementPage() {
         {isIngredientsModalOpen && (
           <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-5">
-              <button onClick={() => setIsIngredientsModalOpen(false)} className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setIsIngredientsModalOpen(false)} 
+                className="absolute top-5 right-5 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white shrink-0 z-10"
+                title="Close"
+              >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-extrabold text-white flex items-center gap-2">
-                    <Boxes className="w-5 h-5 text-blue-400" /> Master Ingredients Directory
-                  </h3>
-                  <p className="text-xs text-slate-400">View configured raw ingredients available for recipe breakdowns.</p>
-                </div>
+              <div className="pr-12">
+                <h3 className="text-lg font-extrabold text-white flex items-center gap-2">
+                  <Boxes className="w-5 h-5 text-blue-400 shrink-0" /> Master Ingredients Directory
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">View configured raw ingredients available for recipe breakdowns.</p>
               </div>
 
               {/* ACTION: OPEN ADD SUB-MODAL */}
@@ -226,15 +221,21 @@ export default function MenuManagementPage() {
         {isAddSubModalOpen && (
           <div className="fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-4">
-              <button onClick={() => setIsAddSubModalOpen(false)} className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setIsAddSubModalOpen(false)} 
+                className="absolute top-5 right-5 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white shrink-0 z-10"
+                title="Close"
+              >
                 <X className="w-5 h-5" />
               </button>
 
-              <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                <PackageCheck className="w-5 h-5 text-emerald-400" /> Create Raw Ingredient
-              </h3>
+              <div className="pr-12">
+                <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <PackageCheck className="w-5 h-5 text-emerald-400 shrink-0" /> Create Raw Ingredient
+                </h3>
+              </div>
 
-              <form onSubmit={handleAddIngredient} className="space-y-3">
+              <form onSubmit={handleAddIngredient} className="space-y-3 pt-1">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 mb-1">Ingredient Name</label>
                   <input type="text" value={newIngredientName} onChange={(e) => setNewIngredientName(e.target.value)} placeholder="E.g., Basmati Rice, Fresh Paneer" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />

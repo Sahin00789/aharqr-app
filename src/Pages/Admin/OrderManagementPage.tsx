@@ -82,7 +82,7 @@ export default function OrderManagementPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
-            <ClipboardList className="w-7 h-7 text-blue-500" />
+            <ClipboardList className="w-7 h-7 text-blue-500 shrink-0" />
             Order Operations Hub
           </h2>
           <p className="text-slate-400 text-xs sm:text-sm">
@@ -191,15 +191,21 @@ export default function OrderManagementPage() {
         })}
       </div>
 
-      {/* TIMELINE MODAL */}
+      {/* TIMELINE MODAL WITH CLEAN CLOSE BUTTON SPACING */}
       <AnimatePresence>
         {selectedTimelineOrder && (
           <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-4">
-              <button onClick={() => setSelectedTimelineOrder(null)} className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+              <button 
+                onClick={() => setSelectedTimelineOrder(null)} 
+                className="absolute top-5 right-5 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white shrink-0 z-10"
+                title="Close"
+              >
                 <X className="w-5 h-5" />
               </button>
-              <h3 className="text-base font-extrabold text-white">Order Timeline Audit ({selectedTimelineOrder.orderNumber})</h3>
+              <div className="pr-12">
+                <h3 className="text-base font-extrabold text-white">Order Timeline Audit ({selectedTimelineOrder.orderNumber})</h3>
+              </div>
               <div className="space-y-3 pt-2">
                 {timelineEvents.map((ev, i) => (
                   <div key={i} className="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex items-center justify-between text-xs">
