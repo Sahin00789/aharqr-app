@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import ChildPageLayout from '../../components/layout/ChildPageLayout';
 import { fetchIngredients, createIngredient, type Ingredient } from '../../api/inventoryApi';
+import { fetchMenuItems, createMenuItem, updateMenuItemStatus, type MenuItem } from '../../api/menuApi';
 
 export default function MenuManagementPage() {
   const location = useLocation();
@@ -25,50 +26,33 @@ export default function MenuManagementPage() {
 
   // Data State
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [newIngredientName, setNewIngredientName] = useState('');
   const [newIngredientType, setNewIngredientType] = useState<'SOLID' | 'LIQUID' | 'COUNT'>('SOLID');
   const [newDefaultUnit, setNewDefaultUnit] = useState('kg');
 
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const loadIngredients = async () => {
-    const res = await fetchIngredients();
-    if (res.success) setIngredients(res.ingredients);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const ingRes = await fetchIngredients();
+      if (ingRes.success) setIngredients(ingRes.ingredients);
+
+      const menuRes = await fetchMenuItems();
+      if (menuRes.success) setMenuItems(menuRes.menuItems);
+    } catch (err) {
+      console.error('Menu load error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadIngredients();
+    loadData();
   }, []);
-
-  const [menuItems] = useState([
-    {
-      id: 'm-1',
-      name: 'Chicken Biryani Special',
-      category: 'Main Course & Biryani',
-      price: 320,
-      prepTime: 20,
-      isVeg: false,
-      imageUrl: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop',
-      recipe: [
-        { ingredientName: 'Basmati Rice', qty: '300 g' },
-        { ingredientName: 'Chicken', qty: '250 g' },
-        { ingredientName: 'Cooking Oil', qty: '30 ml' },
-      ],
-    },
-    {
-      id: 'm-2',
-      name: 'Paneer Butter Masala',
-      category: 'Main Course & Biryani',
-      price: 260,
-      prepTime: 15,
-      isVeg: true,
-      imageUrl: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop',
-      recipe: [
-        { ingredientName: 'Fresh Paneer', qty: '200 g' },
-        { ingredientName: 'Butter & Gravy', qty: '100 g' },
-      ],
-    },
-  ]);
 
   const handleAddIngredient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,8 +61,16 @@ export default function MenuManagementPage() {
     setSuccessMsg(`New ingredient "${newIngredientName}" added to master directory!`);
     setIsAddSubModalOpen(false);
     setNewIngredientName('');
-    loadIngredients();
+    loadData();
   };
+
+  const handleToggleStatus = async (item: MenuItem) => {
+    await updateMenuItemStatus(item.id, !item.isActive);
+    loadData();
+  };
+
+  const safeMenuItems = menuItems || [];
+  const safeIngredients = ingredients || [];
 
   const content = (
     <div className="space-y-6">
@@ -86,7 +78,7 @@ export default function MenuManagementPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
-              <UtensilsCrossed className="w-7 h-7 text-emerald-500" />
+              <UtensilsCrossed className="w-7 h-7 text-emerald-500 shrink-0" />
               Menu & Recipe Master
             </h2>
             <p className="text-slate-400 text-xs sm:text-sm">
@@ -98,7 +90,7 @@ export default function MenuManagementPage() {
               onClick={() => setIsIngredientsModalOpen(true)}
               className="px-3.5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center gap-2 border border-slate-700 active:scale-95 transition-all shadow-md"
             >
-              <Boxes className="w-4 h-4 text-blue-400" /> Ingredients Directory ({ingredients.length})
+              <Boxes className="w-4 h-4 text-blue-400" /> Ingredients Directory ({safeIngredients.length})
             </button>
             <button className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
               <Plus className="w-4 h-4" /> + Add New Dish
@@ -113,7 +105,7 @@ export default function MenuManagementPage() {
             onClick={() => setIsIngredientsModalOpen(true)}
             className="px-3.5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center gap-2 border border-slate-700 active:scale-95 transition-all shadow-md"
           >
-            <Boxes className="w-4 h-4 text-blue-400" /> Ingredients Directory ({ingredients.length})
+            <Boxes className="w-4 h-4 text-blue-400" /> Ingredients Directory ({safeIngredients.length})
           </button>
           <button className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
             <Plus className="w-4 h-4" /> + Add New Dish
@@ -130,10 +122,10 @@ export default function MenuManagementPage() {
 
       {/* DISH CARDS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {menuItems.map((item) => (
+        {safeMenuItems.map((item) => (
           <div key={item.id} className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 space-y-4 hover:border-slate-700 transition-all flex flex-col justify-between shadow-xl">
             <div className="flex gap-4">
-              <img src={item.imageUrl} alt={item.name} className="w-24 h-24 rounded-2xl object-cover border border-slate-800 shrink-0" />
+              <img src={item.imageUrl || 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop'} alt={item.name} className="w-24 h-24 rounded-2xl object-cover border border-slate-800 shrink-0" />
               <div className="min-w-0 space-y-1">
                 <div className="flex items-center gap-2">
                   <span className={`w-3 h-3 rounded-full border-2 ${item.isVeg ? 'bg-emerald-500 border-emerald-400' : 'bg-red-500 border-red-400'}`} />
@@ -145,26 +137,28 @@ export default function MenuManagementPage() {
                     <DollarSign className="w-3.5 h-3.5" /> ₹{item.price}
                   </span>
                   <span className="text-slate-400 flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-blue-400" /> {item.prepTime} mins
+                    <Clock className="w-3.5 h-3.5 text-blue-400" /> {item.prepTimeMinutes} mins
                   </span>
                 </div>
               </div>
             </div>
 
             {/* RECIPE BREAKDOWN */}
-            <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800/80 space-y-2 text-xs">
-              <div className="flex items-center justify-between text-slate-400 font-extrabold text-[11px] uppercase tracking-wider">
-                <span className="flex items-center gap-1"><ChefHat className="w-3.5 h-3.5 text-amber-400" /> Ingredient Recipe:</span>
-                <span className="text-blue-400 font-bold">{item.recipe.length} Ingredients</span>
+            {item.recipe && item.recipe.length > 0 && (
+              <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800/80 space-y-2 text-xs">
+                <div className="flex items-center justify-between text-slate-400 font-extrabold text-[11px] uppercase tracking-wider">
+                  <span className="flex items-center gap-1"><ChefHat className="w-3.5 h-3.5 text-amber-400" /> Ingredient Recipe:</span>
+                  <span className="text-blue-400 font-bold">{item.recipe.length} Ingredients</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {item.recipe.map((r, i) => (
+                    <span key={i} className="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-xl text-[11px] font-medium">
+                      {r.ingredientName}: <strong className="text-emerald-400 font-mono">{r.quantity} {r.unit}</strong>
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {item.recipe.map((r, i) => (
-                  <span key={i} className="bg-slate-900 border border-slate-800 text-slate-200 px-2.5 py-1 rounded-xl text-[11px] font-medium">
-                    {r.ingredientName}: <strong className="text-emerald-400 font-mono">{r.qty}</strong>
-                  </span>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         ))}
       </div>
@@ -199,7 +193,7 @@ export default function MenuManagementPage() {
 
               {/* LIST OF EXISTING INGREDIENTS */}
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2.5 max-h-72 overflow-y-auto divide-y divide-slate-800/60">
-                {ingredients.map((ing) => (
+                {safeIngredients.map((ing) => (
                   <div key={ing.id} className="pt-2.5 first:pt-0 flex items-center justify-between text-xs">
                     <div>
                       <span className="font-extrabold text-white">{ing.name}</span>

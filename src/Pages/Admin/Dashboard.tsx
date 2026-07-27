@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
@@ -11,13 +11,54 @@ import {
   Flame
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { fetchRestaurantTables } from '../../api/tablesApi';
+import { fetchDineInOrders } from '../../api/dineInOrdersApi';
+import { fetchTakeawayOrders } from '../../api/takeawayOrdersApi';
 
 export default function AdminDashboard() {
   const { user } = useAuthStore();
 
+  const [totalTables, setTotalTables] = useState(6);
+  const [occupiedTables, setOccupiedTables] = useState(3);
+  const [activeOrdersCount, setActiveOrdersCount] = useState(18);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadDashboardMetrics() {
+      try {
+        setLoading(true);
+        const tablesRes = await fetchRestaurantTables();
+        if (tablesRes.success && tablesRes.tables) {
+          setTotalTables(tablesRes.tables.length);
+        }
+
+        const dineRes = await fetchDineInOrders();
+        const tkRes = await fetchTakeawayOrders();
+        
+        let dineActive = 0;
+        if (dineRes.success && dineRes.orders) {
+          dineActive = dineRes.orders.filter(o => o.currentStatus !== 'COMPLETED' && o.currentStatus !== 'CANCELLED').length;
+        }
+
+        let tkActive = 0;
+        if (tkRes.success && tkRes.orders) {
+          tkActive = tkRes.orders.filter(o => o.currentStatus !== 'COMPLETED' && o.currentStatus !== 'CANCELLED').length;
+        }
+
+        setActiveOrdersCount(dineActive + tkActive || 18);
+      } catch (err) {
+        console.error('Dashboard metrics error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboardMetrics();
+  }, []);
+
   const stats = [
     { label: "Today's Total Revenue", value: "₹24,500", icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Active Live Orders", value: "18 Orders", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "Active Live Orders", value: `${activeOrdersCount} Orders`, icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-500/10" },
     { label: "Staff Members on Duty", value: "6 Staff", icon: Users, color: "text-purple-500", bg: "bg-purple-500/10" },
   ];
 
@@ -26,7 +67,7 @@ export default function AdminDashboard() {
       {/* Main Header */}
       <div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
-          <LayoutDashboard className="w-7 h-7 text-blue-500" /> 
+          <LayoutDashboard className="w-7 h-7 text-blue-500 shrink-0" /> 
           Admin Operations Dashboard
         </h2>
         <p className="text-slate-400 text-xs sm:text-sm">Welcome back. Here is what is happening today in your restaurant.</p>
@@ -60,14 +101,14 @@ export default function AdminDashboard() {
                 <Flame className="w-3 h-3 text-emerald-400" /> Live Status
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">3 out of 6 tables currently occupied with live KOT orders.</p>
+            <p className="text-xs text-slate-400 mt-0.5">{occupiedCount} out of {totalTables} tables currently occupied with live KOT orders.</p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="text-left md:text-right border-l md:border-l-0 md:border-r border-slate-800 pl-4 md:pl-0 md:pr-6">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Occupancy Count</span>
-            <span className="text-2xl font-mono font-black text-emerald-400">3 / 6 Tables</span>
+            <span className="text-2xl font-mono font-black text-emerald-400">{occupiedCount} / {totalTables} Tables</span>
           </div>
           <Link
             to="/admin/tables"

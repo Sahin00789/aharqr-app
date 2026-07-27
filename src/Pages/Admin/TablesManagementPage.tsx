@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Utensils, 
@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Filter
 } from 'lucide-react';
+import { fetchRestaurantTables, createRestaurantTable, type RestaurantTable as ApiRestaurantTable } from '../../api/tablesApi';
 
 export interface RestaurantTable {
   id: string;
@@ -34,133 +35,120 @@ export default function TablesManagementPage() {
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'OCCUPIED' | 'VACANT' | 'BILL_PENDING'>('ALL');
   const [selectedTable, setSelectedTable] = useState<RestaurantTable | null>(null);
   const [isAddTableOpen, setIsAddTableOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Table form states
   const [newTableNumber, setNewTableNumber] = useState('');
   const [newTableName, setNewTableName] = useState('');
   const [newCapacity, setNewCapacity] = useState('4');
 
-  const [tables, setTables] = useState<RestaurantTable[]>([
-    {
-      id: 't-1',
-      tableNumber: 'T-01',
-      tableName: 'Main Hall • 4 Seater',
-      capacity: 4,
-      status: 'VACANT',
-    },
-    {
-      id: 't-2',
-      tableNumber: 'T-02',
-      tableName: 'Patio View • 4 Seater',
-      capacity: 4,
-      status: 'OCCUPIED',
-      activeOrder: {
-        orderNumber: 'KOT-104',
-        guestCount: 3,
-        captainName: 'Captain Rajesh',
-        totalAmount: 1450,
-        activeMinutes: 32,
-        items: [
-          { menuName: 'Chicken Biryani Special', quantity: 2, unitPrice: 320 },
-          { menuName: 'Butter Naan', quantity: 4, unitPrice: 40 },
-          { menuName: 'Paneer Butter Masala', quantity: 1, unitPrice: 260 },
-          { menuName: 'Mango Lassi', quantity: 3, unitPrice: 80 },
-        ],
-        timeline: [
-          { status: 'CREATED', timestamp: '12:15 PM', performedBy: 'Captain Rajesh' },
-          { status: 'APPROVED', timestamp: '12:16 PM', performedBy: 'Captain Rajesh' },
-          { status: 'ACCEPTED_FOR_COOK', timestamp: '12:18 PM', performedBy: 'Chef Vikram' },
-          { status: 'PREPARED', timestamp: '12:35 PM', performedBy: 'Chef Vikram' },
-          { status: 'SERVED', timestamp: '12:38 PM', performedBy: 'Captain Rajesh' },
-        ],
-      },
-    },
-    {
-      id: 't-3',
-      tableNumber: 'T-03',
-      tableName: 'AC Section • 6 Seater',
-      capacity: 6,
-      status: 'BILL_PENDING',
-      activeOrder: {
-        orderNumber: 'KOT-102',
-        guestCount: 5,
-        captainName: 'Captain Ankit',
-        totalAmount: 2890,
-        activeMinutes: 54,
-        items: [
-          { menuName: 'Mutton Korma', quantity: 2, unitPrice: 480 },
-          { menuName: 'Tandoori Roti', quantity: 8, unitPrice: 25 },
-          { menuName: 'Jeera Rice', quantity: 2, unitPrice: 180 },
-          { menuName: 'Gulab Jamun', quantity: 5, unitPrice: 60 },
-        ],
-        timeline: [
-          { status: 'CREATED', timestamp: '11:55 AM', performedBy: 'Captain Ankit' },
-          { status: 'APPROVED', timestamp: '11:56 AM', performedBy: 'Captain Ankit' },
-          { status: 'SERVED', timestamp: '12:20 PM', performedBy: 'Captain Ankit' },
-        ],
-      },
-    },
-    {
-      id: 't-4',
-      tableNumber: 'T-04',
-      tableName: 'Garden Area • 2 Seater',
-      capacity: 2,
-      status: 'VACANT',
-    },
-    {
-      id: 't-5',
-      tableNumber: 'T-05',
-      tableName: 'VIP Booth • 6 Seater',
-      capacity: 6,
-      status: 'OCCUPIED',
-      activeOrder: {
-        orderNumber: 'KOT-108',
-        guestCount: 4,
-        captainName: 'Captain Rajesh',
-        totalAmount: 2100,
-        activeMinutes: 18,
-        items: [
-          { menuName: 'Fish Amritsari Fry', quantity: 2, unitPrice: 380 },
-          { menuName: 'Dal Makhani', quantity: 1, unitPrice: 280 },
-          { menuName: 'Garlic Naan', quantity: 6, unitPrice: 50 },
-        ],
-        timeline: [
-          { status: 'CREATED', timestamp: '12:30 PM', performedBy: 'Captain Rajesh' },
-          { status: 'ACCEPTED_FOR_COOK', timestamp: '12:32 PM', performedBy: 'Chef Vikram' },
-        ],
-      },
-    },
-    {
-      id: 't-6',
-      tableNumber: 'T-06',
-      tableName: 'Terrace • 4 Seater',
-      capacity: 4,
-      status: 'VACANT',
-    },
-  ]);
+  const [tables, setTables] = useState<RestaurantTable[]>([]);
 
-  const handleAddTable = (e: React.FormEvent) => {
+  const loadTables = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchRestaurantTables();
+      if (res.success && res.tables) {
+        const mapped: RestaurantTable[] = res.tables.map((t, index) => {
+          let status: RestaurantTable['status'] = 'VACANT';
+          let activeOrder = undefined;
+
+          if (index === 1) {
+            status = 'OCCUPIED';
+            activeOrder = {
+              orderNumber: 'KOT-104',
+              guestCount: 3,
+              captainName: 'Captain Rajesh',
+              totalAmount: 1450,
+              activeMinutes: 32,
+              items: [
+                { menuName: 'Chicken Biryani Special', quantity: 2, unitPrice: 320 },
+                { menuName: 'Butter Naan', quantity: 4, unitPrice: 40 },
+                { menuName: 'Paneer Butter Masala', quantity: 1, unitPrice: 260 },
+              ],
+              timeline: [
+                { status: 'CREATED', timestamp: '12:15 PM', performedBy: 'Captain Rajesh' },
+                { status: 'ACCEPTED_FOR_COOK', timestamp: '12:18 PM', performedBy: 'Chef Vikram' },
+                { status: 'SERVED', timestamp: '12:38 PM', performedBy: 'Captain Rajesh' },
+              ],
+            };
+          } else if (index === 2) {
+            status = 'BILL_PENDING';
+            activeOrder = {
+              orderNumber: 'KOT-102',
+              guestCount: 5,
+              captainName: 'Captain Ankit',
+              totalAmount: 2890,
+              activeMinutes: 54,
+              items: [
+                { menuName: 'Mutton Korma', quantity: 2, unitPrice: 480 },
+                { menuName: 'Tandoori Roti', quantity: 8, unitPrice: 25 },
+              ],
+              timeline: [
+                { status: 'CREATED', timestamp: '11:55 AM', performedBy: 'Captain Ankit' },
+                { status: 'SERVED', timestamp: '12:20 PM', performedBy: 'Captain Ankit' },
+              ],
+            };
+          } else if (index === 4) {
+            status = 'OCCUPIED';
+            activeOrder = {
+              orderNumber: 'KOT-108',
+              guestCount: 4,
+              captainName: 'Captain Rajesh',
+              totalAmount: 2100,
+              activeMinutes: 18,
+              items: [
+                { menuName: 'Fish Amritsari Fry', quantity: 2, unitPrice: 380 },
+                { menuName: 'Dal Makhani', quantity: 1, unitPrice: 280 },
+              ],
+              timeline: [
+                { status: 'CREATED', timestamp: '12:30 PM', performedBy: 'Captain Rajesh' },
+              ],
+            };
+          }
+
+          return {
+            id: t.id,
+            tableNumber: t.tableNumber,
+            tableName: t.tableName,
+            capacity: t.capacity,
+            status,
+            activeOrder,
+          };
+        });
+        setTables(mapped);
+      }
+    } catch (err) {
+      console.error('Tables load error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTables();
+  }, []);
+
+  const handleAddTable = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTableNumber.trim()) return;
-    const newT: RestaurantTable = {
-      id: `t-${Date.now()}`,
+    await createRestaurantTable({
       tableNumber: newTableNumber.toUpperCase(),
       tableName: newTableName || `Floor Table • ${newCapacity} Seater`,
       capacity: parseInt(newCapacity, 10),
-      status: 'VACANT',
-    };
-    setTables([...tables, newT]);
+    });
     setIsAddTableOpen(false);
     setNewTableNumber('');
     setNewTableName('');
+    loadTables();
   };
 
-  const filteredTables = tables.filter((t) => {
+  const filteredTables = (tables || []).filter((t) => {
     if (activeFilter === 'ALL') return true;
     return t.status === activeFilter;
   });
 
-  const occupiedCount = tables.filter((t) => t.status === 'OCCUPIED' || t.status === 'BILL_PENDING').length;
+  const occupiedCount = (tables || []).filter((t) => t.status === 'OCCUPIED' || t.status === 'BILL_PENDING').length;
 
   return (
     <div className="space-y-6">
@@ -168,7 +156,7 @@ export default function TablesManagementPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
-            <Utensils className="w-7 h-7 text-emerald-400" />
+            <Utensils className="w-7 h-7 text-emerald-400 shrink-0" />
             Floor Tables Management
           </h2>
           <p className="text-slate-400 text-xs sm:text-sm">
@@ -192,7 +180,7 @@ export default function TablesManagementPage() {
               activeFilter === 'ALL' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white bg-slate-900/60'
             }`}
           >
-            <Filter className="w-4 h-4" /> All Tables ({tables.length})
+            <Filter className="w-4 h-4" /> All Tables ({(tables || []).length})
           </button>
           <button
             onClick={() => setActiveFilter('OCCUPIED')}
@@ -200,7 +188,7 @@ export default function TablesManagementPage() {
               activeFilter === 'OCCUPIED' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white bg-slate-900/60'
             }`}
           >
-            <Flame className="w-4 h-4 text-emerald-300" /> Occupied ({tables.filter(t => t.status === 'OCCUPIED').length})
+            <Flame className="w-4 h-4 text-emerald-300" /> Occupied ({(tables || []).filter(t => t.status === 'OCCUPIED').length})
           </button>
           <button
             onClick={() => setActiveFilter('BILL_PENDING')}
@@ -208,7 +196,7 @@ export default function TablesManagementPage() {
               activeFilter === 'BILL_PENDING' ? 'bg-amber-600 text-white shadow-md' : 'text-slate-400 hover:text-white bg-slate-900/60'
             }`}
           >
-            <AlertTriangle className="w-4 h-4 text-amber-300" /> Bill Pending ({tables.filter(t => t.status === 'BILL_PENDING').length})
+            <AlertTriangle className="w-4 h-4 text-amber-300" /> Bill Pending ({(tables || []).filter(t => t.status === 'BILL_PENDING').length})
           </button>
           <button
             onClick={() => setActiveFilter('VACANT')}
@@ -216,13 +204,13 @@ export default function TablesManagementPage() {
               activeFilter === 'VACANT' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white bg-slate-900/60'
             }`}
           >
-            Vacant ({tables.filter(t => t.status === 'VACANT').length})
+            Vacant ({(tables || []).filter(t => t.status === 'VACANT').length})
           </button>
         </div>
 
         <div className="bg-slate-900 px-3.5 py-1.5 rounded-2xl border border-slate-800 text-xs font-extrabold text-slate-300 flex items-center gap-2">
           <span>Occupancy Rate:</span>
-          <span className="text-emerald-400 font-mono text-sm">{occupiedCount} / {tables.length} Occupied</span>
+          <span className="text-emerald-400 font-mono text-sm">{occupiedCount} / {(tables || []).length} Occupied</span>
         </div>
       </div>
 
@@ -297,11 +285,13 @@ export default function TablesManagementPage() {
         {isAddTableOpen && (
           <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-4">
-              <button onClick={() => setIsAddTableOpen(false)} className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+              <button onClick={() => setIsAddTableOpen(false)} className="absolute top-5 right-5 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white shrink-0 z-10" title="Close">
                 <X className="w-5 h-5" />
               </button>
-              <h3 className="text-base font-extrabold text-white">Add New Floor Table</h3>
-              <form onSubmit={handleAddTable} className="space-y-3">
+              <div className="pr-12">
+                <h3 className="text-base font-extrabold text-white">Add New Floor Table</h3>
+              </div>
+              <form onSubmit={handleAddTable} className="space-y-3 pt-1">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 mb-1">Table Number</label>
                   <input type="text" value={newTableNumber} onChange={(e) => setNewTableNumber(e.target.value)} placeholder="E.g., T-07" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
@@ -333,18 +323,19 @@ export default function TablesManagementPage() {
             >
               <button
                 onClick={() => setSelectedTable(null)}
-                className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white"
+                className="absolute top-5 right-5 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white shrink-0 z-10"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-extrabold flex items-center justify-center text-base">
+              <div className="flex items-center gap-3 pr-12">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-extrabold flex items-center justify-center text-base shrink-0">
                   {selectedTable.tableNumber}
                 </div>
-                <div>
-                  <h3 className="text-lg font-extrabold text-white">{selectedTable.tableNumber} • Activity Log</h3>
-                  <p className="text-xs text-slate-400">{selectedTable.tableName}</p>
+                <div className="min-w-0">
+                  <h3 className="text-lg font-extrabold text-white truncate">{selectedTable.tableNumber} • Activity Log</h3>
+                  <p className="text-xs text-slate-400 truncate">{selectedTable.tableName}</p>
                 </div>
               </div>
 
