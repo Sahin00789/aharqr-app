@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -9,21 +9,37 @@ import {
   DollarSign,
   Boxes,
   X,
-  CheckCircle2
+  CheckCircle2,
+  ListFilter,
+  PackageCheck
 } from 'lucide-react';
 import ChildPageLayout from '../../components/layout/ChildPageLayout';
-import { createIngredient } from '../../api/inventoryApi';
+import { fetchIngredients, createIngredient, type Ingredient } from '../../api/inventoryApi';
 
 export default function MenuManagementPage() {
   const location = useLocation();
   const isStandalone = location.pathname.includes('menu-management');
 
-  const [isAddIngredientOpen, setIsAddIngredientOpen] = useState(false);
+  // Modals
+  const [isIngredientsModalOpen, setIsIngredientsModalOpen] = useState(false);
+  const [isAddSubModalOpen, setIsAddSubModalOpen] = useState(false);
+
+  // Data State
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [newIngredientName, setNewIngredientName] = useState('');
   const [newIngredientType, setNewIngredientType] = useState<'SOLID' | 'LIQUID' | 'COUNT'>('SOLID');
   const [newDefaultUnit, setNewDefaultUnit] = useState('kg');
 
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const loadIngredients = async () => {
+    const res = await fetchIngredients();
+    if (res.success) setIngredients(res.ingredients);
+  };
+
+  useEffect(() => {
+    loadIngredients();
+  }, []);
 
   const [categories] = useState([
     { id: 'cat-1', name: 'Main Course & Biryani' },
@@ -65,9 +81,10 @@ export default function MenuManagementPage() {
     e.preventDefault();
     if (!newIngredientName.trim()) return;
     await createIngredient({ name: newIngredientName, ingredientType: newIngredientType, defaultUnit: newDefaultUnit });
-    setSuccessMsg(`New ingredient master "${newIngredientName}" created!`);
-    setIsAddIngredientOpen(false);
+    setSuccessMsg(`New ingredient "${newIngredientName}" added to master directory!`);
+    setIsAddSubModalOpen(false);
     setNewIngredientName('');
+    loadIngredients();
   };
 
   const content = (
@@ -85,10 +102,10 @@ export default function MenuManagementPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setIsAddIngredientOpen(true)}
-              className="px-3.5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center gap-2 border border-slate-700 active:scale-95 transition-all"
+              onClick={() => setIsIngredientsModalOpen(true)}
+              className="px-3.5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center gap-2 border border-slate-700 active:scale-95 transition-all shadow-md"
             >
-              <Boxes className="w-4 h-4 text-blue-400" /> + Add Ingredient Master
+              <Boxes className="w-4 h-4 text-blue-400" /> View Ingredients Directory ({ingredients.length})
             </button>
             <button className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
               <Plus className="w-4 h-4" /> + Add New Dish
@@ -100,10 +117,10 @@ export default function MenuManagementPage() {
       {isStandalone && (
         <div className="flex justify-end gap-2">
           <button
-            onClick={() => setIsAddIngredientOpen(true)}
-            className="px-3.5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center gap-2 border border-slate-700 active:scale-95 transition-all"
+            onClick={() => setIsIngredientsModalOpen(true)}
+            className="px-3.5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center gap-2 border border-slate-700 active:scale-95 transition-all shadow-md"
           >
-            <Boxes className="w-4 h-4 text-blue-400" /> + Add Ingredient Master
+            <Boxes className="w-4 h-4 text-blue-400" /> View Ingredients Directory ({ingredients.length})
           </button>
           <button className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
             <Plus className="w-4 h-4" /> + Add New Dish
@@ -159,19 +176,68 @@ export default function MenuManagementPage() {
         ))}
       </div>
 
-      {/* MODAL: ADD INGREDIENT MASTER */}
+      {/* MODAL 1: EXISTING INGREDIENTS DIRECTORY MODAL */}
       <AnimatePresence>
-        {isAddIngredientOpen && (
+        {isIngredientsModalOpen && (
           <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-4">
-              <button onClick={() => setIsAddIngredientOpen(false)} className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-5">
+              <button onClick={() => setIsIngredientsModalOpen(false)} className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
-              <h3 className="text-base font-extrabold text-white">Create Ingredient Master</h3>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-extrabold text-white flex items-center gap-2">
+                    <Boxes className="w-5 h-5 text-blue-400" /> Master Ingredients Directory
+                  </h3>
+                  <p className="text-xs text-slate-400">View configured raw ingredients available for recipe breakdowns.</p>
+                </div>
+              </div>
+
+              {/* ACTION: OPEN ADD SUB-MODAL */}
+              <button
+                onClick={() => setIsAddSubModalOpen(true)}
+                className="w-full py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+              >
+                <Plus className="w-4 h-4" /> + Add New Raw Ingredient
+              </button>
+
+              {/* LIST OF EXISTING INGREDIENTS */}
+              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2.5 max-h-72 overflow-y-auto divide-y divide-slate-800/60">
+                {ingredients.map((ing) => (
+                  <div key={ing.id} className="pt-2.5 first:pt-0 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-extrabold text-white">{ing.name}</span>
+                      <span className="text-[10px] text-slate-400 block">Type: {ing.ingredientType}</span>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 font-mono text-emerald-400 font-bold">
+                      {ing.defaultUnit}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* SUB-MODAL 2: ADD NEW INGREDIENT FORM */}
+      <AnimatePresence>
+        {isAddSubModalOpen && (
+          <div className="fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-4">
+              <button onClick={() => setIsAddSubModalOpen(false)} className="absolute top-4 right-4 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                <PackageCheck className="w-5 h-5 text-emerald-400" /> Create Raw Ingredient
+              </h3>
+
               <form onSubmit={handleAddIngredient} className="space-y-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 mb-1">Ingredient Name</label>
-                  <input type="text" value={newIngredientName} onChange={(e) => setNewIngredientName(e.target.value)} placeholder="E.g., Basmati Rice, Paneer" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
+                  <input type="text" value={newIngredientName} onChange={(e) => setNewIngredientName(e.target.value)} placeholder="E.g., Basmati Rice, Fresh Paneer" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 mb-1">Type</label>
@@ -185,7 +251,7 @@ export default function MenuManagementPage() {
                   <label className="block text-xs font-semibold text-slate-400 mb-1">Default Unit</label>
                   <input type="text" value={newDefaultUnit} onChange={(e) => setNewDefaultUnit(e.target.value)} placeholder="kg, litre, piece" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
                 </div>
-                <button type="submit" className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold">Save Ingredient Master</button>
+                <button type="submit" className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold">Save Raw Ingredient</button>
               </form>
             </motion.div>
           </div>
