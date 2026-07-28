@@ -84,13 +84,6 @@ export default function HolidaysPage({ isOpen = true, onClose }: HolidaysProps) 
           <span className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider bg-slate-800/80 px-3 py-1 rounded-xl border border-slate-700/60">
             Holidays & Leave Calendar
           </span>
-          <button
-            onClick={() => setIsAddHolidayModalOpen(true)}
-            className="px-3.5 py-2 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Holiday</span>
-          </button>
         </div>
       </header>
 

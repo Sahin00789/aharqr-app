@@ -41,6 +41,7 @@ import CustomerDashboardLayout, {
   CustomerOrderStatusTab,
   CustomerMenuList
 } from "./views/Customer/CustomerDashboardLayout";
+import SessionRoute from "./views/Customer/SessionRoute";
 
 // Global & Auth Views
 import Home from "./views/Home";
@@ -117,13 +118,14 @@ export default function App() {
           </Route>
         </Route>
 
-        {/* 4. CUSTOMER ROUTES */}
-        <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
-          <Route element={<CustomerDashboardLayout />}>
-            <Route path="/menu/:tableId" element={<CustomerMenu />} />
-            <Route path="/checkout" element={<CustomerCartTab />} />
-            <Route path="/order-status" element={<CustomerOrderStatusTab />} />
-          </Route>
+        {/* 4. CUSTOMER QR & MENU ROUTES */}
+        <Route path="/s/:token" element={<SessionRoute />} />
+
+        <Route element={<CustomerDashboardLayout />}>
+          <Route path="/menu" element={<CustomerMenu />} />
+          <Route path="/menu/:tableId" element={<CustomerMenu />} />
+          <Route path="/checkout" element={<CustomerCartTab />} />
+          <Route path="/order-status" element={<CustomerOrderStatusTab />} />
         </Route>
 
         {/* Error Fallback Routes */}

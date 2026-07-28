@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import ChefMenuList from './menu/ChefMenuList';
+import DashboardTopbar from '../../components/common/DashboardTopbar';
 
 // Re-export Chef Tabs & Menu List for clean App.tsx imports
 export { default as KitchenDisplay } from './tabs/KitchenDisplayTab';
@@ -44,9 +45,8 @@ export default function ChefDashboardLayout() {
 
   const navItems = [
     { id: 'kds', label: 'KDS Board', icon: Flame, to: '/chef/kds', badge: 4 },
-    { id: 'preparing', label: 'Cooking Orders', icon: Clock, to: '/chef/preparing' },
-    { id: 'history', label: 'Completed History', icon: History, to: '/chef/history' },
-    { id: 'profile', label: 'Kitchen Roster', icon: ChefHat, action: () => setIsMenuListOpen(true) },
+    { id: 'preparing', label: 'Cooking', icon: Clock, to: '/chef/preparing' },
+    { id: 'history', label: 'History & Menu', icon: History, to: '/chef/history' },
   ];
 
   return (
@@ -119,55 +119,18 @@ export default function ChefDashboardLayout() {
       {/* MAIN LAYOUT WRAPPER */}
       <div className="flex-1 flex flex-col lg:pl-20 min-w-0">
         
-        {/* SMALL SCREEN TOP HEADER (MOBILE / TABLET) */}
-        <header className="lg:hidden sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/80 px-4 py-3 shadow-xl">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/20 shrink-0">
-                <ChefHat className="w-5 h-5" />
-              </div>
-
-              {!user || !isInitialized ? (
-                <div className="space-y-1.5 min-w-[140px]">
-                  <div className="h-4 w-32 bg-slate-800 rounded-lg animate-pulse" />
-                  <div className="h-3 w-40 bg-slate-800/60 rounded-lg animate-pulse" />
-                </div>
-              ) : (
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-sm font-extrabold text-white truncate">
-                      {user.restaurantName || user.name}
-                    </h1>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                      CHEF KDS
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-amber-400 font-mono font-bold flex items-center gap-1 mt-0.5">
-                    <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
-                    <span>Shift Timer: {formatTimer(elapsedSeconds)}</span>
-                  </p>
-                </div>
-              )}
+        {/* MODERN BORDERLESS TRANSPARENT TOPBAR WITH UP/DOWN SCROLL EFFECT */}
+        <DashboardTopbar 
+          icon={ChefHat}
+          iconBgClass="from-amber-500 to-orange-600 shadow-amber-500/20"
+          onProfileClick={() => setIsMenuListOpen(true)}
+          extraRightElement={
+            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono font-extrabold text-xs">
+              <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>Shift: {formatTimer(elapsedSeconds)}</span>
             </div>
-
-            {!user || !isInitialized ? (
-              <div className="w-10 h-10 rounded-2xl bg-slate-800 animate-pulse shrink-0" />
-            ) : (
-              <button
-                onClick={() => setIsMenuListOpen(true)}
-                className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 transition-all active:scale-95 shrink-0"
-              >
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 font-extrabold text-white text-xs flex items-center justify-center border border-amber-400/40">
-                  {user.name ? user.name.slice(0, 2).toUpperCase() : 'CF'}
-                </div>
-                <div className="hidden sm:block text-left">
-                  <p className="text-xs font-extrabold text-white leading-tight">{user.name}</p>
-                  <p className="text-[10px] text-slate-400 leading-tight">Kitchen Hub</p>
-                </div>
-              </button>
-            )}
-          </div>
-        </header>
+          }
+        />
 
         {/* MAIN CONTENT OUTLET */}
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 pb-28 lg:pb-8">

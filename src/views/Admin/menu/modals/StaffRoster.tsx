@@ -101,6 +101,17 @@ export default function StaffRosterPage({ isOpen = true, onClose }: StaffRosterP
     return matchesRole && matchesSearch;
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -109,10 +120,10 @@ export default function StaffRosterPage({ isOpen = true, onClose }: StaffRosterP
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-      className="fixed inset-0 z-50 bg-slate-950 text-slate-200 font-sans flex flex-col overflow-y-auto selection:bg-blue-500/30"
+      className="fixed inset-0 z-50 bg-slate-950 text-slate-200 font-sans flex flex-col overflow-hidden h-screen h-[100dvh] touch-none selection:bg-blue-500/30"
     >
-      {/* TOP HEADER WITH SINGLE BACK BUTTON */}
-      <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/90 px-4 py-3.5 flex items-center justify-between shadow-2xl">
+      {/* TOP HEADER WITH SINGLE BACK BUTTON (FIXED) */}
+      <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/90 px-4 py-3.5 flex items-center justify-between shadow-2xl shrink-0">
         <div className="flex items-center gap-2">
           <button
             onClick={onClose || (() => navigate(-1))}
@@ -127,18 +138,11 @@ export default function StaffRosterPage({ isOpen = true, onClose }: StaffRosterP
           <span className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider bg-slate-800/80 px-3 py-1 rounded-xl border border-slate-700/60">
             Staff Member Roster
           </span>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="px-3.5 py-2 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Add Staff</span>
-          </button>
         </div>
       </header>
 
-      {/* MAIN CONTAINER */}
-      <main className="flex-1 p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-6">
+      {/* MAIN CONTAINER (SCROLLABLE ONLY) */}
+      <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 pb-24 sm:pb-28 max-w-6xl mx-auto w-full space-y-6 no-scrollbar">
 
         {/* PAGE TITLE BAR */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

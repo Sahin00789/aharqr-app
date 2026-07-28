@@ -162,13 +162,6 @@ export default function WorkingShiftsPage({ isOpen = true, onClose }: WorkingShi
           <span className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider bg-slate-800/80 px-3 py-1 rounded-xl border border-slate-700/60">
             Working Days & Shifts
           </span>
-          <button
-            onClick={openAddShiftModal}
-            className="px-3.5 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>New Shift</span>
-          </button>
         </div>
       </header>
 
@@ -202,6 +195,14 @@ export default function WorkingShiftsPage({ isOpen = true, onClose }: WorkingShi
               <Clock className="w-3.5 h-3.5" />
               <span>{totalShiftsCount} Total Shifts</span>
             </span>
+
+            <button
+              onClick={openAddShiftModal}
+              className="px-3.5 py-1.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>New Shift</span>
+            </button>
           </div>
         </div>
 

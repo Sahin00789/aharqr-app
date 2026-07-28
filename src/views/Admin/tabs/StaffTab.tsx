@@ -88,17 +88,17 @@ export default function ManageStaff() {
       
       {/* PAGE HEADER */}
       <div className="bg-slate-900/60 border border-slate-800/80 p-4 sm:p-6 rounded-3xl backdrop-blur-xl shadow-xl">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <h2 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2.5">
-            <Users className="w-6 h-6 text-blue-500" />
-            Staff Activity & Operations
+        <div className="flex items-center justify-between gap-2 mb-1 min-w-0">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2.5 whitespace-nowrap truncate min-w-0">
+            <Users className="w-6 h-6 text-blue-500 shrink-0" />
+            <span className="truncate">Staff Roster</span>
           </h2>
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1">
-            <Sparkles className="w-3 h-3" /> Realtime Ops
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1 shrink-0 whitespace-nowrap">
+            <Sparkles className="w-3 h-3" /> Live Ops
           </span>
         </div>
-        <p className="text-slate-400 text-xs sm:text-sm">
-          Live attendance QR scanning, order handled stats, and overtime authorizations.
+        <p className="text-slate-400 text-xs sm:text-sm whitespace-nowrap truncate">
+          Live attendance scanning & duty roster.
         </p>
       </div>
 
@@ -114,54 +114,46 @@ export default function ManageStaff() {
         )}
       </AnimatePresence>
 
-      {/* SECTION 1: PERFORMANCE STATS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/70 border border-slate-800/80 p-4 sm:p-5 rounded-3xl space-y-2 shadow-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-semibold">Orders Handled</span>
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
+      {/* SECTION 1: PERFORMANCE MINI CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="bg-slate-900/80 border border-slate-800/80 p-3 sm:p-3.5 rounded-2xl flex flex-col justify-between shadow-md hover:border-slate-700 transition-all space-y-2">
+          <p className="text-[10px] sm:text-xs font-extrabold uppercase text-slate-400 tracking-wider">Orders Handled</p>
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0">
               <TrendingUp className="w-4 h-4" />
             </div>
+            <span className="text-base sm:text-lg font-black text-white">{totalOrdersHandled}</span>
           </div>
-          <p className="text-2xl font-black text-white">{totalOrdersHandled}</p>
-          <p className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
-            <Flame className="w-3 h-3" /> Live Daily Total
-          </p>
         </div>
 
-        <div className="bg-slate-900/70 border border-slate-800/80 p-4 sm:p-5 rounded-3xl space-y-2 shadow-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-semibold">Checked In Staff</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
+        <div className="bg-slate-900/80 border border-slate-800/80 p-3 sm:p-3.5 rounded-2xl flex flex-col justify-between shadow-md hover:border-slate-700 transition-all space-y-2">
+          <p className="text-[10px] sm:text-xs font-extrabold uppercase text-slate-400 tracking-wider">Checked In Staff</p>
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
               <UserCheck className="w-4 h-4" />
             </div>
+            <span className="text-base sm:text-lg font-black text-white">{activeCheckedInCount} / {staffActivities.length}</span>
           </div>
-          <p className="text-2xl font-black text-white">{activeCheckedInCount} / {staffActivities.length}</p>
-          <p className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Active On Floor
-          </p>
         </div>
 
-        <div className="bg-slate-900/70 border border-slate-800/80 p-4 sm:p-5 rounded-3xl space-y-2 shadow-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-semibold">Overtime Hours</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
+        <div className="bg-slate-900/80 border border-slate-800/80 p-3 sm:p-3.5 rounded-2xl flex flex-col justify-between shadow-md hover:border-slate-700 transition-all space-y-2">
+          <p className="text-[10px] sm:text-xs font-extrabold uppercase text-slate-400 tracking-wider">Overtime Hours</p>
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
               <Clock className="w-4 h-4" />
             </div>
+            <span className="text-base sm:text-lg font-black text-white">{totalOvertimeHours} hrs</span>
           </div>
-          <p className="text-2xl font-black text-white">{totalOvertimeHours} hrs</p>
-          <p className="text-[11px] text-amber-400 font-bold">Authorized Overtime</p>
         </div>
 
-        <div className="bg-slate-900/70 border border-slate-800/80 p-4 sm:p-5 rounded-3xl space-y-2 shadow-xl">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-semibold">Avg Fulfillment</span>
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
+        <div className="bg-slate-900/80 border border-slate-800/80 p-3 sm:p-3.5 rounded-2xl flex flex-col justify-between shadow-md hover:border-slate-700 transition-all space-y-2">
+          <p className="text-[10px] sm:text-xs font-extrabold uppercase text-slate-400 tracking-wider">Avg Fulfillment</p>
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shrink-0">
               <Award className="w-4 h-4" />
             </div>
+            <span className="text-base sm:text-lg font-black text-white">{totalOrdersHandled > 0 ? '11.4 mins' : '0.0 mins'}</span>
           </div>
-          <p className="text-2xl font-black text-white">{totalOrdersHandled > 0 ? '11.4 mins' : '0.0 mins'}</p>
-          <p className="text-[11px] text-purple-400 font-bold">High Speed Service</p>
         </div>
       </div>
 

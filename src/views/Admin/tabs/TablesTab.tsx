@@ -10,16 +10,27 @@ import {
   X, 
   History, 
   CheckCircle2,
-  Filter
+  Filter,
+  QrCode,
+  Download,
+  RefreshCw,
+  Users,
+  Search,
+  Check
 } from 'lucide-react';
-import { fetchRestaurantTables, createRestaurantTable, type RestaurantTable as ApiRestaurantTable } from '../../../api/tablesApi';
+import { 
+  fetchRestaurantTables, 
+  createRestaurantTable, 
+  regenerateTableQr, 
+  type RestaurantTable as ApiRestaurantTable 
+} from '../../../api/tablesApi';
+import DownloadQrModal from './modals/DownloadQrModal';
 
-export interface RestaurantTable {
-  id: string;
-  tableNumber: string;
-  tableName: string;
-  capacity: number;
-  status: 'VACANT' | 'OCCUPIED' | 'BILL_PENDING' | 'RESERVED';
+export interface ExtendedRestaurantTable extends ApiRestaurantTable {
+  status?: 'VACANT' | 'OCCUPIED' | 'BILL_PENDING' | 'RESERVED';
+  description?: string;
+  generatedAt?: string;
+  currentQrId?: string;
   activeOrder?: {
     orderNumber: string;
     guestCount: number;
@@ -33,89 +44,31 @@ export interface RestaurantTable {
 
 export default function TablesManagementPage() {
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'OCCUPIED' | 'VACANT' | 'BILL_PENDING'>('ALL');
-  const [selectedTable, setSelectedTable] = useState<RestaurantTable | null>(null);
+  const [selectedTable, setSelectedTable] = useState<ExtendedRestaurantTable | null>(null);
   const [isAddTableOpen, setIsAddTableOpen] = useState(false);
+  const [isDownloadQrOpen, setIsDownloadQrOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Table form states
+  // Add Table form states
   const [newTableNumber, setNewTableNumber] = useState('');
   const [newTableName, setNewTableName] = useState('');
   const [newCapacity, setNewCapacity] = useState('4');
+  const [addingTable, setAddingTable] = useState(false);
 
-  const [tables, setTables] = useState<RestaurantTable[]>([]);
+  const [tables, setTables] = useState<ExtendedRestaurantTable[]>([]);
 
   const loadTables = async () => {
     try {
       setLoading(true);
       const res = await fetchRestaurantTables();
-      if (res.success && res.tables) {
-        const mapped: RestaurantTable[] = res.tables.map((t, index) => {
-          let status: RestaurantTable['status'] = 'VACANT';
-          let activeOrder = undefined;
-
-          if (index === 1) {
-            status = 'OCCUPIED';
-            activeOrder = {
-              orderNumber: 'KOT-104',
-              guestCount: 3,
-              captainName: 'Captain Rajesh',
-              totalAmount: 1450,
-              activeMinutes: 32,
-              items: [
-                { menuName: 'Chicken Biryani Special', quantity: 2, unitPrice: 320 },
-                { menuName: 'Butter Naan', quantity: 4, unitPrice: 40 },
-                { menuName: 'Paneer Butter Masala', quantity: 1, unitPrice: 260 },
-              ],
-              timeline: [
-                { status: 'CREATED', timestamp: '12:15 PM', performedBy: 'Captain Rajesh' },
-                { status: 'ACCEPTED_FOR_COOK', timestamp: '12:18 PM', performedBy: 'Chef Vikram' },
-                { status: 'SERVED', timestamp: '12:38 PM', performedBy: 'Captain Rajesh' },
-              ],
-            };
-          } else if (index === 2) {
-            status = 'BILL_PENDING';
-            activeOrder = {
-              orderNumber: 'KOT-102',
-              guestCount: 5,
-              captainName: 'Captain Ankit',
-              totalAmount: 2890,
-              activeMinutes: 54,
-              items: [
-                { menuName: 'Mutton Korma', quantity: 2, unitPrice: 480 },
-                { menuName: 'Tandoori Roti', quantity: 8, unitPrice: 25 },
-              ],
-              timeline: [
-                { status: 'CREATED', timestamp: '11:55 AM', performedBy: 'Captain Ankit' },
-                { status: 'SERVED', timestamp: '12:20 PM', performedBy: 'Captain Ankit' },
-              ],
-            };
-          } else if (index === 4) {
-            status = 'OCCUPIED';
-            activeOrder = {
-              orderNumber: 'KOT-108',
-              guestCount: 4,
-              captainName: 'Captain Rajesh',
-              totalAmount: 2100,
-              activeMinutes: 18,
-              items: [
-                { menuName: 'Fish Amritsari Fry', quantity: 2, unitPrice: 380 },
-                { menuName: 'Dal Makhani', quantity: 1, unitPrice: 280 },
-              ],
-              timeline: [
-                { status: 'CREATED', timestamp: '12:30 PM', performedBy: 'Captain Rajesh' },
-              ],
-            };
-          }
-
-          return {
-            id: t.id,
-            tableNumber: t.tableNumber,
-            tableName: t.tableName,
-            capacity: t.capacity,
-            status,
-            activeOrder,
-          };
-        });
+      if (res.success && Array.isArray(res.tables)) {
+        const mapped: ExtendedRestaurantTable[] = res.tables.map((t) => ({
+          ...t,
+          status: (t as any).status || 'VACANT',
+          activeOrder: (t as any).activeOrder || undefined,
+        }));
         setTables(mapped);
       }
     } catch (err) {
@@ -132,20 +85,47 @@ export default function TablesManagementPage() {
   const handleAddTable = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTableNumber.trim()) return;
-    await createRestaurantTable({
-      tableNumber: newTableNumber.toUpperCase(),
-      tableName: newTableName || `Floor Table • ${newCapacity} Seater`,
-      capacity: parseInt(newCapacity, 10),
-    });
-    setIsAddTableOpen(false);
-    setNewTableNumber('');
-    setNewTableName('');
-    loadTables();
+    setAddingTable(true);
+    try {
+      await createRestaurantTable({
+        tableNumber: newTableNumber.toUpperCase(),
+        tableName: newTableName || `Floor Table • ${newCapacity} Seater`,
+        capacity: parseInt(newCapacity, 10),
+      });
+      setIsAddTableOpen(false);
+      setNewTableNumber('');
+      setNewTableName('');
+      loadTables();
+    } catch (err) {
+      console.error('Add table error:', err);
+    } finally {
+      setAddingTable(false);
+    }
+  };
+
+  const handleSingleRegenerateQr = async (tableId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setRegeneratingId(tableId);
+    try {
+      await regenerateTableQr(tableId);
+      await loadTables();
+      if (selectedTable?.id === tableId) {
+        setSelectedTable(null);
+      }
+    } catch (err) {
+      console.error('Regenerate QR error:', err);
+    } finally {
+      setRegeneratingId(null);
+    }
   };
 
   const filteredTables = (tables || []).filter((t) => {
-    if (activeFilter === 'ALL') return true;
-    return t.status === activeFilter;
+    const matchesFilter = activeFilter === 'ALL' || t.status === activeFilter;
+    const matchesSearch =
+      !searchQuery.trim() ||
+      t.tableNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.tableName && t.tableName.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesFilter && matchesSearch;
   });
 
   const occupiedCount = (tables || []).filter((t) => t.status === 'OCCUPIED' || t.status === 'BILL_PENDING').length;
@@ -153,25 +133,17 @@ export default function TablesManagementPage() {
   return (
     <div className="space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
-            <Utensils className="w-7 h-7 text-emerald-400 shrink-0" />
-            Floor Tables Management
-          </h2>
-          <p className="text-slate-400 text-xs sm:text-sm">
-            Live table occupancy grid, active order details, guest seating, and table activity audit history.
-          </p>
-        </div>
-        <button
-          onClick={() => setIsAddTableOpen(true)}
-          className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" /> + Add Floor Table
-        </button>
+      <div>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-white mb-1 flex items-center gap-2.5 whitespace-nowrap truncate">
+          <Utensils className="w-6 h-6 text-emerald-400 shrink-0" />
+          <span className="truncate">Floor Tables</span>
+        </h2>
+        <p className="text-slate-400 text-xs sm:text-sm whitespace-nowrap truncate">
+          Live table occupancy grid & order audit.
+        </p>
       </div>
 
-      {/* FILTER TABS & SUMMARY COUNTER */}
+      {/* SEARCH & FILTER TABS */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-3">
         <div className="flex items-center gap-2 overflow-x-auto">
           <button
@@ -208,108 +180,123 @@ export default function TablesManagementPage() {
           </button>
         </div>
 
-        <div className="bg-slate-900 px-3.5 py-1.5 rounded-2xl border border-slate-800 text-xs font-extrabold text-slate-300 flex items-center gap-2">
-          <span>Occupancy Rate:</span>
-          <span className="text-emerald-400 font-mono text-sm">{occupiedCount} / {(tables || []).length} Occupied</span>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search tables..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-slate-900 border border-slate-800 rounded-2xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-all w-36 sm:w-48"
+            />
+          </div>
+
+          <div className="bg-slate-900 px-3.5 py-1.5 rounded-2xl border border-slate-800 text-xs font-extrabold text-slate-300 flex items-center gap-2 shrink-0">
+            <span>Occupancy:</span>
+            <span className="text-emerald-400 font-mono text-xs">{occupiedCount} / {(tables || []).length} Active</span>
+          </div>
         </div>
       </div>
 
       {/* FLOOR TABLES GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredTables.map((t) => {
-          const isOccupied = t.status === 'OCCUPIED';
-          const isBillPending = t.status === 'BILL_PENDING';
+      {loading ? (
+        <div className="py-16 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+          <RefreshCw className="w-5 h-5 animate-spin text-blue-500" /> Loading floor tables...
+        </div>
+      ) : filteredTables.length === 0 ? (
+        <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-12 text-center text-slate-400 space-y-3">
+          <Utensils className="w-10 h-10 text-slate-600 mx-auto" />
+          <h3 className="text-base font-extrabold text-white">No Tables Found</h3>
+          <p className="text-xs text-slate-500">
+            {searchQuery ? `No tables matching "${searchQuery}"` : 'Create your first table to generate QR stickers & manage orders.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTables.map((t) => {
+            const isOccupied = t.status === 'OCCUPIED';
+            const isBillPending = t.status === 'BILL_PENDING';
+            const isRegenerating = regeneratingId === t.id;
 
-          return (
-            <div
-              key={t.id}
-              onClick={() => setSelectedTable(t)}
-              className={`bg-slate-900/70 border rounded-3xl p-5 space-y-4 shadow-xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col justify-between ${
-                isOccupied
-                  ? 'border-emerald-500/40 hover:border-emerald-400'
-                  : isBillPending
-                  ? 'border-amber-500/40 hover:border-amber-400'
-                  : 'border-slate-800 hover:border-slate-700'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="text-lg font-black text-white">{t.tableNumber}</h4>
-                  <p className="text-xs text-slate-400 font-medium">{t.tableName}</p>
+            return (
+              <div
+                key={t.id}
+                onClick={() => setSelectedTable(t)}
+                className={`bg-slate-900/70 border rounded-3xl p-5 space-y-4 shadow-xl cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all flex flex-col justify-between relative group ${
+                  isOccupied
+                    ? 'border-emerald-500/40 hover:border-emerald-400'
+                    : isBillPending
+                    ? 'border-amber-500/40 hover:border-amber-400'
+                    : 'border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="text-lg font-black text-white">
+                      {t.tableNumber}
+                    </h4>
+                    <p className="text-xs text-slate-400 font-medium leading-relaxed break-words mt-0.5">{t.tableName}</p>
+                  </div>
+                  <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-xl border flex items-center gap-1 ${
+                    isOccupied ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                    isBillPending ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                    'bg-slate-800 text-slate-400 border-slate-700'
+                  }`}>
+                    {isOccupied && <Flame className="w-3 h-3 text-emerald-400" />}
+                    {isBillPending && <AlertTriangle className="w-3 h-3 text-amber-400" />}
+                    {(t.status || 'VACANT').replace('_', ' ')}
+                  </span>
                 </div>
-                <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-xl border flex items-center gap-1 ${
-                  isOccupied ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                  isBillPending ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                  'bg-slate-800 text-slate-400 border-slate-700'
-                }`}>
-                  {isOccupied && <Flame className="w-3 h-3 text-emerald-400" />}
-                  {isBillPending && <AlertTriangle className="w-3 h-3 text-amber-400" />}
-                  {t.status.replace('_', ' ')}
-                </span>
-              </div>
 
-              {t.activeOrder ? (
-                <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2 text-xs">
-                  <div className="flex justify-between items-center font-bold">
-                    <span className="font-mono text-blue-400">{t.activeOrder.orderNumber}</span>
-                    <span className="text-slate-400">{t.activeOrder.guestCount} Guests</span>
+                {t.activeOrder ? (
+                  <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 space-y-2 text-xs">
+                    <div className="flex justify-between items-center font-bold">
+                      <span className="font-mono text-blue-400">{t.activeOrder.orderNumber}</span>
+                      <span className="text-slate-400">{t.activeOrder.guestCount} Guests</span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-300">
+                      <span>Total Amount:</span>
+                      <span className="font-mono font-extrabold text-emerald-400">₹{t.activeOrder.totalAmount}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-400 text-[11px]">
+                      <span>{t.activeOrder.captainName}</span>
+                      <span className="flex items-center gap-1 text-slate-500">
+                        <Clock className="w-3 h-3 text-blue-400" /> {t.activeOrder.activeMinutes} mins
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center text-slate-300">
-                    <span>Total Amount:</span>
-                    <span className="font-mono font-extrabold text-emerald-400">₹{t.activeOrder.totalAmount}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-slate-400 text-[11px]">
-                    <span>{t.activeOrder.captainName}</span>
-                    <span className="flex items-center gap-1 text-slate-500">
-                      <Clock className="w-3 h-3 text-blue-400" /> {t.activeOrder.activeMinutes} mins
+                ) : (
+                  <div className="bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+                    <span className="flex items-center gap-1.5 text-slate-300 font-medium">
+                      <Users className="w-3.5 h-3.5 text-slate-500" /> Capacity: {t.capacity} Guests
                     </span>
+                    <span className="text-[10px] text-slate-500">Vacant & Ready</span>
                   </div>
-                </div>
-              ) : (
-                <div className="bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800/60 text-center text-xs text-slate-500">
-                  Table Ready for New Guest
-                </div>
-              )}
+                )}
 
-              <div className="flex items-center justify-between text-xs font-bold text-blue-400 pt-1">
-                <span>View Activity History</span>
-                <ChevronRight className="w-4 h-4" />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60">
+                  <button
+                    onClick={(e) => handleSingleRegenerateQr(t.id, e)}
+                    disabled={isRegenerating}
+                    className="text-[11px] font-bold text-slate-400 hover:text-sky-400 flex items-center gap-1 transition-all"
+                    title="Regenerate single QR code"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isRegenerating ? 'animate-spin text-sky-400' : ''}`} />
+                    {isRegenerating ? 'Regenerating...' : 'Regenerate QR'}
+                  </button>
 
-      {/* ADD TABLE MODAL */}
-      <AnimatePresence>
-        {isAddTableOpen && (
-          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl relative space-y-4">
-              <button onClick={() => setIsAddTableOpen(false)} className="absolute top-5 right-5 p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white shrink-0 z-10" title="Close">
-                <X className="w-5 h-5" />
-              </button>
-              <div className="pr-12">
-                <h3 className="text-base font-extrabold text-white">Add New Floor Table</h3>
+                  <span className="font-bold text-blue-400 flex items-center gap-0.5">
+                    Activity <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
               </div>
-              <form onSubmit={handleAddTable} className="space-y-3 pt-1">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Table Number</label>
-                  <input type="text" value={newTableNumber} onChange={(e) => setNewTableNumber(e.target.value)} placeholder="E.g., T-07" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Table Name & Location</label>
-                  <input type="text" value={newTableName} onChange={(e) => setNewTableName(e.target.value)} placeholder="E.g., Balcony Section • 4 Seater" className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Seating Capacity</label>
-                  <input type="number" value={newCapacity} onChange={(e) => setNewCapacity(e.target.value)} min="1" max="20" required className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
-                </div>
-                <button type="submit" className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold">Save Floor Table</button>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+            );
+          })}
+        </div>
+      )}
+
+
 
       {/* TABLE ACTIVITY MODAL */}
       <AnimatePresence>
@@ -335,8 +322,27 @@ export default function TablesManagementPage() {
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-lg font-extrabold text-white truncate">{selectedTable.tableNumber} • Activity Log</h3>
-                  <p className="text-xs text-slate-400 truncate">{selectedTable.tableName}</p>
+                  <p className="text-xs text-slate-400 truncate">{selectedTable.tableName || 'Standard Table'}</p>
                 </div>
+              </div>
+
+              {/* Table Info Badge */}
+              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                <div>
+                  <span className="text-slate-500">QR Version:</span>{' '}
+                  <strong className="text-white font-mono">v{selectedTable.qrVersion || 1}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500">Seating:</span>{' '}
+                  <strong className="text-white">{selectedTable.capacity} Guests</strong>
+                </div>
+                <button
+                  onClick={(e) => handleSingleRegenerateQr(selectedTable.id, e)}
+                  disabled={regeneratingId === selectedTable.id}
+                  className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold text-[11px] flex items-center gap-1 transition-all"
+                >
+                  <RefreshCw className={`w-3 h-3 ${regeneratingId === selectedTable.id ? 'animate-spin' : ''}`} /> Regenerate QR
+                </button>
               </div>
 
               {selectedTable.activeOrder ? (

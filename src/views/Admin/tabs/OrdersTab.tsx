@@ -79,14 +79,14 @@ export default function OrderManagementPage() {
   return (
     <div className="space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
-            <ClipboardList className="w-7 h-7 text-blue-500 shrink-0" />
-            Order Operations Hub
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white mb-1 flex items-center gap-2.5 whitespace-nowrap truncate">
+            <ClipboardList className="w-6 h-6 text-blue-500 shrink-0" />
+            <span className="truncate">Order Hub</span>
           </h2>
-          <p className="text-slate-400 text-xs sm:text-sm">
-            Live order tracking, status state transitions, timeline audit, and automatic inventory recipe deduction.
+          <p className="text-slate-400 text-xs sm:text-sm whitespace-nowrap truncate">
+            Realtime order tracking & status state transitions.
           </p>
         </div>
       </div>

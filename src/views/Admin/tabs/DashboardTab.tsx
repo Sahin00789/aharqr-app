@@ -68,11 +68,11 @@ export default function AdminDashboard() {
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
       {/* Main Header */}
       <div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
-          <LayoutDashboard className="w-7 h-7 text-blue-500 shrink-0" /> 
-          Admin Operations Dashboard
+        <h2 className="text-xl sm:text-2xl font-extrabold text-white mb-1 flex items-center gap-2.5 whitespace-nowrap truncate">
+          <LayoutDashboard className="w-6 h-6 text-blue-500 shrink-0" /> 
+          <span className="truncate">Executive Dashboard</span>
         </h2>
-        <p className="text-slate-400 text-xs sm:text-sm">Welcome back. Here is what is happening today in your restaurant.</p>
+        <p className="text-slate-400 text-xs sm:text-sm whitespace-nowrap truncate">Live restaurant overview & operational metrics.</p>
       </div>
 
       {/* Stats Grid */}

@@ -16,6 +16,7 @@ import {
   Sparkles 
 } from 'lucide-react';
 import { useAuthStore } from '../../../store/authStore';
+import { useIsMobile } from '../../../utils/useIsMobile';
 import AttendanceScannerModal from '../../../components/attendance/AttendanceScannerModal';
 import DishAvailabilityModal from './modals/DishAvailabilityModal';
 
@@ -27,6 +28,7 @@ interface ChefMenuListProps {
 export default function ChefMenuList({ isOpen, onClose }: ChefMenuListProps) {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
+  const isMobile = useIsMobile();
 
   const [isAttendanceScannerOpen, setIsAttendanceScannerOpen] = useState(false);
   const [isDishAvailabilityOpen, setIsDishAvailabilityOpen] = useState(false);
@@ -40,7 +42,7 @@ export default function ChefMenuList({ isOpen, onClose }: ChefMenuListProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex">
+      <div className="fixed inset-0 z-50 flex justify-end lg:justify-start">
         {/* BACKDROP OVERLAY */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -61,13 +63,13 @@ export default function ChefMenuList({ isOpen, onClose }: ChefMenuListProps) {
           onClose={() => setIsDishAvailabilityOpen(false)}
         />
 
-        {/* MODAL SLIDE FROM LEFT ON DESKTOP & FULLVIEW ON MOBILE */}
+        {/* MODAL SLIDE FROM RIGHT ON MOBILE & LEFT ON DESKTOP */}
         <motion.div 
-          initial={{ x: '-100%', opacity: 0 }}
+          initial={{ x: isMobile ? '100%' : '-100%', opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          exit={{ x: '-100%', opacity: 0 }}
+          exit={{ x: isMobile ? '100%' : '-100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="relative z-10 w-full lg:w-[480px] h-full bg-slate-950/95 border-r border-slate-800 text-slate-200 font-sans flex flex-col overflow-y-auto selection:bg-amber-500/30 shadow-2xl"
+          className="relative z-10 w-full lg:w-[480px] h-full bg-slate-950/95 border-l lg:border-r border-slate-800 text-slate-200 font-sans flex flex-col overflow-y-auto selection:bg-amber-500/30 shadow-2xl"
         >
           {/* TOP HEADER WITH SINGLE BACK BUTTON */}
           <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-2xl">

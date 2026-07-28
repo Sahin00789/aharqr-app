@@ -96,12 +96,6 @@ export default function MenuManagementPage() {
           <span className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider bg-slate-800/80 px-3 py-1 rounded-xl border border-slate-700/60">
             Menu & Recipe Builder
           </span>
-          <button
-            onClick={() => setIsIngredientsModalOpen(true)}
-            className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center gap-1.5 border border-slate-700 active:scale-95 transition-all shadow-md"
-          >
-            <Boxes className="w-3.5 h-3.5 text-blue-400" /> Ingredients
-          </button>
         </div>
       </header>
 
@@ -117,6 +111,13 @@ export default function MenuManagementPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setIsIngredientsModalOpen(true)}
+              className="px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center gap-2 border border-slate-700 active:scale-95 transition-all shadow-md"
+            >
+              <Boxes className="w-4 h-4 text-blue-400" /> Ingredients
+            </button>
+
             <button className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
               <Plus className="w-4 h-4" /> + Add New Dish
             </button>

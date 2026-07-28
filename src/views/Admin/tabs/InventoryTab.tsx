@@ -117,14 +117,14 @@ export default function InventoryPage() {
   return (
     <div className="space-y-6">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-1 flex items-center gap-3">
-            <Boxes className="w-7 h-7 text-amber-500" />
-            Stock & Inventory Ledger
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white mb-1 flex items-center gap-2.5 whitespace-nowrap truncate">
+            <Boxes className="w-6 h-6 text-amber-500 shrink-0" />
+            <span className="truncate">Stock Inventory</span>
           </h2>
-          <p className="text-slate-400 text-xs sm:text-sm">
-            Stock levels computed automatically from purchases, wastage, resales, and KOT recipe consumption.
+          <p className="text-slate-400 text-xs sm:text-sm whitespace-nowrap truncate">
+            Stock levels & automated recipe consumption.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

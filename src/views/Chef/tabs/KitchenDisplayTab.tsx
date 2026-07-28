@@ -47,8 +47,8 @@ export default function KitchenDisplay() {
         {activeTab === 'kds' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Flame className="w-5 h-5 text-amber-400" /> Kitchen KDS Display
+              <h2 className="text-lg font-bold text-white flex items-center gap-2 whitespace-nowrap truncate min-w-0">
+                <Flame className="w-5 h-5 text-amber-400 shrink-0" /> <span className="truncate">Kitchen Display</span>
               </h2>
               <span className="text-xs text-slate-400">{tickets.length} Active Tickets</span>
             </div>

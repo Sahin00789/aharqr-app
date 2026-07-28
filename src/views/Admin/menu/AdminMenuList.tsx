@@ -16,9 +16,11 @@ import {
   Users,
   Coins,
   ArrowLeft,
+  Utensils,
 } from "lucide-react";
 import { useAuthStore } from "../../../store/authStore";
 import { useWebhookRoom } from "../../../utils/useWebhookRoom";
+import { useIsMobile } from "../../../utils/useIsMobile";
 
 // Full-Page Modals Attached to AdminMenuList
 import Settings from "./modals/Settings";
@@ -28,10 +30,7 @@ import StaffRoster from "./modals/StaffRoster";
 import WorkingShifts from "./modals/WorkingShifts";
 import Holidays from "./modals/Holidays";
 import PayrollHub from "./modals/PayrollHub";
-
-// Submodals attached to AdminMenuList
-import AddHolidayModal from "./submodals/AddHolidayModal";
-import WorkingDaysModal from "./submodals/WorkingDaysModal";
+import TableManagementModal from "./modals/TableManagementModal";
 
 interface AdminMenuListProps {
   isOpen: boolean;
@@ -46,20 +45,31 @@ type ActiveAdminModal =
   | 'SHIFTS' 
   | 'HOLIDAYS' 
   | 'PAYROLL' 
+  | 'TABLES'
   | null;
 
 export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
   const navigate = useNavigate();
   const { user, clearAuth } = useAuthStore();
+  const isMobile = useIsMobile();
 
   const [activeModal, setActiveModal] = useState<ActiveAdminModal>(null);
-  const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false);
-  const [isWorkingDaysModalOpen, setIsWorkingDaysModalOpen] = useState(false);
 
   const roomId = user?.restaurantId
     ? `restaurant-${user.restaurantId}`
     : "default-room";
   const { isConnected: isWsConnected } = useWebhookRoom(roomId);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   const handleLogout = () => {
     clearAuth();
@@ -72,7 +82,7 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex">
+      <div className="fixed inset-0 z-50 flex justify-end lg:justify-start h-screen h-[100dvh] touch-none">
         {/* BACKDROP OVERLAY */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -104,21 +114,20 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
         {activeModal === 'PAYROLL' && (
           <PayrollHub isOpen={true} onClose={() => setActiveModal(null)} />
         )}
+        {activeModal === 'TABLES' && (
+          <TableManagementModal isOpen={true} onClose={() => setActiveModal(null)} />
+        )}
 
-        {/* SUBMODALS ATTACHED TO PARENT MODAL */}
-        <AddHolidayModal isOpen={isHolidayModalOpen} onClose={() => setIsHolidayModalOpen(false)} />
-        <WorkingDaysModal isOpen={isWorkingDaysModalOpen} onClose={() => setIsWorkingDaysModalOpen(false)} />
-
-        {/* PARENT ADMIN MENU MODAL SLIDE FROM LEFT ON DESKTOP & FULLVIEW ON MOBILE */}
+        {/* PARENT ADMIN MENU MODAL SLIDE FROM RIGHT ON MOBILE & LEFT ON DESKTOP */}
         <motion.div
-          initial={{ x: "-100%", opacity: 0 }}
+          initial={{ x: isMobile ? "100%" : "-100%", opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          exit={{ x: "-100%", opacity: 0 }}
+          exit={{ x: isMobile ? "100%" : "-100%", opacity: 0 }}
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          className="relative z-10 w-full lg:w-[480px] h-full bg-slate-950/95 border-r border-slate-800 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col overflow-y-auto shadow-2xl"
+          className="relative z-10 w-full lg:w-[480px] h-full h-[100dvh] bg-slate-950 border-l lg:border-r border-slate-800 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col overflow-hidden shadow-2xl"
         >
-          {/* MODAL HEADER WITH SINGLE BACK BUTTON */}
-          <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-2xl">
+          {/* MODAL HEADER WITH SINGLE BACK BUTTON (FIXED) */}
+          <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-2xl shrink-0">
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
@@ -136,10 +145,9 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
             </div>
           </header>
 
-          {/* MODAL BODY (SCROLLABLE) */}
-          <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 scrollbar-thin scrollbar-thumb-slate-800">
-            {/* USER PROFILE CARD */}
-            <div className="bg-linear-to-br from-slate-900 via-slate-900 to-indigo-950/40 p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-xl flex items-center justify-between gap-4">
+          {/* USER PROFILE CARD (FIXED) */}
+          <div className="p-4 sm:p-5 border-b border-slate-800/80 shrink-0">
+            <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/40 p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-xl flex items-center justify-between gap-4">
               {!user ? (
                 <div className="flex items-center gap-4 min-w-0 w-full">
                   <div className="w-14 h-14 rounded-2xl bg-slate-800 animate-pulse shrink-0" />
@@ -150,7 +158,7 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                 </div>
               ) : (
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-blue-500 via-indigo-600 to-purple-600 font-extrabold text-white text-lg flex items-center justify-center border border-blue-400/40 shadow-lg shadow-blue-500/20 shrink-0">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 font-extrabold text-white text-lg flex items-center justify-center border border-blue-400/40 shadow-lg shadow-blue-500/20 shrink-0">
                     {user.name ? user.name.slice(0, 2).toUpperCase() : 'AD'}
                   </div>
                   <div className="min-w-0">
@@ -172,6 +180,10 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                 <LogOut className="w-4 h-4" /> Sign Out
               </button>
             </div>
+          </div>
+
+          {/* MODAL BODY OPTIONS (SCROLLABLE ONLY) */}
+          <div className="p-4 sm:p-5 pb-24 sm:pb-28 overflow-y-auto space-y-6 flex-1 min-h-0 no-scrollbar">
 
             {/* CONTROLS SECTION (ALL OPENS MODALS IN-PLACE VIA STATE) */}
             <div className="space-y-3">
@@ -240,6 +252,22 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
 
               <div className="grid grid-cols-1 gap-2.5">
                 <button
+                  onClick={() => setActiveModal('TABLES')}
+                  className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                      <Utensils className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-extrabold text-white">Dine-In Table Management</h4>
+                      <p className="text-[11px] text-slate-400">Configure floor tables, seat capacity & QR codes</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+
+                <button
                   onClick={() => setActiveModal('STAFF_ROSTER')}
                   className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
                 >
@@ -301,32 +329,6 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
-                </button>
-              </div>
-            </div>
-
-            {/* SUBMODAL DIALOG TRIGGERS */}
-            <div className="space-y-3 pt-2">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>Quick Submodal Dialogs</span>
-              </h3>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setIsHolidayModalOpen(true)}
-                  className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-left space-y-1 group transition-all"
-                >
-                  <span className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">Add Holiday</span>
-                  <p className="text-[10px] text-slate-400">Popup dialog</p>
-                </button>
-
-                <button
-                  onClick={() => setIsWorkingDaysModalOpen(true)}
-                  className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-left space-y-1 group transition-all"
-                >
-                  <span className="text-xs font-bold text-white group-hover:text-amber-400 transition-colors">Working Days</span>
-                  <p className="text-[10px] text-slate-400">Popup dialog</p>
                 </button>
               </div>
             </div>

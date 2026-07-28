@@ -58,8 +58,8 @@ export default function CaptainFloorPlan() {
         {activeTab === 'tables' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Utensils className="w-5 h-5 text-emerald-400" /> Floor Plan Overview
+              <h2 className="text-lg font-bold text-white flex items-center gap-2 whitespace-nowrap truncate min-w-0">
+                <Utensils className="w-5 h-5 text-emerald-400 shrink-0" /> <span className="truncate">Floor Plan</span>
               </h2>
               <button 
                 onClick={() => setIsKotModalOpen(true)}
