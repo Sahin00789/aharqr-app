@@ -124,7 +124,7 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: isMobile ? "100%" : "-100%", opacity: 0 }}
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          className="relative z-10 w-full lg:w-[480px] h-full h-[100dvh] bg-slate-950 border-l lg:border-r border-slate-800 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col overflow-hidden shadow-2xl"
+          className="relative z-10 w-full  md:h-full h-dvh bg-slate-950 border-l lg:border-r border-slate-800 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col  overflow-hidden shadow-2xl"
         >
           {/* MODAL HEADER WITH SINGLE BACK BUTTON (FIXED) */}
           <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-2xl shrink-0">
@@ -183,16 +183,16 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
           </div>
 
           {/* MODAL BODY OPTIONS (SCROLLABLE ONLY) */}
-          <div className="p-4 sm:p-5 pb-24 sm:pb-28 overflow-y-auto space-y-6 flex-1 min-h-0 no-scrollbar">
+          <div className="p-4 sm:p-5 pb-24 sm:pb-28 overflow-y-auto space-y-6 flex-1 min-h-0 no-scrollbar  ">
 
             {/* CONTROLS SECTION (ALL OPENS MODALS IN-PLACE VIA STATE) */}
-            <div className="space-y-3">
+            <div className="space-y-3 ">
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-blue-400" />
                 <span>Account & Restaurant Controls</span>
               </h3>
 
-              <div className="grid grid-cols-1 gap-2.5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                 <button
                   onClick={() => setActiveModal('SETTINGS')}
                   className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
@@ -250,7 +250,7 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                 <span>Operational Modules</span>
               </h3>
 
-              <div className="grid grid-cols-1 gap-2.5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                 <button
                   onClick={() => setActiveModal('TABLES')}
                   className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
