@@ -98,22 +98,6 @@ export default function ChefDashboardLayout() {
             })}
           </nav>
         </div>
-
-        {/* BOTTOM SIDENAV USER PROFILE BUTTON */}
-        {!user || !isInitialized ? (
-          <div className="w-11 h-11 bg-slate-800 rounded-2xl animate-pulse mx-auto" />
-        ) : (
-          <button
-            onClick={() => setIsMenuListOpen(true)}
-            title="Kitchen Hub & Menu"
-            className="w-full flex flex-col items-center justify-center p-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 transition-all active:scale-95"
-          >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 font-extrabold text-white text-xs flex items-center justify-center border border-amber-400/40 shrink-0">
-              {user.name ? user.name.slice(0, 2).toUpperCase() : 'CF'}
-            </div>
-            <span className="text-[9px] font-extrabold text-slate-300 mt-1 truncate max-w-[60px]">Menu</span>
-          </button>
-        )}
       </aside>
 
       {/* MAIN LAYOUT WRAPPER */}
@@ -133,7 +117,7 @@ export default function ChefDashboardLayout() {
         />
 
         {/* MAIN CONTENT OUTLET */}
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 pb-28 lg:pb-8">
+        <main className="flex-1 w-full p-4 sm:p-6 pb-28 lg:pb-8">
           <Outlet />
         </main>
       </div>

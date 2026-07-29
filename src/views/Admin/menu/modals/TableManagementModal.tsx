@@ -102,7 +102,7 @@ export default function TableManagementModal({ isOpen, onClose }: TableManagemen
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="w-full h-full sm:h-auto sm:max-h-[85dvh] max-w-5xl bg-slate-950 border-0 sm:border border-slate-800 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+            className="w-full h-full sm:h-auto sm:max-h-[85dvh] max-w-[1360px] bg-slate-950 border-0 sm:border border-slate-800 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col"
           >
             {/* TOPBAR HEADER WITH SINGLE BACK BUTTON (FIXED) */}
             <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-3.5 sm:px-5 py-3 flex items-center justify-between shadow-xl shrink-0">

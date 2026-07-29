@@ -41,7 +41,7 @@ export default function CustomerMenuList({ isOpen, onClose }: CustomerMenuListPr
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex justify-end lg:justify-start">
+      <div className="fixed inset-0 z-50 flex justify-end">
         {/* BACKDROP OVERLAY */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -51,13 +51,13 @@ export default function CustomerMenuList({ isOpen, onClose }: CustomerMenuListPr
           className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl"
         />
 
-        {/* MODAL SLIDE FROM RIGHT ON MOBILE & LEFT ON DESKTOP */}
+        {/* MODAL SLIDE FROM RIGHT */}
         <motion.div 
-          initial={{ x: isMobile ? '100%' : '-100%', opacity: 0 }}
+          initial={{ x: '100%', opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          exit={{ x: isMobile ? '100%' : '-100%', opacity: 0 }}
+          exit={{ x: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="relative z-10 w-full lg:w-[480px] h-full bg-slate-950/95 border-l lg:border-r border-slate-800 text-slate-200 font-sans flex flex-col overflow-y-auto selection:bg-rose-500/30 shadow-2xl"
+          className="relative z-10 w-full lg:w-[600px] xl:w-[680px] h-full bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800 text-slate-200 font-sans flex flex-col overflow-y-auto selection:bg-rose-500/30 shadow-2xl"
         >
           {/* TOP HEADER WITH SINGLE BACK BUTTON */}
           <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-2xl">
@@ -193,10 +193,14 @@ export default function CustomerMenuList({ isOpen, onClose }: CustomerMenuListPr
               );
             })()}
 
-            <CustomerVerificationModal
-              isOpen={isVerifyModalOpen}
-              onClose={() => setIsVerifyModalOpen(false)}
-            />
+            <AnimatePresence mode="wait">
+              {isVerifyModalOpen && (
+                <CustomerVerificationModal
+                  isOpen={true}
+                  onClose={() => setIsVerifyModalOpen(false)}
+                />
+              )}
+            </AnimatePresence>
 
             {/* CALL WAITER QUICK ACTION */}
             <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 space-y-3">

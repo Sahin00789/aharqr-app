@@ -82,7 +82,7 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex justify-end lg:justify-start h-screen h-[100dvh] touch-none">
+      <div className="fixed inset-0 z-50 flex justify-end h-screen h-[100dvh]">
         {/* BACKDROP OVERLAY */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -92,46 +92,48 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
           className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl"
         />
 
-        {/* FULL-PAGE MODALS ATTACHED IN-PLACE TO ADMIN MENU (NO URL CHANGE) */}
-        {activeModal === 'SETTINGS' && (
-          <Settings isOpen={true} onClose={() => setActiveModal(null)} />
-        )}
-        {activeModal === 'SUBSCRIPTION' && (
-          <Subscription isOpen={true} onClose={() => setActiveModal(null)} />
-        )}
-        {activeModal === 'DEVICES' && (
-          <DevicesSessions isOpen={true} onClose={() => setActiveModal(null)} />
-        )}
-        {activeModal === 'STAFF_ROSTER' && (
-          <StaffRoster isOpen={true} onClose={() => setActiveModal(null)} />
-        )}
-        {activeModal === 'SHIFTS' && (
-          <WorkingShifts isOpen={true} onClose={() => setActiveModal(null)} />
-        )}
-        {activeModal === 'HOLIDAYS' && (
-          <Holidays isOpen={true} onClose={() => setActiveModal(null)} />
-        )}
-        {activeModal === 'PAYROLL' && (
-          <PayrollHub isOpen={true} onClose={() => setActiveModal(null)} />
-        )}
-        {activeModal === 'TABLES' && (
-          <TableManagementModal isOpen={true} onClose={() => setActiveModal(null)} />
-        )}
+        {/* FULL-PAGE MODALS ATTACHED IN-PLACE TO ADMIN MENU (WITH BACK ANIMATION) */}
+        <AnimatePresence mode="wait">
+          {activeModal === 'SETTINGS' && (
+            <Settings isOpen={true} onClose={() => setActiveModal(null)} />
+          )}
+          {activeModal === 'SUBSCRIPTION' && (
+            <Subscription isOpen={true} onClose={() => setActiveModal(null)} />
+          )}
+          {activeModal === 'DEVICES' && (
+            <DevicesSessions isOpen={true} onClose={() => setActiveModal(null)} />
+          )}
+          {activeModal === 'STAFF_ROSTER' && (
+            <StaffRoster isOpen={true} onClose={() => setActiveModal(null)} />
+          )}
+          {activeModal === 'SHIFTS' && (
+            <WorkingShifts isOpen={true} onClose={() => setActiveModal(null)} />
+          )}
+          {activeModal === 'HOLIDAYS' && (
+            <Holidays isOpen={true} onClose={() => setActiveModal(null)} />
+          )}
+          {activeModal === 'PAYROLL' && (
+            <PayrollHub isOpen={true} onClose={() => setActiveModal(null)} />
+          )}
+          {activeModal === 'TABLES' && (
+            <TableManagementModal isOpen={true} onClose={() => setActiveModal(null)} />
+          )}
+        </AnimatePresence>
 
-        {/* PARENT ADMIN MENU MODAL SLIDE FROM RIGHT ON MOBILE & LEFT ON DESKTOP */}
+        {/* PARENT ADMIN MENU MODAL SLIDE FROM RIGHT */}
         <motion.div
-          initial={{ x: isMobile ? "100%" : "-100%", opacity: 0 }}
+          initial={{ x: "100%", opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          exit={{ x: isMobile ? "100%" : "-100%", opacity: 0 }}
+          exit={{ x: "100%", opacity: 0 }}
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          className="relative z-10 w-full  md:h-full h-dvh bg-slate-950 border-l lg:border-r border-slate-800 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col  overflow-hidden shadow-2xl"
+          className="relative z-10 w-full lg:w-[620px] xl:w-[720px] h-full bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800 text-slate-200 font-sans selection:bg-blue-500/30 flex flex-col overflow-hidden shadow-2xl"
         >
           {/* MODAL HEADER WITH SINGLE BACK BUTTON (FIXED) */}
-          <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-2xl shrink-0">
+          <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 sm:px-6 py-4 flex items-center justify-between shadow-2xl shrink-0">
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 text-xs font-bold text-slate-200 border border-slate-700/60 transition-all active:scale-95 group"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 text-xs font-bold text-slate-200 border border-slate-700/60 transition-all active:scale-95 group cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 text-slate-300 group-hover:-translate-x-0.5 transition-transform" />
                 <span>Back</span>
@@ -139,15 +141,15 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider bg-slate-800/80 px-3 py-1 rounded-xl border border-slate-700/60">
-                Admin Account & Menu Hub
+              <span className="text-xs font-extrabold text-slate-300 uppercase tracking-wider bg-slate-800/80 px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-inner">
+                Admin Account & Control Hub
               </span>
             </div>
           </header>
 
           {/* USER PROFILE CARD (FIXED) */}
-          <div className="p-4 sm:p-5 border-b border-slate-800/80 shrink-0">
-            <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/40 p-4 sm:p-5 rounded-3xl border border-slate-800 shadow-xl flex items-center justify-between gap-4">
+          <div className="p-4 sm:p-6 border-b border-slate-800/80 shrink-0">
+            <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/40 p-5 sm:p-6 rounded-3xl border border-slate-800 shadow-xl flex items-center justify-between gap-4">
               {!user ? (
                 <div className="flex items-center gap-4 min-w-0 w-full">
                   <div className="w-14 h-14 rounded-2xl bg-slate-800 animate-pulse shrink-0" />
@@ -175,7 +177,7 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
 
               <button
                 onClick={handleLogout}
-                className="px-4 py-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-extrabold hidden sm:flex items-center gap-2 border border-red-500/20 shadow-md active:scale-95 transition-all shrink-0"
+                className="px-4 py-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-extrabold hidden sm:flex items-center gap-2 border border-red-500/20 shadow-md active:scale-95 transition-all shrink-0 cursor-pointer"
               >
                 <LogOut className="w-4 h-4" /> Sign Out
               </button>
@@ -183,16 +185,16 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
           </div>
 
           {/* MODAL BODY OPTIONS (SCROLLABLE ONLY) */}
-          <div className="p-4 sm:p-5 pb-24 sm:pb-28 overflow-y-auto space-y-6 flex-1 min-h-0 no-scrollbar  ">
+          <div className="p-5 sm:p-6 pb-24 sm:pb-28 overflow-y-auto space-y-6 flex-1 min-h-0 no-scrollbar">
 
             {/* CONTROLS SECTION (ALL OPENS MODALS IN-PLACE VIA STATE) */}
-            <div className="space-y-3 ">
+            <div className="space-y-3">
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 px-1 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-blue-400" />
                 <span>Account & Restaurant Controls</span>
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <button
                   onClick={() => setActiveModal('SETTINGS')}
                   className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"
@@ -250,7 +252,7 @@ export default function AdminMenuList({ isOpen, onClose }: AdminMenuListProps) {
                 <span>Operational Modules</span>
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <button
                   onClick={() => setActiveModal('TABLES')}
                   className="w-full text-left p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between group active:scale-[0.98]"

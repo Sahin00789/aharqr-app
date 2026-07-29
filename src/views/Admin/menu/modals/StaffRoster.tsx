@@ -142,7 +142,7 @@ export default function StaffRosterPage({ isOpen = true, onClose }: StaffRosterP
       </header>
 
       {/* MAIN CONTAINER (SCROLLABLE ONLY) */}
-      <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 pb-24 sm:pb-28 max-w-6xl mx-auto w-full space-y-6 no-scrollbar">
+      <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 pb-24 sm:pb-28 w-full space-y-6 no-scrollbar">
 
         {/* PAGE TITLE BAR */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

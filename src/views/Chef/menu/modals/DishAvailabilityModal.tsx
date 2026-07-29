@@ -16,7 +16,12 @@ import {
 } from 'lucide-react';
 import { fetchMenuItems, updateMenuItemStatus, type MenuItem } from '../../../../api/menuApi';
 
-export default function ChefMenuList() {
+interface DishAvailabilityModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function DishAvailabilityModal({ isOpen = true, onClose }: DishAvailabilityModalProps) {
   const navigate = useNavigate();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,8 +45,10 @@ export default function ChefMenuList() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (isOpen) {
+      loadData();
+    }
+  }, [isOpen]);
 
   const handleToggleAvailability = async (item: MenuItem) => {
     setUpdatingId(item.id);
@@ -69,6 +76,16 @@ export default function ChefMenuList() {
     return matchesSearch && matchesCat;
   });
 
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      navigate(-1);
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
     <motion.div 
       initial={{ y: '100%', opacity: 0 }}
@@ -81,7 +98,7 @@ export default function ChefMenuList() {
       <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-2xl">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleClose}
             className="py-2 px-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 text-white border border-slate-700/70 transition-all flex items-center gap-2 text-xs font-extrabold active:scale-95 shadow-md group"
           >
             <ArrowLeft className="w-4 h-4 text-slate-300 group-hover:-translate-x-0.5 transition-transform" />
@@ -97,7 +114,7 @@ export default function ChefMenuList() {
       </header>
 
       {/* MAIN BODY CONTAINER */}
-      <main className="flex-1 p-4 sm:p-6 max-w-5xl mx-auto w-full space-y-6">
+      <main className="flex-1 p-4 sm:p-6 w-full space-y-6">
         
         {/* TITLE & QUICK STATS */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
@@ -178,7 +195,7 @@ export default function ChefMenuList() {
             <p className="text-xs text-slate-500 mt-1">Try resetting category or search keywords.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filteredItems.map((item) => (
               <motion.div
                 key={item.id}

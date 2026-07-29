@@ -42,7 +42,7 @@ export default function ChefMenuList({ isOpen, onClose }: ChefMenuListProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex justify-end lg:justify-start">
+      <div className="fixed inset-0 z-50 flex justify-end">
         {/* BACKDROP OVERLAY */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -52,24 +52,30 @@ export default function ChefMenuList({ isOpen, onClose }: ChefMenuListProps) {
           className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl"
         />
 
-        {/* IN-PLACE MODALS ATTACHED TO CHEF MENU */}
-        <AttendanceScannerModal 
-          isOpen={isAttendanceScannerOpen} 
-          onClose={() => setIsAttendanceScannerOpen(false)} 
-          staffRole="CHEF"
-        />
-        <DishAvailabilityModal
-          isOpen={isDishAvailabilityOpen}
-          onClose={() => setIsDishAvailabilityOpen(false)}
-        />
+        {/* IN-PLACE MODALS ATTACHED TO CHEF MENU (WITH BACK ANIMATION) */}
+        <AnimatePresence mode="wait">
+          {isAttendanceScannerOpen && (
+            <AttendanceScannerModal 
+              isOpen={true} 
+              onClose={() => setIsAttendanceScannerOpen(false)} 
+              staffRole="CHEF"
+            />
+          )}
+          {isDishAvailabilityOpen && (
+            <DishAvailabilityModal
+              isOpen={true}
+              onClose={() => setIsDishAvailabilityOpen(false)}
+            />
+          )}
+        </AnimatePresence>
 
-        {/* MODAL SLIDE FROM RIGHT ON MOBILE & LEFT ON DESKTOP */}
+        {/* MODAL SLIDE FROM RIGHT */}
         <motion.div 
-          initial={{ x: isMobile ? '100%' : '-100%', opacity: 0 }}
+          initial={{ x: '100%', opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          exit={{ x: isMobile ? '100%' : '-100%', opacity: 0 }}
+          exit={{ x: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="relative z-10 w-full lg:w-[480px] h-full bg-slate-950/95 border-l lg:border-r border-slate-800 text-slate-200 font-sans flex flex-col overflow-y-auto selection:bg-amber-500/30 shadow-2xl"
+          className="relative z-10 w-full lg:w-[600px] xl:w-[680px] h-full bg-slate-950/95 backdrop-blur-2xl border-l border-slate-800 text-slate-200 font-sans flex flex-col overflow-y-auto selection:bg-amber-500/30 shadow-2xl"
         >
           {/* TOP HEADER WITH SINGLE BACK BUTTON */}
           <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 py-3.5 flex items-center justify-between shadow-2xl">

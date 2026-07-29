@@ -92,23 +92,6 @@ export default function CustomerDashboardLayout() {
             })}
           </nav>
         </div>
-
-        {/* BOTTOM SIDENAV USER PROFILE BUTTON (OPENS MENU DRAWER VIA STATE) */}
-        <button
-          onClick={() => setIsMenuListOpen(true)}
-          className="w-full flex items-center justify-center xl:justify-between p-2.5 xl:p-3 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 transition-all active:scale-95 text-left cursor-pointer"
-        >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 font-extrabold text-white text-xs flex items-center justify-center border border-rose-400/40 uppercase shrink-0">
-              {tableId ? tableId.slice(0, 2) : 'T1'}
-            </div>
-            <div className="hidden xl:block min-w-0">
-              <p className="text-xs font-extrabold text-white truncate leading-tight">Guest Hub</p>
-              <p className="text-[10px] text-slate-400 truncate leading-tight">Profile & Verification</p>
-            </div>
-          </div>
-          <Settings className="hidden xl:block w-4 h-4 text-slate-400 shrink-0" />
-        </button>
       </aside>
 
       {/* MAIN LAYOUT WRAPPER */}
@@ -122,7 +105,7 @@ export default function CustomerDashboardLayout() {
         />
 
         {/* MAIN CONTENT OUTLET */}
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 pb-28 lg:pb-8">
+        <main className="flex-1 w-full p-4 sm:p-6 pb-28 lg:pb-8">
           <Outlet />
         </main>
       </div>
