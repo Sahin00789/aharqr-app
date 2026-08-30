@@ -43,32 +43,30 @@ export async function regenerateTableQr(tableId: string): Promise<{ success: boo
 }
 
 export async function downloadTableQrPdf(tableIds: string[]): Promise<void> {
-  try {
-    const response = await api.post('/settings/download-qr', { tableIds }, {
-      responseType: 'blob',
-    });
+  // Backend returns JSON with restaurant + per-table QR data; the PDF is
+  // rendered in the browser with pdfmake (see utils/qrPdfGenerator).
+  const fetchData = async (url: string) => {
+    const { data } = await api.post(url, { tableIds });
+    return data as {
+      success: boolean;
+      restaurant: { name: string; address: string; logoUrl?: string | null; slug?: string };
+      tables: {
+        tableNumber: string;
+        tableName?: string;
+        description?: string;
+        capacity?: number;
+        qrUrl: string;
+      }[];
+    };
+  };
 
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'AharQR_Table_Stickers.pdf');
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    const response = await api.post('/restaurant/tables/download-qr-pdf', { tableIds }, {
-      responseType: 'blob',
-    });
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'AharQR_Table_Stickers.pdf');
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+  let payload: Awaited<ReturnType<typeof fetchData>>;
+  try {
+    payload = await fetchData('/settings/download-qr');
+  } catch {
+    payload = await fetchData('/restaurant/tables/download-qr-pdf');
   }
+
+  const { downloadQrStickersPdf } = await import('../utils/qrPdfGenerator');
+  await downloadQrStickersPdf(payload.restaurant, payload.tables);
 }

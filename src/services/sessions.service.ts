@@ -12,9 +12,12 @@ export interface SessionDevice {
 }
 
 export function listSessions(): Promise<SessionDevice[]> {
-  return api<SessionDevice[]>("/api/v1/auth/sessions");
+  return api<SessionDevice[]>("/api/auth/devices-sessions");
 }
 
 export function revokeSession(id: string): Promise<void> {
-  return api(`/api/v1/auth/sessions/${id}`, { method: "DELETE" });
+  return api("/api/auth/revoke-session", {
+    method: "POST",
+    body: { sessionId: id },
+  });
 }

@@ -18,7 +18,7 @@ export function CaptainProfileTab() {
 
       <Card>
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-600 text-white">
             <UserCog className="h-6 w-6" />
           </div>
           <div>

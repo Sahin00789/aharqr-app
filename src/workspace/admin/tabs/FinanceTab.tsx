@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Wallet, Receipt, TrendingUp } from "lucide-react";
 import {
   SectionTitle,
@@ -8,84 +8,87 @@ import {
 } from "../../../common/ui";
 import { Card, Badge } from "../../../common/ui";
 import {
-  MOCK_SALES,
-  MOCK_ORDERS,
-  STATUS_TONE,
-  formatINR,
-} from "../../../common/mock";
+  fetchFinanceSummary,
+  fetchLedger,
+  type LedgerEntry,
+} from "../../../api/financeApi";
+
+function formatINR(n: number): string {
+  return `₹${Number(n || 0).toLocaleString("en-IN")}`;
+}
 
 export function AdminFinanceTab() {
   useCurrentUser();
-  const [orders] = useState(MOCK_ORDERS);
 
-  const totalRevenue = MOCK_SALES.reduce((sum, s) => sum + s.revenue, 0);
+  const { data: summaryData, isLoading: loadingSummary } = useQuery({
+    queryKey: ["admin-finance-summary"],
+    queryFn: fetchFinanceSummary,
+  });
+  const { data: ledgerData, isLoading: loadingLedger } = useQuery({
+    queryKey: ["admin-ledger"],
+    queryFn: () => fetchLedger(),
+  });
+
+  const summary = summaryData?.summary;
+  const entries: LedgerEntry[] = ledgerData?.entries ?? [];
 
   return (
     <div className="flex h-full flex-col">
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:p-6 md:space-y-6">
           <section className="space-y-3">
-            <SectionTitle>Sales summary</SectionTitle>
+            <SectionTitle>Finance summary</SectionTitle>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 md:gap-4">
-              {MOCK_SALES.map((s) => (
-                <StatCard
-                  key={s.label}
-                  label={s.label}
-                  value={formatINR(s.revenue)}
-                  hint={`${s.orders} orders`}
-                />
-              ))}
+              <StatCard
+                label="Total revenue"
+                value={loadingSummary ? "…" : formatINR(summary?.totalRevenue ?? 0)}
+              />
+              <StatCard
+                label="Total expense"
+                value={loadingSummary ? "…" : formatINR(summary?.totalExpense ?? 0)}
+              />
+              <StatCard
+                label="Net profit"
+                value={loadingSummary ? "…" : formatINR(summary?.netProfit ?? 0)}
+              />
+              <StatCard label="Ledger entries" value={String(entries.length)} />
             </div>
           </section>
 
           <section className="space-y-3">
-            <SectionTitle>Ledger</SectionTitle>
-            {orders.length === 0 ? (
+            <SectionTitle>Ledger (double-entry)</SectionTitle>
+            {loadingLedger ? (
+              <p className="text-sm text-zinc-400">Loading ledger…</p>
+            ) : entries.length === 0 ? (
               <EmptyState
-                title="No transactions"
-                description="Completed orders will be listed here."
+                title="No transactions yet"
+                description="Accepting orders records revenue; purchases and salary payments post here automatically."
               />
             ) : (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 md:gap-3">
-                {orders.map((o) => (
-                  <Card key={o.id} className="flex items-center justify-between gap-3 p-3 md:p-5">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500">
-                        <Receipt size={15} />
+                {entries.map((e) => (
+                  <Card key={e.id} className="flex flex-col gap-2 p-3 md:p-5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-2 text-sm font-medium text-zinc-900">
+                        <Receipt size={15} /> {e.referenceType}
                       </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-zinc-900">
-                          Table {o.table}
-                        </p>
-                        <p className="truncate text-xs text-zinc-400">{o.id}</p>
-                      </div>
+                      <Badge tone="green">{formatINR(Number(e.amount))}</Badge>
                     </div>
-                    <div className="flex shrink-0 items-center gap-3">
-                      <span className="text-sm font-semibold text-zinc-900">
-                        {formatINR(o.total)}
-                      </span>
-                      <Badge tone={STATUS_TONE[o.status]}>{o.status}</Badge>
-                    </div>
+                    <p className="text-xs text-zinc-500">{e.description}</p>
+                    <p className="text-xs text-zinc-400">
+                      {e.debitName ?? "–"} → {e.creditName ?? "–"}
+                    </p>
+                    <p className="text-[11px] text-zinc-300">
+                      {new Date(e.entryDate).toLocaleString()}
+                    </p>
                   </Card>
                 ))}
               </div>
             )}
           </section>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
-            <StatCard label="Gross revenue" value={formatINR(totalRevenue)} />
-            <StatCard
-              label="Avg / order"
-              value={formatINR(
-                Math.round(totalRevenue / MOCK_SALES.reduce((a, s) => a + s.orders, 0))
-              )}
-            />
-            <StatCard label="Ledger entries" value={orders.length} />
-          </div>
-
           <p className="flex items-center gap-2 text-xs text-zinc-400">
-            <TrendingUp size={14} /> <Wallet size={14} /> Figures are demo data from
-            the mock dataset.
+            <TrendingUp size={14} /> <Wallet size={14} /> Live from the finance ledger.
           </p>
         </div>
       </Card>

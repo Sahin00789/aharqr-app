@@ -106,9 +106,14 @@ export async function scanOvertimeQr(signedQr: string): Promise<AttendanceScanRe
   }
 }
 
-export async function verifyAttendanceQr(qrToken: string): Promise<AttendanceScanResponse> {
+export async function verifyAttendanceQr(
+  qrToken: string,
+  staffId?: string,
+): Promise<AttendanceScanResponse> {
   try {
-    const { data } = await api.post('/attendance/verify', { qrToken });
+    const body: Record<string, unknown> = { token: qrToken };
+    if (staffId) body.staffId = staffId;
+    const { data } = await api.post('/attendance/verify', body);
     if (data.success) {
       return data;
     }

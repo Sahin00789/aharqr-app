@@ -42,10 +42,10 @@ export function GoogleAuthButton({
         onClick={trigger}
         disabled={loading}
         aria-busy={loading}
-        className={`inline-flex w-full items-center justify-center gap-3 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 active:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800 ${className}`}
+        className={`inline-flex w-full items-center justify-center gap-3 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 active:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800 ${className}`}
       >
         {loading ? (
-          <Loader2 size={18} className="animate-spin text-indigo-600" aria-hidden />
+          <Loader2 size={18} className="animate-spin text-accent-600" aria-hidden />
         ) : (
           <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
             <path

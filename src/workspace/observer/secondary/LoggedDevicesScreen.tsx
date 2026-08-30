@@ -7,7 +7,7 @@ import {
   revokeSession,
   type SessionDevice,
 } from "../../../services/sessions.service";
-import { SecondaryScreen } from "./SecondaryScreen";
+import { SecondaryScreen } from "../../../common/layouts/SecondaryScreen";
 
 function describeUA(ua?: string | null): { type: "desktop" | "mobile"; label: string } {
   if (!ua) return { type: "desktop", label: "Unknown device" };
@@ -131,3 +131,4 @@ export function LoggedDevicesScreen() {
     </SecondaryScreen>
   );
 }
+

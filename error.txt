@@ -1,0 +1,24 @@
+Γ£ù Build failed in 1.77s
+error during build:
+[vite:esbuild] Transform failed with 1 error:
+E:/webapps/AharQR/web/src/common/layouts/Layout.tsx:349:42: ERROR: Expected "}" but found "$"
+file: E:/webapps/AharQR/web/src/common/layouts/Layout.tsx:349:42
+
+Expected "}" but found "$"
+347|            <NavLink
+348|              key={name}
+349|              to={routeUrl === "" ? base : `${base}/${routeUrl}`}
+   |                                            ^
+350|              end={routeUrl === ""}
+351|              className={({ isActive }) =>
+
+    at failureErrorWithLog (E:\webapps\AharQR\web\node_modules\esbuild\lib\main.js:1467:15)
+    at E:\webapps\AharQR\web\node_modules\esbuild\lib\main.js:736:50
+    at responseCallbacks.<computed> (E:\webapps\AharQR\web\node_modules\esbuild\lib\main.js:603:9)
+    at handleIncomingPacket (E:\webapps\AharQR\web\node_modules\esbuild\lib\main.js:658:12)
+    at Socket.readFromStdout (E:\webapps\AharQR\web\node_modules\esbuild\lib\main.js:581:7)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)

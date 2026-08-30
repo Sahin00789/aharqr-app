@@ -3,7 +3,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios";
 import { toast } from "react-hot-toast";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../stores/auth-store";
 
 declare module "axios" {
   export interface InternalAxiosRequestConfig {
@@ -97,7 +97,7 @@ api.interceptors.response.use(
       // Do NOT trigger refresh logic for auth endpoints (login, google, register, refresh itself)
       if (isAuthActionEndpoint) {
         if (url.includes("/auth/refresh")) {
-          useAuthStore.getState().setInitialized(true);
+          useAuthStore.getState().markBooted();
         }
         return Promise.reject(error);
       }
@@ -124,22 +124,22 @@ api.interceptors.response.use(
 
         return new Promise((resolve, reject) => {
           api.post("/auth/refresh")
-            .then(({ data }) => {
-              if (data.success && data.accessToken) {
-                const { accessToken, user } = data;
-                useAuthStore.getState().setAuth(accessToken, user);
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-                processQueue(null, accessToken);
-                resolve(api(originalRequest));
-              } else {
-                throw new Error("Invalid token refresh response.");
-              }
-            })
-            .catch((refreshErr) => {
-              processQueue(refreshErr, null);
-              useAuthStore.getState().clearAuth();
-              reject(refreshErr);
-            })
+             .then(({ data }) => {
+               if (data.success && data.accessToken) {
+                 const { accessToken, user } = data;
+                 useAuthStore.getState().setSession(user, accessToken);
+                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                 processQueue(null, accessToken);
+                 resolve(api(originalRequest));
+               } else {
+                 throw new Error("Invalid token refresh response.");
+               }
+             })
+             .catch((refreshErr) => {
+               processQueue(refreshErr, null);
+               useAuthStore.getState().clearSession();
+               reject(refreshErr);
+             })
             .finally(() => {
               isRefreshing = false;
             });

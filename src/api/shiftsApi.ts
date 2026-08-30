@@ -1,4 +1,4 @@
-import { api } from './client';
+import api from './client';
 
 export interface ShiftTemplate {
   id: string;
@@ -6,71 +6,114 @@ export interface ShiftTemplate {
   code: string;
   startTime: string;
   endTime: string;
-  isNightShift: boolean;
-  graceMinutes: number;
-  lateAfterMinutes: number;
-  earlyLeaveMinutes: number;
-  isActive: boolean;
+  isNightShift?: boolean;
+  graceMinutes?: number | null;
+  lateAfterMinutes?: number | null;
+  earlyLeaveMinutes?: number | null;
 }
 
-export interface StaffShiftSalaryConfig {
+export interface ShiftAssignment {
   id: string;
   staffId: string;
-  staffName: string;
-  dayOfWeek: string;
-  shiftTemplateId: string;
-  shiftName: string;
+  staffName?: string;
+  shiftId: string;
+  shiftName?: string;
+  dayOfWeek: number;
+  isEnabled: boolean;
   presentPay: number;
-  halfDayPay: number;
   absentPay: number;
+  halfDayPay: number;
   leavePay: number;
+  offDayPayment?: number;
+  holidayPayment?: number;
 }
 
-export async function fetchShiftTemplates(): Promise<{ success: boolean; shiftTemplates: ShiftTemplate[] }> {
-  try {
-    const { data } = await api.get('/shifts/templates');
-    return data;
-  } catch (error) {
-    return {
-      success: true,
-      shiftTemplates: [
-        { id: 'shift-morn', name: 'Morning Shift', code: 'MORN', startTime: '09:00', endTime: '17:00', isNightShift: false, graceMinutes: 15, lateAfterMinutes: 30, earlyLeaveMinutes: 30, isActive: true },
-        { id: 'shift-eve', name: 'Evening Shift', code: 'EVE', startTime: '17:00', endTime: '01:00', isNightShift: true, graceMinutes: 15, lateAfterMinutes: 30, earlyLeaveMinutes: 30, isActive: true },
-        { id: 'shift-night', name: 'Night Shift', code: 'NIGHT', startTime: '22:00', endTime: '06:00', isNightShift: true, graceMinutes: 15, lateAfterMinutes: 30, earlyLeaveMinutes: 30, isActive: true },
-      ],
-    };
-  }
+export async function fetchShiftTemplates(): Promise<{
+  success: boolean;
+  templates: ShiftTemplate[];
+}> {
+  const { data } = await api.get('/working-shifts/templates');
+  return data;
 }
 
-export async function createShiftTemplate(payload: Omit<ShiftTemplate, 'id' | 'isActive'>) {
-  try {
-    const { data } = await api.post('/shifts/templates', payload);
-    return data;
-  } catch (error: any) {
-    return { success: true, message: 'Shift template created successfully' };
-  }
+export async function createShiftTemplate(payload: {
+  name: string;
+  code: string;
+  startTime: string;
+  endTime: string;
+  isNightShift?: boolean;
+  graceMinutes?: number;
+  lateAfterMinutes?: number;
+  earlyLeaveMinutes?: number;
+}): Promise<{ success: boolean; template: ShiftTemplate }> {
+  const { data } = await api.post('/working-shifts/templates', payload);
+  return data;
 }
 
-export async function fetchStaffShiftSalaries(staffId: string): Promise<{ success: boolean; configs: StaffShiftSalaryConfig[] }> {
-  try {
-    const { data } = await api.get(`/shifts/staff-salaries?staffId=${staffId}`);
-    return data;
-  } catch (error) {
-    return {
-      success: true,
-      configs: [
-        { id: 'cfg-1', staffId, staffName: 'Rajesh Kumar', dayOfWeek: 'MONDAY', shiftTemplateId: 'shift-morn', shiftName: 'Morning Shift', presentPay: 800, halfDayPay: 400, absentPay: 0, leavePay: 400 },
-        { id: 'cfg-2', staffId, staffName: 'Rajesh Kumar', dayOfWeek: 'TUESDAY', shiftTemplateId: 'shift-morn', shiftName: 'Morning Shift', presentPay: 800, halfDayPay: 400, absentPay: 0, leavePay: 400 },
-      ],
-    };
-  }
+export async function updateShiftTemplate(
+  id: string,
+  payload: {
+    name?: string;
+    code?: string;
+    startTime?: string;
+    endTime?: string;
+    isNightShift?: boolean;
+    graceMinutes?: number;
+    lateAfterMinutes?: number;
+    earlyLeaveMinutes?: number;
+  },
+): Promise<{ success: boolean; template: ShiftTemplate }> {
+  const { data } = await api.put(`/working-shifts/templates/${id}`, payload);
+  return data;
 }
 
-export async function saveStaffShiftSalaryConfig(payload: Omit<StaffShiftSalaryConfig, 'id' | 'staffName' | 'shiftName'>) {
-  try {
-    const { data } = await api.post('/shifts/staff-salaries', payload);
-    return data;
-  } catch (error: any) {
-    return { success: true, message: 'Staff shift salary configuration saved' };
-  }
+export async function deleteShiftTemplate(
+  id: string,
+): Promise<{ success: boolean; message: string }> {
+  const { data } = await api.delete(`/working-shifts/templates/${id}`);
+  return data;
+}
+
+export async function fetchAssignments(): Promise<{
+  success: boolean;
+  assignments: ShiftAssignment[];
+}> {
+  const { data } = await api.get('/working-shifts/assignments');
+  return data;
+}
+
+export async function createAssignment(payload: {
+  staffId: string;
+  shiftId: string;
+  dayOfWeek: number;
+  isEnabled: boolean;
+  presentPay: number | string;
+  absentPay: number | string;
+  halfDayPay: number | string;
+  leavePay: number | string;
+  offDayPayment?: number | string;
+  holidayPayment?: number | string;
+}): Promise<{ success: boolean; assignment: ShiftAssignment }> {
+  const { data } = await api.post('/working-shifts/assign', payload);
+  return data;
+}
+
+export interface WeeklyDayInput {
+  dayOfWeek: number;
+  shiftId: string | null;
+  isEnabled?: boolean;
+}
+
+export async function createWeeklyAssignment(payload: {
+  staffId: string;
+  days: WeeklyDayInput[];
+  presentPay?: number | string;
+  halfDayPay?: number | string;
+  absentPay?: number | string;
+  leavePay?: number | string;
+  offDayPayment?: number | string;
+  holidayPayment?: number | string;
+}): Promise<{ success: boolean; assignments: ShiftAssignment[] }> {
+  const { data } = await api.post('/working-shifts/assign-weekly', payload);
+  return data;
 }

@@ -26,7 +26,7 @@ let refreshInFlight: Promise<boolean> | null = null;
 
 /**
  * Browser refresh relies on the httpOnly cookie the backend sets on
- * /api/v1/auth/*; same-origin via the Vite proxy so it just works.
+ * /api/auth/*; same-origin via the Vite proxy so it just works.
  * The response body also carries a refresh token for mobile clients —
  * intentionally ignored here.
  */
@@ -34,7 +34,7 @@ async function tryRefresh(): Promise<boolean> {
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
       try {
-        const res = await fetch("/api/v1/auth/refresh", {
+        const res = await fetch("/api/auth/refresh", {
           method: "POST",
           credentials: "include",
           headers: {
@@ -91,7 +91,7 @@ export async function api<T = unknown>(
 
   // Access token expired: refresh once, replay the original request with the
   // newly issued token.
-  if (res.status === 401 && auth && !path.startsWith("/api/v1/auth/")) {
+  if (res.status === 401 && auth && !path.startsWith("/api/auth/")) {
     if (await tryRefresh()) {
       res = await send();
     }
@@ -104,7 +104,7 @@ export async function api<T = unknown>(
     | null;
 
   if (!res.ok) {
-    if (path.startsWith("/api/v1/auth/") && res.status === 401) {
+    if (path.startsWith("/api/auth/") && res.status === 401) {
       useAuthStore.getState().clearSession();
     }
     throw new ApiError(

@@ -22,8 +22,8 @@ export function MenuPage() {
   const addItem = useCartStore((s) => s.addItem);
 
   const menuQuery = useQuery({
-    queryKey: ["public-menu", restaurant],
-    queryFn: () => getPublicMenu(restaurant),
+    queryKey: ["public-menu", restaurant, table],
+    queryFn: () => getPublicMenu(restaurant, table),
     retry: false,
   });
 
@@ -65,7 +65,7 @@ export function MenuPage() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search dishes…"
-        className="w-full rounded-full border border-zinc-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+        className="w-full rounded-full border border-zinc-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20"
       />
 
       <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -75,7 +75,7 @@ export function MenuPage() {
             onClick={() => setActiveCategory(cat)}
             className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
               activeCategory === cat
-                ? "bg-indigo-600 text-white"
+                ? "bg-accent-600 text-white"
                 : "border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"
             }`}
           >
@@ -107,7 +107,7 @@ export function MenuPage() {
       {items.length > 0 && (
         <Link
           to={`/customer/cart?${qs}`}
-          className="fixed inset-x-4 bottom-20 z-40 mx-auto flex max-w-[calc(32rem-2rem)] items-center justify-between rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+          className="fixed inset-x-4 bottom-20 z-40 mx-auto flex max-w-[calc(32rem-2rem)] items-center justify-between rounded-xl bg-accent-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-accent-700"
         >
           <span>
             {items.reduce((n, i) => n + i.qty, 0)} item
@@ -163,7 +163,7 @@ function MenuItemRow({
         ) : (
           <button
             onClick={onAdd}
-            className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-indigo-700 active:bg-indigo-800"
+            className="rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-accent-700 active:bg-accent-800"
           >
             ADD
           </button>
@@ -177,20 +177,20 @@ function QtyBadge({ name, qty, itemId }: { name: string; qty: number; itemId: st
   const setQty = useCartStore((s) => s.setQty);
   return (
     <div
-      className="flex items-center overflow-hidden rounded-lg border border-indigo-600"
+      className="flex items-center overflow-hidden rounded-lg border border-accent-600"
       aria-label={`${name}, quantity ${qty}`}
     >
       <button
         onClick={() => setQty(itemId, qty - 1)}
-        className="px-2.5 py-1.5 text-sm font-bold text-indigo-600 transition hover:bg-indigo-50"
+        className="px-2.5 py-1.5 text-sm font-bold text-accent-600 transition hover:bg-accent-50"
         aria-label={`Remove one ${name}`}
       >
         −
       </button>
-      <span className="w-6 text-center text-sm font-bold text-indigo-700">{qty}</span>
+      <span className="w-6 text-center text-sm font-bold text-accent-700">{qty}</span>
       <button
         onClick={() => setQty(itemId, qty + 1)}
-        className="px-2.5 py-1.5 text-sm font-bold text-indigo-600 transition hover:bg-indigo-50"
+        className="px-2.5 py-1.5 text-sm font-bold text-accent-600 transition hover:bg-accent-50"
         aria-label={`Add one ${name}`}
       >
         +

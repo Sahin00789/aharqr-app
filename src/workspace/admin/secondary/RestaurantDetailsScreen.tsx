@@ -7,8 +7,8 @@ import {
   getMyRestaurant,
   updateMyRestaurant,
   type RestaurantProfile,
-} from "../../../services/settings.service";
-import { SecondaryScreen } from "./SecondaryScreen";
+} from "../../../services/restaurant.services";
+import { SecondaryScreenAdapter } from "../../../common/layouts/SecondaryScreenAdapter";
 
 export function RestaurantDetailsScreen() {
   const navigate = useNavigate();
@@ -45,14 +45,14 @@ export function RestaurantDetailsScreen() {
 
   if (query.isPending) {
     return (
-      <SecondaryScreen title="Restaurant details">
+      <SecondaryScreenAdapter title="Restaurant details">
         <div className="h-40 animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800" />
-      </SecondaryScreen>
+      </SecondaryScreenAdapter>
     );
   }
 
   return (
-    <SecondaryScreen title="Restaurant details">
+    <SecondaryScreenAdapter title="Restaurant details">
       <div className="space-y-5">
         <div>
           <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
@@ -93,6 +93,7 @@ export function RestaurantDetailsScreen() {
           </Button>
         </div>
       </div>
-    </SecondaryScreen>
+    </SecondaryScreenAdapter>
   );
 }
+

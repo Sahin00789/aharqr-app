@@ -59,11 +59,19 @@ export interface NavItemConfig {
   subtitle?: string;
 }
 
-/** An entry inside the profile drawer's account list. */
+/** An entry inside the profile dropdown / account list. */
 export interface ProfileMenuItem {
   icon: LucideIcon;
   name: string;
   subtexts?: string;
-  /** Path relative to /app/<role> (e.g. "settings/profile"). */
+  /** Path relative to /app/<role> (e.g. "settings/profile"). "logout" triggers sign-out. */
   routeUrl: string;
+  /** "danger" tints the row red (e.g. Logout). */
+  tone?: "default" | "danger";
+}
+
+/** Header shown at the top of the profile dropdown. */
+export interface ProfileMenuHeader {
+  label: string;
+  items: ProfileMenuItem[];
 }

@@ -39,7 +39,7 @@ export function ObserverReportsTab() {
               </div>
               <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-100">
                 <div
-                  className="h-full rounded-full bg-indigo-600"
+                  className="h-full rounded-full bg-accent-600"
                   style={{ width: `${pct}%` }}
                   role="img"
                   aria-label={`${s.label} revenue ${pct.toFixed(0)} percent of peak`}

@@ -3,8 +3,8 @@ import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import { Button, Card, Input } from "../../../common/ui";
 import { useAuthStore } from "../../../stores/auth-store";
-import { updateMyProfile } from "../../../services/settings.service";
-import { SecondaryScreen } from "./SecondaryScreen";
+import { updateMyProfile } from "../../../services/auth.service";
+import { SecondaryScreenAdapter } from "../../../common/layouts/SecondaryScreenAdapter";
 
 export function EditProfileScreen() {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ export function EditProfileScreen() {
   }
 
   return (
-    <SecondaryScreen title="Edit profile">
+    <SecondaryScreenAdapter title="Edit profile">
       <div className="space-y-5">
         <div>
           <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
@@ -74,6 +74,7 @@ export function EditProfileScreen() {
           </Button>
         </div>
       </div>
-    </SecondaryScreen>
+    </SecondaryScreenAdapter>
   );
 }
+

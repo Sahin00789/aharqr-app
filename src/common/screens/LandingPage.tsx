@@ -34,7 +34,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-40 border-b border-zinc-200/80 bg-white/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent-600 to-accent2-600 text-white">
               <QrCode size={18} />
             </span>
             <span className="text-lg font-bold tracking-tight">AharQR</span>
@@ -63,12 +63,12 @@ export function LandingPage() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 sm:px-6">
         <section className="flex flex-col items-center py-16 text-center sm:py-24">
-          <span className="mb-4 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold tracking-wide text-indigo-700 uppercase">
+          <span className="mb-4 rounded-full border border-accent-200 bg-accent-50 px-3 py-1 text-xs font-semibold tracking-wide text-accent-700 uppercase">
             Restaurant POS · reimagined
           </span>
           <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight text-balance sm:text-6xl">
             Every table, every order —{" "}
-            <span className="text-indigo-600">one dashboard</span>
+            <span className="text-accent-600">one dashboard</span>
           </h1>
           <p className="mt-5 max-w-xl text-base text-zinc-500 sm:text-lg">
             AharQR turns your tables into self-serving touchpoints while captains,
@@ -94,9 +94,9 @@ export function LandingPage() {
           {FEATURES.map(({ icon: Icon, title, body }) => (
             <div
               key={title}
-              className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+              className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-accent-300 hover:shadow-md"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-50 text-accent-600">
                 <Icon size={20} />
               </span>
               <h3 className="mt-3 font-semibold">{title}</h3>

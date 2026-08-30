@@ -77,7 +77,7 @@ export function SignupPage() {
           />
           <p className="text-xs text-zinc-400">
             Already registered?{" "}
-            <Link to="/auth" className="font-medium text-indigo-600 hover:underline">
+            <Link to="/auth" className="font-medium text-accent-600 hover:underline">
               Sign in
             </Link>
           </p>
@@ -89,8 +89,8 @@ export function SignupPage() {
         >
           <ErrorBanner message={error} />
 
-          <div className="flex items-center gap-3 rounded-lg bg-indigo-50 px-3 py-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white">
+          <div className="flex items-center gap-3 rounded-lg bg-accent-50 px-3 py-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent-600 to-accent2-600 text-white">
               {stage.profile.picture ? (
                 <img
                   src={stage.profile.picture}

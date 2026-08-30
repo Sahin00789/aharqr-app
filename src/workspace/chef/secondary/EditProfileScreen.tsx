@@ -3,8 +3,8 @@ import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import { Button, Card, Input } from "../../../common/ui";
 import { useAuthStore } from "../../../stores/auth-store";
-import { updateMyProfile } from "../../../services/settings.service";
-import { SecondaryScreen } from "./SecondaryScreen";
+import { updateMyProfile } from "../../../services/auth.service";
+import { SecondaryScreen } from "../../../common/layouts/SecondaryScreen";
 
 export function EditProfileScreen() {
   const navigate = useNavigate();
@@ -77,3 +77,4 @@ export function EditProfileScreen() {
     </SecondaryScreen>
   );
 }
+

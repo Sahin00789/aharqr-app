@@ -54,7 +54,7 @@ export function CartPage() {
         <p className="mt-1 text-sm text-zinc-500">Add some dishes to get started.</p>
         <Link
           to={`/customer?${qs}`}
-          className="mt-4 inline-block rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+          className="mt-4 inline-block rounded-lg bg-accent-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-700"
         >
           Browse menu
         </Link>

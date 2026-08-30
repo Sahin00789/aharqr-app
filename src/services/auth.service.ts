@@ -1,4 +1,4 @@
-import type { AuthSession, GoogleProfile } from "../types";
+import type { AuthSession, GoogleProfile, PublicUser } from "../types";
 import { api } from "./api-client";
 import { useAuthStore } from "../stores/auth-store";
 
@@ -7,7 +7,7 @@ import { useAuthStore } from "../stores/auth-store";
  * @react-oauth/google. The backend verifies the token and issues a session.
  */
 export async function loginWithGoogle(credential: string): Promise<AuthSession> {
-  const session = await api<AuthSession>("/api/v1/auth/google/login", {
+  const session = await api<AuthSession>("/api/auth/login/google", {
     method: "POST",
     auth: false,
     body: { credential },
@@ -21,7 +21,7 @@ export async function loginWithPassword(
   email: string,
   password: string,
 ): Promise<AuthSession> {
-  const session = await api<AuthSession>("/api/v1/auth/login", {
+  const session = await api<AuthSession>("/api/auth/login", {
     method: "POST",
     auth: false,
     body: { email, password },
@@ -38,7 +38,7 @@ export async function verifyGoogleCode(credential: string): Promise<{
   profile: GoogleProfile;
   registrationTicket: string;
 }> {
-  return api("/api/v1/auth/google/verify", {
+  return api("/api/auth/verify-google-profile", {
     method: "POST",
     auth: false,
     body: { credential },
@@ -52,7 +52,7 @@ export async function registerRestaurantAdmin(input: {
   phone?: string;
   address?: string;
 }): Promise<AuthSession> {
-  const session = await api<AuthSession>("/api/v1/auth/google/register", {
+  const session = await api<AuthSession>("/api/auth/register/admin/full", {
     method: "POST",
     auth: false,
     body: input,
@@ -61,6 +61,18 @@ export async function registerRestaurantAdmin(input: {
   return session;
 }
 
+/** Self-service: update the signed-in user's own profile. */
+export function updateMyProfile(input: {
+  firstName: string;
+  lastName?: string;
+  phone?: string;
+}): Promise<PublicUser> {
+  return api<{ success: boolean; user: PublicUser }>("/api/auth/me", {
+    method: "PATCH",
+    body: input,
+  }).then((data) => data.user);
+}
+
 export function logout(): Promise<void> {
-  return api("/api/v1/auth/logout", { method: "POST" });
+  return api("/api/auth/logout", { method: "POST" });
 }

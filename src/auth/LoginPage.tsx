@@ -23,12 +23,12 @@ const ROLE_THEMES: Record<
   }
 > = {
   ADMIN: {
-    gradient: "from-indigo-600 to-violet-500",
-    text: "text-indigo-700",
-    idleIcon: "text-indigo-400",
-    pillRing: "ring-indigo-200",
-    glow: "shadow-indigo-600/25",
-    blobA: "bg-indigo-200/40",
+    gradient: "from-accent-600 to-accent2-600",
+    text: "text-accent-700",
+    idleIcon: "text-accent-400",
+    pillRing: "ring-accent-200",
+    glow: "shadow-accent-600/25",
+    blobA: "bg-accent-200/40",
     blobB: "bg-violet-200/40",
   },
   CAPTAIN: {
@@ -60,12 +60,12 @@ const ROLE_THEMES: Record<
   },
 };
 
-const ROLES: { role: UserRole; short: string; icon: typeof User; blurb: string }[] =
+const ROLES: { role: UserRole; short: string; icon: typeof User; sub: string; blurb: string }[] =
   [
-    { role: "ADMIN", short: "Admin", icon: ShieldCheck, blurb: "Full control of your restaurant" },
-    { role: "CAPTAIN", short: "Captain", icon: User, blurb: "Tables, orders and billing" },
-    { role: "CHEF", short: "Chef", icon: ChefHat, blurb: "Kitchen queue and prep" },
-    { role: "OBSERVER", short: "Observer", icon: Eye, blurb: "Read-only live monitoring" },
+    { role: "ADMIN", short: "Admin", icon: ShieldCheck, sub: "Owner / Management", blurb: "Full control of your restaurant" },
+    { role: "CAPTAIN", short: "Captain", icon: User, sub: "Floor & Orders", blurb: "Tables, orders and billing" },
+    { role: "CHEF", short: "Chef", icon: ChefHat, sub: "Kitchen KDS", blurb: "Kitchen queue and prep" },
+    { role: "OBSERVER", short: "Observer", icon: Eye, sub: "Read-only monitoring", blurb: "Read-only live monitoring" },
   ];
 
 const ROLE_BLURBS = Object.fromEntries(
@@ -197,36 +197,51 @@ export function LoginPage() {
 
           {/* Role selection */}
           <div
-            role="tablist"
+            role="radiogroup"
             aria-label="Choose your role"
-            className="grid grid-cols-4 gap-1 rounded-xl bg-zinc-100 p-1"
+            className="grid gap-2 sm:grid-cols-2"
           >
-            {ROLES.map(({ role: r, short, icon: Icon }) => {
+            {ROLES.map(({ role: r, short, icon: Icon, sub }) => {
               const active = role === r;
               const t = ROLE_THEMES[r];
               return (
                 <button
                   key={r}
                   type="button"
-                  role="tab"
-                  aria-selected={active}
+                  role="radio"
+                  aria-checked={active}
                   onClick={() => setRole(r)}
-                  className={`relative rounded-lg px-1 py-2 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-offset-1 ${
+                  className={`relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-3 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-offset-1 ${
                     active
-                      ? `${t.text} focus-visible:ring-current`
-                      : "text-zinc-500 hover:text-zinc-800 focus-visible:ring-zinc-400"
+                      ? `border-transparent focus-visible:ring-current ${t.text}`
+                      : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50 focus-visible:ring-zinc-400"
                   }`}
                 >
                   {active && (
                     <motion.span
                       layoutId="role-active-pill"
-                      className={`absolute inset-0 rounded-lg bg-white shadow-sm ring-1 ${t.pillRing}`}
+                      className={`absolute inset-0 bg-gradient-to-br ${t.gradient} opacity-10`}
                       transition={{ type: "spring", bounce: 0.18, duration: 0.45 }}
                     />
                   )}
-                  <span className="relative z-10 flex flex-col items-center gap-1">
-                    <Icon size={16} className={active ? "" : t.idleIcon} />
-                    {short}
+                  <span
+                    className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                      active
+                        ? `bg-gradient-to-br ${t.gradient} text-white shadow-sm ${t.glow}`
+                        : "bg-zinc-100 text-zinc-500"
+                    }`}
+                  >
+                    <Icon size={18} />
+                  </span>
+                  <span className="relative z-10 min-w-0">
+                    <span className="block text-sm font-semibold text-zinc-900">
+                      {short}
+                    </span>
+                    <span
+                      className={`block text-xs ${active ? t.text : "text-zinc-400"}`}
+                    >
+                      {sub}
+                    </span>
                   </span>
                 </button>
               );
@@ -290,7 +305,7 @@ export function LoginPage() {
 
             <p className="text-center text-xs text-zinc-400">
               New restaurant?{" "}
-              <Link to="/signup" className="font-medium text-indigo-600 hover:underline">
+              <Link to="/signup" className="font-medium text-accent-600 hover:underline">
                 Create an account
               </Link>
             </p>
@@ -316,7 +331,7 @@ export function AuthLayout({
       <div aria-hidden className="pointer-events-none absolute inset-0">
         {background ?? (
           <>
-            <div className="absolute -top-28 right-[-8%] h-80 w-80 rounded-full bg-indigo-200/40 blur-3xl" />
+            <div className="absolute -top-28 right-[-8%] h-80 w-80 rounded-full bg-accent-200/40 blur-3xl" />
             <div className="absolute bottom-[-12%] left-[-10%] h-80 w-80 rounded-full bg-violet-200/40 blur-3xl" />
           </>
         )}

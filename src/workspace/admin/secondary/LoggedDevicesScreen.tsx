@@ -7,7 +7,7 @@ import {
   revokeSession,
   type SessionDevice,
 } from "../../../services/sessions.service";
-import { SecondaryScreen } from "./SecondaryScreen";
+import { SecondaryScreenAdapter } from "../../../common/layouts/SecondaryScreenAdapter";
 
 function describeUA(ua?: string | null): { type: "desktop" | "mobile"; label: string } {
   if (!ua) return { type: "desktop", label: "Unknown device" };
@@ -66,7 +66,7 @@ export function LoggedDevicesScreen() {
   const others = devices.filter((s: SessionDevice) => !s.current);
 
   return (
-    <SecondaryScreen title="Logged devices">
+    <SecondaryScreenAdapter title="Logged devices">
       <Card className="overflow-hidden p-0">
         <div className="flex items-center justify-between gap-3 border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
           <div>
@@ -128,6 +128,7 @@ export function LoggedDevicesScreen() {
           </ul>
         )}
       </Card>
-    </SecondaryScreen>
+    </SecondaryScreenAdapter>
   );
 }
+

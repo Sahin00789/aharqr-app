@@ -1,5 +1,66 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Dual-color sub-theme accents. Values resolve to runtime CSS variables
+     (--accent-* / --accent2-*) set by the ThemeProvider, defaulting below.
+     NOTE: each --color-accent-* points straight at the runtime var, whose value
+     is a full `rgb(R G B)` string, so utilities stay valid in the compiled CSS
+     (no unresolved <alpha-value> placeholder). */
+  --color-accent-50: var(--accent-50);
+  --color-accent-100: var(--accent-100);
+  --color-accent-200: var(--accent-200);
+  --color-accent-300: var(--accent-300);
+  --color-accent-400: var(--accent-400);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  --color-accent-700: var(--accent-700);
+  --color-accent-800: var(--accent-800);
+  --color-accent-900: var(--accent-900);
+  --color-accent-950: var(--accent-950);
+
+  --color-accent2-50: var(--accent2-50);
+  --color-accent2-100: var(--accent2-100);
+  --color-accent2-200: var(--accent2-200);
+  --color-accent2-300: var(--accent2-300);
+  --color-accent2-400: var(--accent2-400);
+  --color-accent2-500: var(--accent2-500);
+  --color-accent2-600: var(--accent2-600);
+  --color-accent2-700: var(--accent2-700);
+  --color-accent2-800: var(--accent2-800);
+  --color-accent2-900: var(--accent2-900);
+  --color-accent2-950: var(--accent2-950);
+}
+
+/* Default sub-theme = Indigo (primary) + Violet (secondary). Overridden at
+   runtime by ThemeProvider via the selected preset. Values are full rgb() colors. */
+:root {
+  --accent-50: rgb(238 242 255);
+  --accent-100: rgb(224 231 255);
+  --accent-200: rgb(199 210 254);
+  --accent-300: rgb(165 180 252);
+  --accent-400: rgb(129 140 248);
+  --accent-500: rgb(99 102 241);
+  --accent-600: rgb(79 70 229);
+  --accent-700: rgb(67 56 202);
+  --accent-800: rgb(55 48 163);
+  --accent-900: rgb(49 46 129);
+  --accent-950: rgb(30 27 75);
+
+  --accent2-50: rgb(245 243 255);
+  --accent2-100: rgb(237 233 254);
+  --accent2-200: rgb(221 214 254);
+  --accent2-300: rgb(196 181 253);
+  --accent2-400: rgb(167 139 250);
+  --accent2-500: rgb(139 92 246);
+  --accent2-600: rgb(124 58 237);
+  --accent2-700: rgb(109 40 217);
+  --accent2-800: rgb(91 33 182);
+  --accent2-900: rgb(76 29 149);
+  --accent2-950: rgb(46 16 101);
+}
+
 @layer utilities {
   /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {

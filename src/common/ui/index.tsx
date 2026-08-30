@@ -11,11 +11,11 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 shadow-sm",
+    "bg-accent-600 text-white hover:bg-accent-700 active:bg-accent-800 shadow-sm disabled:bg-accent-600 disabled:text-white",
   secondary:
-    "bg-white text-zinc-700 border border-zinc-300 hover:bg-zinc-50 active:bg-zinc-100",
-  ghost: "text-zinc-600 hover:bg-zinc-100 active:bg-zinc-200",
-  danger: "bg-red-600 text-white hover:bg-red-700",
+    "bg-white text-zinc-700 border border-zinc-300 hover:bg-zinc-50 active:bg-zinc-100 disabled:bg-zinc-50 disabled:text-zinc-400",
+  ghost: "text-zinc-600 hover:bg-zinc-100 active:bg-zinc-200 disabled:text-zinc-400",
+  danger: "bg-red-600 text-white hover:bg-red-700 disabled:bg-red-600 disabled:text-white",
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -47,7 +47,7 @@ export function Button({
       {...rest}
       aria-busy={loading}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-60 ${SIZES[size]} ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:cursor-not-allowed disabled:opacity-100 ${SIZES[size]} ${VARIANTS[variant]} ${className}`}
     >
       {loading && <Loader2 size={size === "sm" ? 14 : 16} className="animate-spin" aria-hidden />}
       <span className={`inline-flex items-center gap-2 ${loading ? "opacity-90" : ""}`}>
@@ -86,7 +86,7 @@ export function Input({
           id={id}
           type={isPassword && showPassword ? "text" : type}
           {...rest}
-          className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm outline-none transition placeholder:text-zinc-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 ${
+          className={`w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 ${
             isPassword ? "pr-10" : ""
           } ${error ? "border-red-400" : "border-zinc-300"} ${className}`}
         />
@@ -115,7 +115,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-xl border border-zinc-200 bg-white p-4 shadow-sm md:p-5 ${className}`}
+      className={`rounded-xl border border-zinc-200 bg-white p-4 text-zinc-900 shadow-sm md:p-5 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 ${className}`}
     >
       {children}
     </div>
@@ -134,7 +134,7 @@ export function Badge({
     green: "bg-emerald-100 text-emerald-700",
     amber: "bg-amber-100 text-amber-700",
     red: "bg-red-100 text-red-700",
-    indigo: "bg-indigo-100 text-indigo-700",
+    indigo: "bg-accent-100 text-accent-700",
   } as const;
   return (
     <span
@@ -173,6 +173,9 @@ export function PagePlaceholder({
 }
 
 export * from "./loaders";
+export * from "./Modal";
+export * from "./Stepper";
+export * from "./fields";
 
 export function ScreenHeader({
   title,

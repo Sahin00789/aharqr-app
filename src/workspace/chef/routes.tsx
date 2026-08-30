@@ -5,36 +5,53 @@ import { AccountScreen } from "../../common/layouts/AccountScreen";
 import { EditProfileScreen } from "./secondary/EditProfileScreen";
 import { AppearanceScreen } from "./secondary/AppearanceScreen";
 import { LoggedDevicesScreen } from "./secondary/LoggedDevicesScreen";
+import {
+  MyShiftScreen,
+  AttendanceHistoryScreen,
+  SalarySummaryScreen,
+  SecurityScreen,
+  HelpScreen,
+} from "../../common/layouts/secondary/StaffProfileScreens";
 import type { NavItemConfig, ProfileMenuItem } from "../../types";
 import { ROLE_PATHS } from "../../types";
-import { HomeTab } from "./tabs/HomeTab";
 import { ChefKitchenTab } from "./tabs/KitchenTab";
 import { ChefOrdersTab } from "./tabs/OrdersTab";
-import { ChefMenuTab } from "./tabs/MenuTab";
-import { ChefProfileTab } from "./tabs/ProfileTab";
+import { ChefDishesTab } from "./tabs/DishesTab";
+import { ChefStockTab } from "./tabs/StockTab";
+import { CaptainAttendanceTab as ChefAttendanceTab } from "../captain/tabs/AttendanceTab";
 import {
   ChefHat,
   ClipboardList,
-  LayoutDashboard,
-  Laptop,
-  Settings,
-  User,
-  UserRound,
   UtensilsCrossed,
+  CalendarClock,
+  Boxes,
+  Wallet,
+  UserRound,
+  Clock,
+  History,
+  Shield,
+  Settings,
+  LifeBuoy,
+  LogOut,
 } from "lucide-react";
 
 const navItems: NavItemConfig[] = [
-  { routeUrl: "", name: "Home", icon: LayoutDashboard, element: <HomeTab />, subtitle: "Live snapshot of your restaurant" },
-  { routeUrl: "kitchen", name: "Kitchen", icon: ChefHat, element: <ChefKitchenTab />, subtitle: "Live kitchen tickets" },
+  { routeUrl: "", name: "Kitchen", icon: ChefHat, element: <ChefKitchenTab />, subtitle: "Live kitchen tickets" },
   { routeUrl: "orders", name: "Orders", icon: ClipboardList, element: <ChefOrdersTab />, subtitle: "All orders across the floor" },
-  { routeUrl: "menu", name: "Menu", icon: UtensilsCrossed, element: <ChefMenuTab />, subtitle: "Read-only menu view" },
-  { routeUrl: "profile", name: "Profile", icon: User, element: <ChefProfileTab />, subtitle: "Your chef account" },
+  { routeUrl: "dishes", name: "Dishes", icon: UtensilsCrossed, element: <ChefDishesTab />, subtitle: "Menu availability" },
+  { routeUrl: "attendance", name: "Attendance", icon: CalendarClock, element: <ChefAttendanceTab />, subtitle: "Your shift and attendance" },
+  { routeUrl: "stock", name: "Stock", icon: Boxes, element: <ChefStockTab />, subtitle: "Operational stock visibility" },
 ];
 
 const profileMenuListItems: ProfileMenuItem[] = [
-  { icon: UserRound, name: "Edit profile", subtexts: "Name, phone & password", routeUrl: "settings/profile" },
-  { icon: Laptop, name: "Logged devices", subtexts: "Sessions on other devices", routeUrl: "settings/devices" },
-  { icon: Settings, name: "Appearance", subtexts: "Theme & display", routeUrl: "settings/appearance" },
+  { icon: UserRound, name: "My Profile", subtexts: "Name, phone & password", routeUrl: "settings/profile" },
+  { icon: Clock, name: "My Shift", subtexts: "Your scheduled shift", routeUrl: "settings/my-shift" },
+  { icon: History, name: "Attendance History", subtexts: "Past check-ins & status", routeUrl: "settings/attendance-history" },
+  { icon: Wallet, name: "Salary Summary", subtexts: "Your monthly earnings", routeUrl: "settings/salary-summary" },
+  { icon: Shield, name: "Security", subtexts: "Password & sessions", routeUrl: "settings/security" },
+  { icon: Settings, name: "Settings", subtexts: "Appearance & devices", routeUrl: "settings" },
+  { icon: LifeBuoy, name: "Help", subtexts: "Support & guides", routeUrl: "settings/help" },
+  { icon: LogOut, name: "Logout", routeUrl: "logout", tone: "danger" },
 ];
 
 /** CHEF workspace route tree, guarded by role and exposing the secondary screens. */
@@ -62,6 +79,11 @@ export const chefRoutes = (
       <Route path="profile" element={<EditProfileScreen />} />
       <Route path="devices" element={<LoggedDevicesScreen />} />
       <Route path="appearance" element={<AppearanceScreen />} />
+      <Route path="my-shift" element={<MyShiftScreen />} />
+      <Route path="attendance-history" element={<AttendanceHistoryScreen />} />
+      <Route path="salary-summary" element={<SalarySummaryScreen />} />
+      <Route path="security" element={<SecurityScreen />} />
+      <Route path="help" element={<HelpScreen />} />
     </Route>
   </Route>
 );

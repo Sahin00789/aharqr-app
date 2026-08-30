@@ -10,7 +10,7 @@ export function Spinner({ size = 16 }: { size?: number }) {
 export function PageLoader({ label }: { label?: string }) {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-zinc-400">
-      <Loader2 size={28} className="animate-spin text-indigo-600" />
+      <Loader2 size={28} className="animate-spin text-accent-600" />
       {label && <p className="text-sm">{label}</p>}
     </div>
   );

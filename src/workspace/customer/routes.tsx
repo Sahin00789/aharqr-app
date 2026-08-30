@@ -34,7 +34,7 @@ function CustomerShell({ navItems }: { navItems: NavItemConfig[] }) {
     <div className="flex min-h-full flex-col bg-zinc-50">
       <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/90 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-lg items-center gap-2.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-600 text-white">
             <QrCode size={18} />
           </span>
           <div className="min-w-0 flex-1">
@@ -51,7 +51,7 @@ function CustomerShell({ navItems }: { navItems: NavItemConfig[] }) {
           >
             <ShoppingCart size={18} />
             {items.length > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-bold text-white">
+              <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-600 px-1 text-[10px] font-bold text-white">
                 {cartCount(items)}
               </span>
             )}
@@ -74,7 +74,7 @@ function CustomerShell({ navItems }: { navItems: NavItemConfig[] }) {
             end={routeUrl === ""}
             className={({ isActive }) =>
               `flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition ${
-                isActive ? "text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+                isActive ? "text-accent-600" : "text-zinc-400 hover:text-zinc-600"
               }`
             }
           >

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, LogOut, UtensilsCrossed, QrCode, LifeBuoy } from "lucide-react";
 import type { ProfileMenuItem } from "../../types";
 import { ROLE_PATHS } from "../../types";
-import { getMyRestaurant } from "../../services/settings.service";
+import { getMyRestaurant } from "../../services/restaurant.services";
 import { useAuthStore } from "../../stores/auth-store";
 import { useLogout } from "../../hooks/use-logout";
 import { Button } from "../ui";
@@ -58,7 +58,7 @@ export function AccountScreen({ items }: { items: ProfileMenuItem[] }) {
           {/* Profile — display only; editing lives in the settings grid below */}
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200/70 dark:bg-zinc-900 dark:ring-zinc-800">
             <div className="flex items-center gap-4">
-              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-xl font-bold text-white">
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-600 to-accent2-600 text-xl font-bold text-white">
                 {initials(fullName) || userInfo?.email?.[0]?.toUpperCase() || "U"}
               </span>
               <div className="min-w-0">
@@ -67,7 +67,7 @@ export function AccountScreen({ items }: { items: ProfileMenuItem[] }) {
                 </p>
                 <p className="truncate text-sm text-zinc-400">{userInfo?.email}</p>
                 {userInfo && (
-                  <span className="mt-1.5 inline-flex rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
+                  <span className="mt-1.5 inline-flex rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-600 dark:bg-accent-500/15 dark:text-accent-300">
                     {ROLE_PATHS[userInfo.role]}
                   </span>
                 )}
@@ -97,9 +97,9 @@ export function AccountScreen({ items }: { items: ProfileMenuItem[] }) {
               <button
                 key={a.name}
                 onClick={() => navigate(`${base}/${a.routeUrl}`)}
-                className="group flex items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-zinc-200/70 transition hover:ring-indigo-300 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:ring-indigo-500/50"
+                className="group flex items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-zinc-200/70 transition hover:ring-accent-300 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:ring-accent-500/50"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600 dark:bg-accent-500/15 dark:text-accent-300">
                   <a.icon size={18} />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -134,7 +134,7 @@ export function AccountScreen({ items }: { items: ProfileMenuItem[] }) {
 
           {/* App branding — full-width card, icon + name + sub text, pinned to the bottom */}
           <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200/70 dark:bg-zinc-900 dark:ring-zinc-800">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-sm">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-600 to-accent2-600 text-white shadow-sm">
               <QrCode size={24} />
             </span>
             <div className="min-w-0">
@@ -142,7 +142,7 @@ export function AccountScreen({ items }: { items: ProfileMenuItem[] }) {
                 AharQR
               </p>
               <p className="truncate text-xs text-zinc-400">
-                Restaurant operations, simplified · v0.1
+                Restaurant operations, simplified � v0.1
               </p>
             </div>
           </div>

@@ -18,6 +18,8 @@ export function RequireAuth() {
 /** Keeps each workspace role-scoped — no peeking across roles via URL. */
 export function RequireRole({ role, children }: { role: UserRole; children?: ReactNode }) {
   const user = useAuthStore((s) => s.user);
+  const booted = useAuthStore((s) => s.booted);
+  if (!booted) return <PageLoader label="Restoring session…" />;
   if (user?.role !== role) {
     const target = user ? `/app/${ROLE_PATHS[user.role]}` : "/auth";
     return <Navigate to={target} replace />;
