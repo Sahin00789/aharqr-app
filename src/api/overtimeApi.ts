@@ -12,6 +12,7 @@ export interface OvertimeRecord {
   actualCheckInTime?: string | null;
   actualCheckOutTime?: string | null;
   workedMinutes?: number;
+  payableAmount?: number;
   remarks?: string | null;
   status: string;
   [key: string]: unknown;
@@ -36,6 +37,7 @@ export async function createOvertime(payload: {
   actualCheckInTime?: string;
   actualCheckOutTime?: string;
   workedMinutes: number;
+  payableAmount?: number;
   remarks?: string;
 }): Promise<{ success: boolean; record: OvertimeRecord }> {
   const { data } = await api.post('/overtime', payload);
@@ -48,6 +50,7 @@ export async function updateOvertime(
     overtimeDate?: string;
     plannedStartTime?: string;
     plannedEndTime?: string;
+    payableAmount?: number;
     remarks?: string;
   },
 ): Promise<{ success: boolean; record: OvertimeRecord }> {

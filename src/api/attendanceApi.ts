@@ -77,6 +77,7 @@ export interface StaffAttendanceStatus {
     actualCheckOutTime: string | null;
     shiftTemplateId: string;
     plannedStartTime: string | null;
+    payableAmount?: number | null;
   } | null;
   action: AttendanceStatusAction;
 }
@@ -85,5 +86,10 @@ export async function fetchStaffAttendanceStatus(
   staffId: string,
 ): Promise<StaffAttendanceStatus> {
   const { data } = await api.get(`/attendance/status/${staffId}`);
+  return data;
+}
+
+export async function fetchMyAttendanceStatus(): Promise<StaffAttendanceStatus> {
+  const { data } = await api.get('/attendance/my-status');
   return data;
 }

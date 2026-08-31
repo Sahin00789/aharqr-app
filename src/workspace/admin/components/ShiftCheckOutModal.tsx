@@ -6,7 +6,6 @@ import { QrCodeBox } from "./QrCodeBox";
 import { useQrToken } from "./useQrToken";
 import { generateAttendanceQr } from "../../../services/attendance.services";
 import { fetchShiftTemplates } from "../../../api/shiftsApi";
-import toast from "react-hot-toast";
 
 export function ShiftCheckOutModal({
   open,
@@ -32,21 +31,19 @@ export function ShiftCheckOutModal({
       : templates[0]?.id) ||
     "";
 
-  const { url, loading, generate } = useQrToken(async () => {
-    try {
+  const { url, token, loading, error, generate, secondsLeft } = useQrToken(
+    async () => {
       const res = await generateAttendanceQr({
         shiftTemplateId: effectiveId,
         actionType: "CHECK_OUT",
         workType: "REGULAR",
       });
       const token = res?.token;
-      if (!token) throw new Error("no token");
+      if (!token) throw new Error("No token returned.");
       return token;
-    } catch {
-      toast.error("Could not generate shift check-out QR");
-      return undefined;
-    }
-  });
+    },
+    { enabled: open },
+  );
 
   useEffect(() => {
     if (open && effectiveId) void generate();
@@ -71,7 +68,14 @@ export function ShiftCheckOutModal({
             }))}
           />
         </Field>
-        <QrCodeBox url={url} loading={loading} onRefresh={() => void generate()} />
+        <QrCodeBox
+          url={url}
+          token={token}
+          loading={loading}
+          error={error}
+          secondsLeft={secondsLeft}
+          onRefresh={() => void generate()}
+        />
       </div>
     </Modal>
   );

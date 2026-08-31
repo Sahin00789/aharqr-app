@@ -67,17 +67,15 @@ export function OvertimeCheckInModal({
     ? EDITABLE_STATUSES.includes(selected.status)
     : false;
 
-  const { url, loading, generate } = useQrToken(async () => {
-    try {
+  const { url, token, loading, error, generate, secondsLeft } = useQrToken(
+    async () => {
       const res = await getOvertimeCheckInQr(effectiveId || undefined);
       const token = res?.token;
-      if (!token) throw new Error("no token");
+      if (!token) throw new Error("No token returned.");
       return token;
-    } catch {
-      toast.error("Could not generate overtime check-in QR");
-      return undefined;
-    }
-  });
+    },
+    { enabled: open },
+  );
 
   useEffect(() => {
     if (open && effectiveId) void generate();
@@ -86,7 +84,6 @@ export function OvertimeCheckInModal({
   const cancelMutation = useMutation({
     mutationFn: () => cancelOvertime(effectiveId),
     onSuccess: () => {
-      toast.success("Overtime cancelled");
       qc.invalidateQueries({ queryKey: ["overtime"] });
       if (selected?.staffId) {
         qc.invalidateQueries({
@@ -96,6 +93,8 @@ export function OvertimeCheckInModal({
     },
     onError: () => toast.error("Could not cancel overtime"),
   });
+
+  const notEditable = selected && !editable;
 
   return (
     <Modal
@@ -127,7 +126,21 @@ export function OvertimeCheckInModal({
           </div>
         )}
 
-        <QrCodeBox url={url} loading={loading} onRefresh={() => void generate()} />
+        {notEditable ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            This overtime has already been checked in — a check-in QR is no
+            longer available. Use the check-out QR instead.
+          </div>
+        ) : (
+          <QrCodeBox
+            url={url}
+            token={token}
+            loading={loading}
+            error={error}
+            secondsLeft={secondsLeft}
+            onRefresh={() => void generate()}
+          />
+        )}
 
         {editable && selected ? (
           <div className="flex items-center justify-end gap-2">

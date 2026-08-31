@@ -1,4 +1,12 @@
 import { Modal, Badge } from "../../../common/ui";
+import {
+  Mail,
+  Phone,
+  Hash,
+  ChefHat,
+  CalendarDays,
+  MapPin,
+} from "lucide-react";
 import type { StaffMember } from "../../../api/staffApi";
 
 export const ROLE_LABEL: Record<StaffMember["role"], string> = {
@@ -17,26 +25,51 @@ export const STATUS_TONE: Record<
   SUSPENDED: "red",
 };
 
+const AVATAR_TONE: Record<StaffMember["role"], string> = {
+  CAPTAIN: "bg-sky-100 text-sky-700",
+  CHEF: "bg-orange-100 text-orange-700",
+  OBSERVER: "bg-emerald-100 text-emerald-700",
+  RESTAURANT_ADMIN: "bg-accent-100 text-accent-700",
+};
+
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "U";
 }
 
-export function Field({
+function formatDate(value?: string): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function InfoRow({
+  icon: Icon,
   label,
   value,
 }: {
+  icon: typeof Mail;
   label: string;
   value?: React.ReactNode;
 }) {
   return (
-    <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-        {label}
-      </p>
-      <p className="mt-1 text-sm text-zinc-900 dark:text-zinc-100">
-        {value ?? "—"}
-      </p>
+    <div className="flex items-start gap-3 py-2.5">
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+        <Icon size={15} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-400">
+          {label}
+        </p>
+        <p className="mt-0.5 text-sm font-medium break-words text-zinc-900 dark:text-zinc-100">
+          {value ?? "—"}
+        </p>
+      </div>
     </div>
   );
 }
@@ -56,12 +89,12 @@ export function StaffDetailModal({
       open={open}
       onClose={onClose}
       size="md"
-      title={staff ? staff.name || staff.email : "Staff Details"}
-      description="Team member profile"
+      title="Team member profile"
+      description={staff?.name || "Staff details"}
       footer={
         <button
           onClick={onClose}
-          className="rounded-lg bg-zinc-100 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200"
+          className="w-full rounded-lg bg-zinc-100 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200"
         >
           Close
         </button>
@@ -69,36 +102,45 @@ export function StaffDetailModal({
     >
       {staff && (
         <div className="space-y-5">
-          <div className="flex items-center gap-3">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-100 text-lg font-semibold text-accent-700">
+          <div className="flex items-center gap-4 rounded-2xl bg-zinc-50 p-4 ring-1 ring-zinc-200/70 dark:bg-zinc-800/50 dark:ring-zinc-700">
+            <span
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-bold ${AVATAR_TONE[staff.role]}`}
+            >
               {initials(staff.name || staff.email)}
             </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-base font-semibold text-zinc-900 dark:text-zinc-100">
                 {staff.name || staff.email}
               </p>
-              <p className="truncate text-xs text-zinc-400">{staff.email}</p>
-            </div>
-            <div className="ml-auto flex flex-col items-end gap-1">
-              <Badge tone="indigo">{ROLE_LABEL[staff.role]}</Badge>
-              <Badge tone={STATUS_TONE[staff.status] ?? "zinc"}>
-                {staff.status}
-              </Badge>
+              <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-zinc-400">
+                <Mail size={12} className="shrink-0" />
+                <span className="truncate">{staff.email}</span>
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Badge tone="indigo">{ROLE_LABEL[staff.role]}</Badge>
+                <Badge tone={STATUS_TONE[staff.status] ?? "zinc"}>
+                  {staff.status}
+                </Badge>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-4 rounded-2xl bg-zinc-50 p-4 ring-1 ring-zinc-200/70 dark:bg-zinc-800/50 dark:ring-zinc-700 sm:grid-cols-2">
-            <Field label="Phone" value={staff.phone} />
-            <Field label="Employee Code" value={staff.employeeCode} />
-            <Field label="Kitchen Station" value={staff.kitchenStation} />
-            <Field
+          <div className="divide-y divide-zinc-200/80 rounded-2xl ring-1 ring-zinc-200/70 dark:divide-zinc-800 dark:ring-zinc-700">
+            <InfoRow icon={Phone} label="Phone" value={staff.phone} />
+            <InfoRow icon={Hash} label="Employee Code" value={staff.employeeCode} />
+            {staff.role === "CHEF" && (
+              <InfoRow
+                icon={ChefHat}
+                label="Kitchen Station"
+                value={staff.kitchenStation}
+              />
+            )}
+            <InfoRow
+              icon={CalendarDays}
               label="Joining Date"
-              value={
-                staff.joiningDate
-                  ? String(staff.joiningDate).slice(0, 10)
-                  : undefined
-              }
+              value={formatDate(staff.joiningDate)}
             />
+            <InfoRow icon={MapPin} label="Address" value={staff.address} />
           </div>
         </div>
       )}

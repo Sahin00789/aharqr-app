@@ -6,7 +6,6 @@ import { QrCodeBox } from "./QrCodeBox";
 import { useQrToken } from "./useQrToken";
 import { getOvertimeCheckOutQr } from "../../../services/overtime.services";
 import { fetchOvertime } from "../../../api/overtimeApi";
-import toast from "react-hot-toast";
 
 /** Admin displays an overtime check-out QR for a selected overtime record. */
 export function OvertimeCheckOutModal({
@@ -33,17 +32,15 @@ export function OvertimeCheckOutModal({
       : records[0]?.id) ||
     "";
 
-  const { url, loading, generate } = useQrToken(async () => {
-    try {
+  const { url, token, loading, error, generate, secondsLeft } = useQrToken(
+    async () => {
       const res = await getOvertimeCheckOutQr(effectiveId || undefined);
       const token = res?.token;
-      if (!token) throw new Error("no token");
+      if (!token) throw new Error("No token returned.");
       return token;
-    } catch {
-      toast.error("Could not generate overtime check-out QR");
-      return undefined;
-    }
-  });
+    },
+    { enabled: open },
+  );
 
   useEffect(() => {
     if (open && effectiveId) void generate();
@@ -68,7 +65,14 @@ export function OvertimeCheckOutModal({
             }))}
           />
         </Field>
-        <QrCodeBox url={url} loading={loading} onRefresh={() => void generate()} />
+        <QrCodeBox
+          url={url}
+          token={token}
+          loading={loading}
+          error={error}
+          secondsLeft={secondsLeft}
+          onRefresh={() => void generate()}
+        />
       </div>
     </Modal>
   );

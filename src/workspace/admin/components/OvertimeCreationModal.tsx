@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock } from "lucide-react";
 import { Modal, Button, Input, Field, Textarea, ErrorBanner, Card, useCurrentUser } from "../../../common/ui";
@@ -15,6 +15,7 @@ interface OtForm {
   overtimeDate: string;
   plannedStartTime: string;
   plannedEndTime: string;
+  payableAmount: string;
   remarks: string;
 }
 
@@ -23,6 +24,7 @@ const EMPTY: OtForm = {
   overtimeDate: "",
   plannedStartTime: "",
   plannedEndTime: "",
+  payableAmount: "",
   remarks: "",
 };
 
@@ -46,6 +48,22 @@ function isoToTime(value?: string | null): string {
   return `${h}:${m}`;
 }
 
+/** Total planned minutes between two HH:MM times. 0 when invalid. */
+function plannedMinutes(start: string, end: string): number {
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  if (
+    [sh, sm, eh, em].some((n) => Number.isNaN(n)) ||
+    sh === undefined ||
+    sm === undefined ||
+    eh === undefined ||
+    em === undefined
+  ) {
+    return 0;
+  }
+  return eh * 60 + em - (sh * 60 + sm);
+}
+
 /** Admin creates or edits an overtime record for the selected staff member. */
 export function OvertimeCreationModal({
   open,
@@ -62,11 +80,28 @@ export function OvertimeCreationModal({
 }) {
   const qc = useQueryClient();
   useCurrentUser();
-  const [form, setForm] = useState<OtForm>(() => ({
-    ...EMPTY,
-    staffId: defaultStaffId ?? "",
-    overtimeDate: new Date().toISOString().slice(0, 10),
-  }));
+  const [form, setForm] = useState<OtForm>(() => {
+    if (initialRecord) {
+      return {
+        staffId: initialRecord.staffId,
+        overtimeDate:
+          initialRecord.overtimeDate?.slice(0, 10) ??
+          new Date().toISOString().slice(0, 10),
+        plannedStartTime: isoToTime(initialRecord.plannedStartTime),
+        plannedEndTime: isoToTime(initialRecord.plannedEndTime),
+        payableAmount:
+          initialRecord.payableAmount != null
+            ? String(initialRecord.payableAmount)
+            : "",
+        remarks: initialRecord.remarks ?? "",
+      };
+    }
+    return {
+      ...EMPTY,
+      staffId: defaultStaffId ?? "",
+      overtimeDate: new Date().toISOString().slice(0, 10),
+    };
+  });
 
   const { data: roster } = useQuery({
     queryKey: ["admin-staff"],
@@ -78,27 +113,6 @@ export function OvertimeCreationModal({
     ?.allStaff ?? [];
 
   const selectedStaff = staffMembers.find((s) => s.id === form.staffId) ?? null;
-
-  useEffect(() => {
-    if (!open) return;
-    if (initialRecord) {
-      setForm({
-        staffId: initialRecord.staffId,
-        overtimeDate:
-          initialRecord.overtimeDate?.slice(0, 10) ??
-          new Date().toISOString().slice(0, 10),
-        plannedStartTime: isoToTime(initialRecord.plannedStartTime),
-        plannedEndTime: isoToTime(initialRecord.plannedEndTime),
-        remarks: initialRecord.remarks ?? "",
-      });
-    } else {
-      setForm((f) => ({
-        ...EMPTY,
-        staffId: defaultStaffId ?? f.staffId ?? "",
-        overtimeDate: new Date().toISOString().slice(0, 10),
-      }));
-    }
-  }, [open, defaultStaffId, initialRecord]);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -113,6 +127,7 @@ export function OvertimeCreationModal({
               form.overtimeDate,
               form.plannedEndTime,
             ),
+            payableAmount: Math.max(0, Number(form.payableAmount) || 0),
             remarks: form.remarks.trim() || undefined,
           })
         : createOvertime({
@@ -128,6 +143,7 @@ export function OvertimeCreationModal({
               form.plannedEndTime,
             ),
             workedMinutes: 0,
+            payableAmount: Math.max(0, Number(form.payableAmount) || 0),
             remarks: form.remarks.trim() || undefined,
           }),
     onSuccess: () => {
@@ -156,6 +172,11 @@ export function OvertimeCreationModal({
         selectedStaff.employeeCode ? ` (${selectedStaff.employeeCode})` : ""
       }`
     : initialRecord?.staffName ?? "";
+
+  const planMins = plannedMinutes(form.plannedStartTime, form.plannedEndTime);
+  const planAmount = Math.max(0, Number(form.payableAmount) || 0);
+  const perMinute = planMins > 0 && planAmount > 0 ? planAmount / planMins : 0;
+  const planHours = planMins > 0 ? planMins / 60 : 0;
 
   return (
     <Modal
@@ -226,6 +247,45 @@ export function OvertimeCreationModal({
               value={form.plannedEndTime}
               onChange={(e) => set("plannedEndTime", e.target.value)}
             />
+          </div>
+
+          <Input
+            id="payableAmount"
+            label="Overtime Amount (₹) *"
+            type="number"
+            min={0}
+            step={1}
+            placeholder="0"
+            value={form.payableAmount}
+            onChange={(e) => set("payableAmount", e.target.value)}
+          />
+
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+            <p className="font-medium text-zinc-700 dark:text-zinc-200">
+              Calculation
+            </p>
+            <div className="mt-1.5 grid grid-cols-1 gap-1 text-xs sm:grid-cols-3">
+              <span>
+                Planned duration:{" "}
+                <strong className="text-zinc-900 dark:text-zinc-100">
+                  {planMins > 0
+                    ? `${Math.floor(planHours)}h ${planMins % 60}m`
+                    : "—"}
+                </strong>
+              </span>
+              <span>
+                Per hour:{" "}
+                <strong className="text-zinc-900 dark:text-zinc-100">
+                  ₹{planHours > 0 ? (planAmount / planHours).toFixed(1) : "—"}
+                </strong>
+              </span>
+              <span>
+                Per minute:{" "}
+                <strong className="text-zinc-900 dark:text-zinc-100">
+                  ₹{perMinute > 0 ? perMinute.toFixed(2) : "—"}
+                </strong>
+              </span>
+            </div>
           </div>
 
           <Field label="Remarks">

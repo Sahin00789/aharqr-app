@@ -6,6 +6,7 @@ import {
   Zap,
   Users,
   Loader2,
+  ChevronRight,
 } from "lucide-react";
 import {
   SectionTitle,
@@ -28,10 +29,25 @@ import { OvertimeCreationModal } from "../components/OvertimeCreationModal";
 import { OvertimeCheckInModal } from "../components/OvertimeCheckInModal";
 import { OvertimeCheckOutModal } from "../components/OvertimeCheckOutModal";
 
-const STATUS_TONE: Record<StaffMember["status"], "green" | "amber" | "red"> = {
-  ACTIVE: "green",
-  INVITED: "amber",
-  SUSPENDED: "red",
+const STATUS_META: Record<
+  StaffMember["status"],
+  { tone: "green" | "amber" | "red"; dot: string; label: string }
+> = {
+  ACTIVE: {
+    tone: "green",
+    dot: "bg-emerald-500",
+    label: "Active",
+  },
+  INVITED: {
+    tone: "amber",
+    dot: "bg-amber-400",
+    label: "Invited",
+  },
+  SUSPENDED: {
+    tone: "red",
+    dot: "bg-red-500",
+    label: "Suspended",
+  },
 };
 
 type ModalKey =
@@ -59,39 +75,44 @@ function formatTime(value?: string) {
   return `${hour}:${String(m ?? 0).padStart(2, "0")} ${period}`;
 }
 
-function ActionLabel(action: AttendanceStatusAction): string {
+function ActionMeta(action: AttendanceStatusAction): {
+  label: string;
+  icon: "in" | "out" | "zap";
+  primary: boolean;
+} {
   switch (action) {
     case "SHIFT_CHECK_IN":
-      return "Shift Check-in";
+      return { label: "Check-in", icon: "in", primary: true };
     case "SHIFT_CHECK_OUT":
-      return "Shift Check-out";
+      return { label: "Check-out", icon: "out", primary: false };
     case "OVERTIME_CHECK_IN":
-      return "Overtime Check-in QR";
+      return { label: "OT Check-in", icon: "zap", primary: false };
     case "OVERTIME_CHECK_OUT":
-      return "Overtime Check-out";
+      return { label: "OT Check-out", icon: "out", primary: false };
     case "CREATE_OVERTIME":
-      return "Create Overtime";
+      return { label: "Add Overtime", icon: "zap", primary: false };
   }
 }
 
-function ActionIconName(action: AttendanceStatusAction): "in" | "out" | "zap" {
-  switch (action) {
-    case "SHIFT_CHECK_IN":
-    case "SHIFT_CHECK_OUT":
-      return "in";
-    case "OVERTIME_CHECK_IN":
-      return "zap";
-    case "OVERTIME_CHECK_OUT":
-      return "out";
-    case "CREATE_OVERTIME":
-      return "zap";
-  }
+function Avatar({ name, email }: { name: string; email: string }) {
+  const initials = (name || email)
+    .split(" ")
+    .map((n) => n[0])
+    .filter(Boolean)
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  return (
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-100 text-sm font-semibold text-accent-700 dark:bg-accent-500/15 dark:text-accent-400">
+      {initials || "—"}
+    </span>
+  );
 }
 
 /** Admin staff directory — backed by the live roster, with per-staff conditional actions. */
 export function AdminStaffTab() {
   useCurrentUser();
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin-staff"],
     queryFn: fetchStaffRoster,
   });
@@ -112,43 +133,55 @@ export function AdminStaffTab() {
     });
   }
 
-  if (isLoading) {
-    return <p className="text-sm text-zinc-400">Loading team…</p>;
-  }
-
   return (
     <div className="space-y-6">
-      <section>
-        <SectionTitle>Attendance &amp; Overtime</SectionTitle>
-        <p className="text-xs text-zinc-400">
-          Each staff member below shows a single action based on their assigned
-          shift and live attendance / overtime state. Click it to open the QR
-          their staff member scans.
-        </p>
+      <section className="flex items-start justify-between gap-3">
+        <div>
+          <SectionTitle>Team</SectionTitle>
+          <h1 className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+            Attendance &amp; Overtime
+          </h1>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Each member&apos;s action is resolved from today&apos;s shift and
+            live attendance state. Tap it to open the QR they scan.
+          </p>
+        </div>
+        <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 sm:flex dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+          <Users size={14} className="text-zinc-400" />
+          {staff.length} {staff.length === 1 ? "member" : "members"}
+        </span>
       </section>
 
-      {isError ? (
+      {isLoading ? (
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-20 animate-pulse rounded-xl bg-zinc-200 dark:bg-zinc-800"
+            />
+          ))}
+        </div>
+      ) : isError ? (
         <EmptyState
           title="Couldn't load team"
           description="Check your connection and try again."
+          action={
+            <Button variant="secondary" onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+        />
+      ) : staff.length === 0 ? (
+        <EmptyState
+          title="No staff yet"
+          description="Open Staff Management to add your first team member."
         />
       ) : (
-        <>
-          <SectionTitle>Team</SectionTitle>
-
-          {staff.length === 0 ? (
-            <EmptyState
-              title="No staff yet"
-              description="Open Staff Management to add your first team member."
-            />
-          ) : (
-            <div className="grid gap-3">
-              {staff.map((member) => (
-                <StaffCard key={member.id} member={member} onOpen={open} />
-              ))}
-            </div>
-          )}
-        </>
+        <div className="grid gap-3">
+          {staff.map((member) => (
+            <StaffCard key={member.id} member={member} onOpen={open} />
+          ))}
+        </div>
       )}
 
       <ShiftCheckInModal
@@ -162,6 +195,7 @@ export function AdminStaffTab() {
         defaultShiftId={active?.shiftId}
       />
       <OvertimeCreationModal
+        key={`overtime-${active?.editingOvertime?.id ?? active?.staffId ?? "new"}`}
         open={active?.modal === "overtimeCreate"}
         onClose={() => setActive(null)}
         defaultStaffId={active?.staffId}
@@ -188,11 +222,6 @@ export function AdminStaffTab() {
         onClose={() => setActive(null)}
         defaultOvertimeId={active?.overtimeId}
       />
-
-      <p className="flex items-center gap-2 text-xs text-zinc-400">
-        <Users size={14} /> Actions are resolved from each member&apos;s assigned
-        shift for today; the server decides the valid next step.
-      </p>
     </div>
   );
 }
@@ -213,9 +242,9 @@ function actionToModal(action: AttendanceStatusAction): ModalKey {
 }
 
 function ActionIcon({ name }: { name: "in" | "out" | "zap" }) {
-  if (name === "in") return <LogIn className="mr-1 h-4 w-4" />;
-  if (name === "out") return <LogOut className="mr-1 h-4 w-4" />;
-  return <Zap className="mr-1 h-4 w-4" />;
+  if (name === "in") return <LogIn className="h-4 w-4" />;
+  if (name === "out") return <LogOut className="h-4 w-4" />;
+  return <Zap className="h-4 w-4" />;
 }
 
 function StaffCard({
@@ -236,58 +265,67 @@ function StaffCard({
     action === "CREATE_OVERTIME" ||
     action === "OVERTIME_CHECK_IN" ||
     action === "OVERTIME_CHECK_OUT";
+  const statusMeta = STATUS_META[member.status] ?? STATUS_META.INVITED;
+
+  const actionMeta = action ? ActionMeta(action) : null;
+  const shiftLabel = status?.shift
+    ? `${status.shift.name} · ${formatTime(status.shift.startTime)} – ${formatTime(
+        status.shift.endTime,
+      )}`
+    : null;
 
   return (
     <Card
-      className={`flex flex-wrap items-center justify-between gap-3 ${
+      className={`flex flex-col gap-4 !p-4 sm:flex-row sm:items-center sm:justify-between md:!p-5 ${
         hasOvertime
           ? "ring-2 ring-amber-300 dark:ring-amber-500/60"
           : ""
       }`}
     >
-      <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-100 text-sm font-semibold text-accent-700">
-          {(member.name ?? member.email)
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .slice(0, 2)}
-        </span>
-        <div>
-          <p className="text-sm font-medium text-zinc-900">
-            {member.name || member.email}
-          </p>
-          <p className="text-xs text-zinc-400">{member.email}</p>
-          {member.employeeCode && (
-            <p className="text-xs text-zinc-400">{member.employeeCode}</p>
-          )}
-          {status?.shift && (
-            <p className="mt-0.5 text-xs text-zinc-500">
-              {status.shift.name} · {formatTime(status.shift.startTime)} –{" "}
-              {formatTime(status.shift.endTime)}{" "}
-              {status.inShiftWindow ? (
-                <Badge tone="green">In shift</Badge>
-              ) : (
-                <Badge tone="zinc">Outside shift</Badge>
-              )}
+      <div className="flex min-w-0 items-center gap-3.5">
+        <Avatar name={member.name} email={member.email} />
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {member.name || member.email}
             </p>
-          )}
+            <span className="flex items-center gap-1.5 rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+              <span className={`h-1.5 w-1.5 rounded-full ${statusMeta.dot}`} />
+              {statusMeta.label}
+            </span>
+          </div>
+          <p className="mt-0.5 truncate text-xs text-zinc-400">
+            {member.email}
+            {member.employeeCode ? ` · ${member.employeeCode}` : ""}
+          </p>
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+            {shiftLabel ? (
+              <>
+                <span className="truncate">{shiftLabel}</span>
+                {status?.inShiftWindow ? (
+                  <Badge tone="green">In shift</Badge>
+                ) : (
+                  <Badge tone="zinc">Outside shift</Badge>
+                )}
+              </>
+            ) : (
+              "No shift assigned today"
+            )}
+          </p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <Badge tone="indigo">{member.role}</Badge>
-        <Badge tone={STATUS_TONE[member.status] ?? "zinc"}>
-          {member.status}
-        </Badge>
-        {action && status ? (
+        {action && status && actionMeta ? (
           <Button
             size="sm"
-            variant={action === "SHIFT_CHECK_IN" ? undefined : "secondary"}
+            variant={actionMeta.primary ? "primary" : "secondary"}
             onClick={() => onOpen(member, status)}
           >
-            <ActionIcon name={ActionIconName(action)} />
-            {ActionLabel(action)}
+            <ActionIcon name={actionMeta.icon} />
+            {actionMeta.label}
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         ) : isLoading ? (
           <Button size="sm" variant="secondary" disabled>
