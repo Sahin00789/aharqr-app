@@ -7,6 +7,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  resolve: {
+    dedupe: ['pdfkit'],
+  },
+  optimizeDeps: {
+    include: ['@react-pdf/renderer'],
+  },
   server: {
     proxy: {
       '/api': {
