@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components -- PDF module exports the download helper next to its private layout primitives. */
+import type { ReactElement } from "react";
 import {
   pdf,
   Document,
@@ -6,9 +8,15 @@ import {
   View,
   StyleSheet,
   Image,
+  Svg,
+  Circle,
+  Path,
+  Rect,
+  type DocumentProps,
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { imageUrlToDataUrl } from "./image-data.util";
+import { STICKER_H, STICKER_W, stickerArt } from "./sticker-art";
 
 /** App mark shown in each sticker's bottom branding strip. */
 const APP_LOGO_URL = "/aharqr-logo-tight.png";
@@ -28,9 +36,14 @@ export interface TableQrData {
 }
 
 const ACCENT = "#d97736";
+const ACCENT_DEEP = "#9a552b";
 const INK = "#142238";
 const MUTED = "#64748b";
-const RULE = "#edf0f4";
+const RULE = "#efe7dd";
+const CARD_BG = "#fffdfa";
+
+/** Sticker artwork size in points (matches the 2×2 A4 cell). */
+const ART_H = STICKER_H;
 
 const styles = StyleSheet.create({
   page: {
@@ -68,27 +81,34 @@ const styles = StyleSheet.create({
   },
   stickerCell: {
     width: "48.5%",
-    height: 350,
-    marginBottom: 14,
+    height: ART_H,
+    marginBottom: 16,
     alignItems: "center",
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#dbe2ea",
-    borderRadius: 16,
-    backgroundColor: "#ffffff",
+    borderColor: "#e6ded4",
+    borderRadius: 18,
+    backgroundColor: CARD_BG,
   },
-  accent: {
+
+  /* ---- background art layer (decorative, never under the QR) ---- */
+  art: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+  },
+  accentStrip: {
     width: "100%",
-    height: 7,
+    height: 5,
     backgroundColor: ACCENT,
   },
   stickerContent: {
     width: "100%",
     flex: 1,
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 8,
+    paddingHorizontal: 14,
+    paddingTop: 11,
+    paddingBottom: 9,
   },
 
   /* ---- 1. Restaurant identity (logo + name + address + phone) ---- */
@@ -98,65 +118,130 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  logoPlate: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    marginRight: 10,
+    padding: 3,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: RULE,
+  },
   restaurantLogo: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    marginRight: 8,
+    width: "100%",
+    height: "100%",
     objectFit: "contain",
   },
   restaurantText: {
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   restaurantName: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: "bold",
     color: INK,
     letterSpacing: 0.2,
-    textAlign: "center",
   },
   restaurantMeta: {
     marginTop: 2,
-    fontSize: 6.8,
+    fontSize: 6.6,
     color: MUTED,
-    textAlign: "center",
+    lineHeight: 1.2,
+  },
+  restaurantPhone: {
+    marginTop: 2,
+    fontSize: 7.6,
+    fontWeight: "bold",
+    color: ACCENT_DEEP,
+    letterSpacing: 0.4,
   },
 
   /* ---- 2. Table identity ---- */
-  divider: {
+  tableBlock: {
     width: "100%",
-    height: 1,
-    marginTop: 7,
-    backgroundColor: RULE,
+    marginTop: 8,
+    alignItems: "center",
   },
   tableName: {
-    marginTop: 7,
-    fontSize: 16,
+    fontSize: 19,
     fontWeight: "bold",
     color: INK,
+    letterSpacing: 0.4,
     textAlign: "center",
   },
-  tableMeta: {
+  tableUnderline: {
+    width: 26,
+    height: 3,
     marginTop: 3,
-    fontSize: 8,
+    borderRadius: 2,
+    backgroundColor: ACCENT,
+  },
+  tableMeta: {
+    marginTop: 4,
+    fontSize: 7.4,
     fontWeight: "bold",
-    color: "#9a552b",
-    letterSpacing: 1.1,
+    color: ACCENT_DEEP,
+    letterSpacing: 1.3,
     textAlign: "center",
   },
 
-  /* ---- 3. Big QR ---- */
-  qrFrame: {
+  /* ---- 3. Big QR on a white plate ---- */
+  qrPlateWrap: {
     marginTop: 8,
-    padding: 6,
-    borderWidth: 1,
-    borderColor: "#e5eaf0",
-    borderRadius: 12,
+  },
+  qrPlate: {
+    padding: 8,
+    borderRadius: 16,
     backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#f1e8dd",
   },
   qrImage: {
-    width: 180,
-    height: 180,
+    width: 152,
+    height: 152,
+  },
+  corner: {
+    position: "absolute",
+    width: 15,
+    height: 15,
+    borderColor: ACCENT,
+    borderWidth: 0,
+  },
+  cornerTL: {
+    top: -2,
+    left: -2,
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    borderTopLeftRadius: 7,
+  },
+  cornerTR: {
+    top: -2,
+    right: -2,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    borderTopRightRadius: 7,
+  },
+  cornerBL: {
+    bottom: -2,
+    left: -2,
+    borderBottomWidth: 2,
+    borderLeftWidth: 2,
+    borderBottomLeftRadius: 7,
+  },
+  cornerBR: {
+    bottom: -2,
+    right: -2,
+    borderBottomWidth: 2,
+    borderRightWidth: 2,
+    borderBottomRightRadius: 7,
+  },
+  scanHint: {
+    marginTop: 6,
+    fontSize: 7,
+    fontWeight: "bold",
+    color: MUTED,
+    letterSpacing: 1.4,
+    textAlign: "center",
   },
 
   /* ---- 4. AharQR branding ---- */
@@ -166,29 +251,99 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: RULE,
+    borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
   },
+  footerLabel: {
+    fontSize: 6.4,
+    fontWeight: "bold",
+    color: "#a8b1bd",
+    letterSpacing: 1.6,
+    marginBottom: 2,
+  },
   footerLogo: {
-    width: 30,
-    height: 12.4,
+    width: 46,
+    height: 19.05,
   },
   footerFallback: {
-    fontSize: 8,
+    fontSize: 9.5,
     fontWeight: "bold",
-    color: "#9a552b",
+    color: ACCENT_DEEP,
     letterSpacing: 1.2,
   },
   emptyCell: {
     width: "48.5%",
-    height: 350,
-    marginBottom: 14,
+    height: ART_H,
+    marginBottom: 16,
   },
 });
 
-export async function downloadQrStickersPdf(
+/**
+ * Decorative sticker artwork: Indian block-print / rangoli motifs (corner
+ * rosettes, kolam dot borders, a triangular hem and a double frame) shared
+ * with the on-screen preview via `utils/sticker-art.ts`. Everything is a very
+ * light tint so the QR plate and the ink text keep full contrast.
+ */
+/** Artwork never changes — build the shape list once. */
+const STICKER_ART = stickerArt();
+
+function StickerArt() {
+  return (
+    <Svg
+      style={styles.art}
+      width={STICKER_W}
+      height={STICKER_H}
+      viewBox={`0 0 ${STICKER_W} ${STICKER_H}`}
+    >
+      {STICKER_ART.map((shape, index) => {
+        const fill = shape.fill ?? "none";
+        if (shape.kind === "circle") {
+          return (
+            <Circle
+              key={index}
+              cx={shape.cx}
+              cy={shape.cy}
+              r={shape.r}
+              fill={fill}
+              stroke={shape.stroke}
+              strokeWidth={shape.strokeWidth}
+            />
+          );
+        }
+        if (shape.kind === "rect") {
+          return (
+            <Rect
+              key={index}
+              x={shape.x}
+              y={shape.y}
+              width={shape.width}
+              height={shape.height}
+              rx={shape.rx}
+              fill={fill}
+              stroke={shape.stroke}
+              strokeWidth={shape.strokeWidth}
+            />
+          );
+        }
+        return (
+          <Path
+            key={index}
+            d={shape.d}
+            fill={fill}
+            stroke={shape.stroke}
+            strokeWidth={shape.strokeWidth}
+          />
+        );
+      })}
+    </Svg>
+  );
+}
+
+/** Builds the sticker document (kept separate so it can be rendered headlessly). */
+export async function buildQrStickersDocument(
   tablesList: TableQrData[],
-): Promise<void> {
+): Promise<ReactElement<DocumentProps>> {
   const pagesCount = Math.max(1, Math.ceil(tablesList.length / 4));
   const pagesData: TableQrData[][] = [];
 
@@ -261,20 +416,23 @@ export async function downloadQrStickersPdf(
 
               return (
                 <View key={item.qrUrl} style={styles.stickerCell}>
-                  <View style={styles.accent} />
+                  <StickerArt />
+                  <View style={styles.accentStrip} />
                   <View style={styles.stickerContent}>
                     {/* Restaurant identity */}
                     <View style={styles.restaurantRow}>
                       {restaurantLogo && (
-                        <Image
-                          src={restaurantLogo}
-                          style={styles.restaurantLogo}
-                        />
+                        <View style={styles.logoPlate}>
+                          <Image
+                            src={restaurantLogo}
+                            style={styles.restaurantLogo}
+                          />
+                        </View>
                       )}
                       <View
                         style={[
                           styles.restaurantText,
-                          restaurantLogo ? { maxWidth: 190 } : {},
+                          restaurantLogo ? { width: 180 } : {},
                         ]}
                       >
                         <Text style={styles.restaurantName}>{restaurantName}</Text>
@@ -282,24 +440,35 @@ export async function downloadQrStickersPdf(
                           <Text style={styles.restaurantMeta}>{address}</Text>
                         ) : null}
                         {phone ? (
-                          <Text style={styles.restaurantMeta}>{phone}</Text>
+                          <Text style={styles.restaurantPhone}>{phone}</Text>
                         ) : null}
                       </View>
                     </View>
 
-                    <View style={styles.divider} />
-
                     {/* Table identity */}
-                    <Text style={styles.tableName}>{tableName}</Text>
-                    <Text style={styles.tableMeta}>{tableMeta}</Text>
-
-                    {/* Big scannable QR */}
-                    <View style={styles.qrFrame}>
-                      <Image src={item.qrDataUrl} style={styles.qrImage} />
+                    <View style={styles.tableBlock}>
+                      <Text style={styles.tableName}>{tableName}</Text>
+                      <View style={styles.tableUnderline} />
+                      <Text style={styles.tableMeta}>{tableMeta}</Text>
                     </View>
+
+                    {/* Big scannable QR on a white plate */}
+                    <View style={styles.qrPlateWrap}>
+                      <View style={styles.qrPlate}>
+                        <Image src={item.qrDataUrl} style={styles.qrImage} />
+                        <View style={[styles.corner, styles.cornerTL]} />
+                        <View style={[styles.corner, styles.cornerTR]} />
+                        <View style={[styles.corner, styles.cornerBL]} />
+                        <View style={[styles.corner, styles.cornerBR]} />
+                      </View>
+                    </View>
+                    <Text style={styles.scanHint}>
+                      {isTakeaway ? "SCAN · ORDER · PICK UP" : "SCAN · VIEW MENU · ORDER"}
+                    </Text>
 
                     {/* AharQR branding */}
                     <View style={styles.footer}>
+                      <Text style={styles.footerLabel}>POWERED BY</Text>
                       {appLogo ? (
                         <Image src={appLogo} style={styles.footerLogo} />
                       ) : (
@@ -315,6 +484,14 @@ export async function downloadQrStickersPdf(
       ))}
     </Document>
   );
+
+  return doc;
+}
+
+export async function downloadQrStickersPdf(
+  tablesList: TableQrData[],
+): Promise<void> {
+  const doc = await buildQrStickersDocument(tablesList);
 
   const blob = await pdf(doc).toBlob();
   const url = URL.createObjectURL(blob);

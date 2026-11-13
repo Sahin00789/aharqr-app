@@ -38,6 +38,7 @@ import {
   useMyRestaurant,
 } from "../../../hooks/use-restaurant";
 import toast from "react-hot-toast";
+import { STICKER_H, STICKER_W, stickerArt } from "../../../utils/sticker-art";
 
 /**
  * Admin-only secondary screen for floor & QR management. Reads/writes the
@@ -566,11 +567,17 @@ function IconButton({
   );
 }
 
+/** Artwork never changes — build the shape list once. */
+const STICKER_ART = stickerArt();
+
 /**
  * Faithful DOM replica of the printable sticker produced by
- * `utils/qrPdfGenerator.tsx` (orange accent bar, restaurant identity, table
- * identity, framed QR and AharQR footer). Sizes use container-query units so
- * the preview scales exactly like the PDF regardless of column width.
+ * `utils/qrPdfGenerator.tsx`: the same Indian block-print background artwork
+ * (corner rangoli rosettes, buti side borders, a triangular hem, a double
+ * frame and soft colour blooms), orange accent strip, centred restaurant
+ * identity, table identity, bracket-framed QR plate, scan hint and AharQR
+ * footer. Sizes use container-query units so the preview scales exactly like
+ * the PDF regardless of column width.
  */
 function StickerPreview({
   table,
@@ -600,68 +607,130 @@ function StickerPreview({
       }`;
 
   return (
-    <div className="relative aspect-[267/350] w-full overflow-hidden rounded-2xl border border-[#dbe2ea] bg-white shadow-sm @container">
-      <div className="h-[2.6cqw] w-full bg-[#d97736]" />
-      <div className="flex h-[calc(100%-2.6cqw)] flex-col items-center px-[4.5cqw] pt-[3.7cqw] pb-[3cqw]">
-        {/* 1. Restaurant identity */}
-        <div className="flex w-full items-center justify-center">
-          {restaurantLogo && logoOk && (
-            <img
-              key={restaurantLogo}
-              src={restaurantLogo}
-              alt=""
-              className="mr-[3cqw] h-[12cqw] w-[12cqw] shrink-0 rounded-[3cqw] object-contain"
-              onError={() => setLogoOk(false)}
+    <div className="relative aspect-[267/364] w-full overflow-hidden rounded-2xl border border-[#e6ded4] bg-[#fffdfa] shadow-sm @container">
+      {/* Decorative artwork — shared with the printable sticker */}
+      <svg
+        viewBox={`0 0 ${STICKER_W} ${STICKER_H}`}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full"
+      >
+        {STICKER_ART.map((shape, index) => {
+          const fill = shape.fill ?? "none";
+          if (shape.kind === "circle") {
+            return (
+              <circle
+                key={index}
+                cx={shape.cx}
+                cy={shape.cy}
+                r={shape.r}
+                fill={fill}
+                stroke={shape.stroke}
+                strokeWidth={shape.strokeWidth}
+              />
+            );
+          }
+          if (shape.kind === "rect") {
+            return (
+              <rect
+                key={index}
+                x={shape.x}
+                y={shape.y}
+                width={shape.width}
+                height={shape.height}
+                rx={shape.rx}
+                fill={fill}
+                stroke={shape.stroke}
+                strokeWidth={shape.strokeWidth}
+              />
+            );
+          }
+          return (
+            <path
+              key={index}
+              d={shape.d}
+              fill={fill}
+              stroke={shape.stroke}
+              strokeWidth={shape.strokeWidth}
             />
-          )}
-          <div className="min-w-0 text-center">
-            <p className="line-clamp-2 text-[4.5cqw] leading-tight font-bold tracking-[0.03em] text-[#142238]">
-              {name}
-            </p>
-            {restaurantAddress && (
-              <p className="mt-[0.4cqw] line-clamp-2 text-[2.55cqw] leading-[1.25] text-[#64748b]">
-                {restaurantAddress}
-              </p>
+          );
+        })}
+      </svg>
+
+      <div className="relative flex h-full flex-col">
+        <div className="h-[1.87cqw] w-full shrink-0 bg-[#d97736]" />
+        <div className="flex w-full flex-1 flex-col items-center px-[5.24cqw] pt-[4.12cqw] pb-[3.37cqw]">
+          {/* 1. Restaurant identity */}
+          <div className="flex w-full items-center justify-center">
+            {restaurantLogo && logoOk && (
+              <div className="mr-[3.75cqw] h-[14.23cqw] w-[14.23cqw] shrink-0 rounded-[4.49cqw] border border-[#efe7dd] bg-white p-[1.12cqw]">
+                <img
+                  key={restaurantLogo}
+                  src={restaurantLogo}
+                  alt=""
+                  className="h-full w-full object-contain"
+                  onError={() => setLogoOk(false)}
+                />
+              </div>
             )}
-            {restaurantPhone && (
-              <p className="text-[2.55cqw] leading-[1.25] text-[#64748b]">
-                {restaurantPhone}
+            <div className="min-w-0 text-left">
+              <p className="line-clamp-2 text-[5.62cqw] leading-tight font-bold tracking-[0.02em] text-[#142238]">
+                {name}
               </p>
+              {restaurantAddress && (
+                <p className="mt-[0.75cqw] line-clamp-2 text-[2.62cqw] leading-[1.2] text-[#64748b]">
+                  {restaurantAddress}
+                </p>
+              )}
+              {restaurantPhone && (
+                <p className="mt-[0.75cqw] text-[2.85cqw] leading-[1.2] font-bold tracking-[0.04em] text-[#9a552b]">
+                  {restaurantPhone}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* 2. Table identity */}
+          <p className="mt-[3cqw] line-clamp-2 max-w-full text-center text-[7.12cqw] leading-tight font-bold break-words text-[#142238]">
+            {tableName}
+          </p>
+          <div className="mt-[1.12cqw] h-[1.12cqw] w-[9.74cqw] rounded-full bg-[#d97736]" />
+          <p className="mt-[1.5cqw] text-center text-[2.77cqw] font-bold tracking-[0.16em] text-[#9a552b]">
+            {tableMeta}
+          </p>
+
+          {/* 3. Big scannable QR on a white plate */}
+          <div className="relative mt-[3cqw] rounded-[6cqw] border border-[#f1e8dd] bg-white p-[3cqw]">
+            <TableQr
+              url={table.qrUrl ?? null}
+              className="h-[56.93cqw] w-[56.93cqw]"
+            />
+            <span className="absolute -top-[0.75cqw] -left-[0.75cqw] h-[5.6cqw] w-[5.6cqw] rounded-tl-[2.6cqw] border-t-2 border-l-2 border-[#d97736]" />
+            <span className="absolute -top-[0.75cqw] -right-[0.75cqw] h-[5.6cqw] w-[5.6cqw] rounded-tr-[2.6cqw] border-t-2 border-r-2 border-[#d97736]" />
+            <span className="absolute -bottom-[0.75cqw] -left-[0.75cqw] h-[5.6cqw] w-[5.6cqw] rounded-bl-[2.6cqw] border-b-2 border-l-2 border-[#d97736]" />
+            <span className="absolute -right-[0.75cqw] -bottom-[0.75cqw] h-[5.6cqw] w-[5.6cqw] rounded-br-[2.6cqw] border-r-2 border-b-2 border-[#d97736]" />
+          </div>
+          <p className="mt-[2.25cqw] text-center text-[2.62cqw] font-bold tracking-[0.18em] text-[#64748b]">
+            {isTakeaway ? "SCAN · ORDER · PICK UP" : "SCAN · VIEW MENU · ORDER"}
+          </p>
+
+          {/* 4. AharQR branding */}
+          <div className="mt-auto flex w-full flex-col items-center border-t border-dashed border-[#efe7dd] pt-[2.25cqw]">
+            <p className="mb-[0.75cqw] text-[2.4cqw] font-bold tracking-[0.18em] text-[#a8b1bd]">
+              POWERED BY
+            </p>
+            {appLogoOk ? (
+              <img
+                src="/aharqr-logo-tight.png"
+                alt="AharQR"
+                className="h-[7.13cqw] w-[17.23cqw] object-contain"
+                onError={() => setAppLogoOk(false)}
+              />
+            ) : (
+              <span className="text-[3.56cqw] font-bold tracking-[0.15em] text-[#9a552b]">
+                AHARQR
+              </span>
             )}
           </div>
-        </div>
-
-        {/* 2. Table identity */}
-        <div className="mt-[2.6cqw] h-px w-full bg-[#edf0f4]" />
-        <p className="mt-[2.6cqw] line-clamp-2 max-w-full text-center text-[6cqw] leading-tight font-bold break-words text-[#142238]">
-          {tableName}
-        </p>
-        <p className="mt-[1.1cqw] text-center text-[3cqw] font-bold tracking-[0.12em] text-[#9a552b]">
-          {tableMeta}
-        </p>
-
-        {/* 3. Big scannable QR */}
-        <div className="mt-[3cqw] rounded-[4.5cqw] border border-[#e5eaf0] bg-white p-[2.25cqw]">
-          <TableQr
-            url={table.qrUrl ?? null}
-            className="h-[67.4cqw] w-[67.4cqw]"
-          />
-        </div>
-
-        {/* 4. AharQR branding */}
-        <div className="mt-auto flex w-full items-center justify-center border-t border-[#edf0f4] pt-[2.25cqw]">
-          {appLogoOk ? (
-            <img
-              src="/aharqr-logo-tight.png"
-              alt="AharQR"
-              className="h-[4.64cqw] w-[11.2cqw] object-contain"
-              onError={() => setAppLogoOk(false)}
-            />
-          ) : (
-            <span className="text-[3cqw] font-bold tracking-[0.15em] text-[#9a552b]">
-              AHARQR
-            </span>
-          )}
         </div>
       </div>
     </div>
