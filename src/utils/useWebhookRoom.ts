@@ -1,31 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
+import { useAuthStore } from '../stores/auth-store';
 
 export interface WebhookRoomEvent {
   event: string;
   roomId?: string;
   message?: string;
-  data?: any;
+  data?: unknown;
   timestamp?: string;
   activeClientsInRoom?: number;
 }
 
 export function useWebhookRoom(roomId: string | null) {
-  const [isConnected, setIsConnected] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<WebhookRoomEvent | null>(null);
+  const accessToken = useAuthStore((s) => s.accessToken);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const heartbeatTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heartbeatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const attemptsRef = useRef(0);
   const urlIndexRef = useRef(0);
 
   useEffect(() => {
-    if (!roomId) {
-      setIsConnected(false);
+    if (!roomId || !accessToken) {
       return;
     }
 
     let isUnmounted = false;
-    setIsConnected(true);
 
     // Construct candidate WebSocket URLs
     const getCandidateUrls = (): string[] => {
@@ -53,7 +53,7 @@ export function useWebhookRoom(roomId: string | null) {
 
     const connect = () => {
       if (isUnmounted) return;
-      setIsConnected(true);
+      setIsConnected(false);
 
       const wsUrl = candidateUrls[urlIndexRef.current % candidateUrls.length];
       console.log(`📡 [Frontend WebSocket] Connecting to Webhook Room [${roomId}] at ${wsUrl}...`);
@@ -64,7 +64,7 @@ export function useWebhookRoom(roomId: string | null) {
 
         ws.onopen = () => {
           if (isUnmounted) return;
-          setIsConnected(true);
+          ws.send(JSON.stringify({ event: 'AUTH', token: accessToken }));
           attemptsRef.current = 0;
           console.log(`🚀 [Frontend WebSocket] CONNECTED to Webhook Room [${roomId}]!`);
 
@@ -81,21 +81,25 @@ export function useWebhookRoom(roomId: string | null) {
           if (isUnmounted) return;
           try {
             const parsed: WebhookRoomEvent = JSON.parse(event.data);
+            if (parsed.event === 'ROOM_CONNECTED') {
+              setIsConnected(true);
+              return;
+            }
             if (parsed.event !== 'PONG') {
               setLastEvent(parsed);
             }
-          } catch (err) {
+          } catch {
             console.log(`📩 [Frontend WebSocket] Message received:`, event.data);
           }
         };
 
         ws.onerror = () => {
-          if (!isUnmounted) setIsConnected(true);
+          if (!isUnmounted) setIsConnected(false);
         };
 
         ws.onclose = () => {
           if (isUnmounted) return;
-          setIsConnected(true);
+          setIsConnected(false);
           attemptsRef.current += 1;
           if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
 
@@ -104,9 +108,9 @@ export function useWebhookRoom(roomId: string | null) {
             connect();
           }, 3000);
         };
-      } catch (err) {
+      } catch {
         if (!isUnmounted) {
-          setIsConnected(true);
+          setIsConnected(false);
           urlIndexRef.current += 1;
           reconnectTimerRef.current = setTimeout(() => {
             connect();
@@ -125,7 +129,7 @@ export function useWebhookRoom(roomId: string | null) {
         wsRef.current.close();
       }
     };
-  }, [roomId]);
+  }, [accessToken, roomId]);
 
-  return { isConnected, lastEvent };
+  return { isConnected: Boolean(roomId && accessToken) && isConnected, lastEvent };
 }

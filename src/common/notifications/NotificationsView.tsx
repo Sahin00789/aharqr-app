@@ -8,7 +8,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { Button, EmptyState } from "../ui";
+import { Button, EmptyState } from "../components";
 import { useNotificationStore, type AppNotification, type NotificationType } from "./notificationStore";
 
 const TYPE_META: Record<
@@ -85,7 +85,7 @@ export function NotificationsView() {
     return (
       <EmptyState
         title="No notifications"
-        description="Alerts about orders, attendance and payments will appear here. They're stored on this device only and can be cleared anytime."
+        description="Your successful order and payment activity will appear here."
       />
     );
   }
@@ -94,7 +94,7 @@ export function NotificationsView() {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-zinc-500">
-          {notifications.length} total · stored on this device
+          {notifications.length} personal {notifications.length === 1 ? "activity" : "activities"}
         </p>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={markAllRead}>

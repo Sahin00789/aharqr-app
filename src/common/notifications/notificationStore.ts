@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 export type NotificationType = "info" | "order" | "staff" | "system" | "warning";
 
@@ -13,7 +12,9 @@ export interface AppNotification {
 }
 
 type NotificationState = {
+  scope: string | null;
   notifications: AppNotification[];
+  setScope: (scope: string | null) => void;
   addNotification: (
     n: Pick<AppNotification, "title" | "body" | "type">
   ) => void;
@@ -22,38 +23,82 @@ type NotificationState = {
   clearAll: () => void;
 };
 
-/** Device-local notification log. Persisted to localStorage (never sent to the
- * backend) and fully clearable, per product requirement. */
-export const useNotificationStore = create<NotificationState>()(
-  persist(
-    (set) => ({
-      notifications: [],
-      addNotification: (n) =>
-        set((s) => ({
-          notifications: [
-            {
-              id:
-                typeof crypto !== "undefined" && "randomUUID" in crypto
-                  ? crypto.randomUUID()
-                  : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-              createdAt: new Date().toISOString(),
-              read: false,
-              type: n.type ?? "info",
-              ...n,
-            },
-            ...s.notifications,
-          ].slice(0, 100),
-        })),
-      markAllRead: () =>
-        set((s) => ({
-          notifications: s.notifications.map((x) => ({ ...x, read: true })),
-        })),
-      remove: (id) =>
-        set((s) => ({
-          notifications: s.notifications.filter((x) => x.id !== id),
-        })),
-      clearAll: () => set({ notifications: [] }),
+function storageKey(scope: string): string {
+  return `aharqr-notifications:${encodeURIComponent(scope)}`;
+}
+
+function readNotifications(scope: string | null): AppNotification[] {
+  if (!scope || typeof localStorage === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(storageKey(scope));
+    if (!stored) return [];
+    const value: unknown = JSON.parse(stored);
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      "notifications" in value &&
+      Array.isArray(value.notifications)
+    ) {
+      return value.notifications as AppNotification[];
+    }
+  } catch {
+    return [];
+  }
+  return [];
+}
+
+function persist(scope: string | null, notifications: AppNotification[]) {
+  if (!scope || typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem(storageKey(scope), JSON.stringify({ notifications }));
+  } catch {
+    // Notification history is best-effort when browser storage is unavailable.
+  }
+}
+
+export const useNotificationStore = create<NotificationState>((set) => ({
+  scope: null,
+  notifications: [],
+  setScope: (scope) =>
+    set((state) =>
+      state.scope === scope
+        ? state
+        : { scope, notifications: readNotifications(scope) },
+    ),
+  addNotification: (n) =>
+    set((state) => {
+      const notification: AppNotification = {
+        id:
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        createdAt: new Date().toISOString(),
+        read: false,
+        type: n.type ?? "info",
+        ...n,
+      };
+      const notifications = [notification, ...state.notifications].slice(0, 100);
+      persist(state.scope, notifications);
+      return { notifications };
     }),
-    { name: "aharq-notifications", version: 1 }
-  )
-);
+  markAllRead: () =>
+    set((state) => {
+      const notifications = state.notifications.map((item) => ({
+        ...item,
+        read: true,
+      }));
+      persist(state.scope, notifications);
+      return { notifications };
+    }),
+  remove: (id) =>
+    set((state) => {
+      const notifications = state.notifications.filter((item) => item.id !== id);
+      persist(state.scope, notifications);
+      return { notifications };
+    }),
+  clearAll: () =>
+    set((state) => {
+      persist(state.scope, []);
+      return { notifications: [] };
+    }),
+}));

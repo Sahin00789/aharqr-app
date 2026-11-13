@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { NotificationsView } from "./NotificationsView";
@@ -28,7 +29,7 @@ export function NotificationPanel({
     }
   }, [open, markAllRead, onClose]);
 
-  return (
+  const panel = (
     <AnimatePresence>
       {open && (
         <>
@@ -45,6 +46,7 @@ export function NotificationPanel({
           <motion.aside
             key="panel"
             role="dialog"
+            aria-modal="true"
             aria-label="Notifications"
             initial={{ x: "-110%" }}
             animate={{ x: 0 }}
@@ -58,7 +60,7 @@ export function NotificationPanel({
                   Notifications
                 </h2>
                 <p className="text-xs text-zinc-500">
-                  Stored on this device only — clearable anytime
+                  Private to you — clearable anytime
                 </p>
               </div>
               <button
@@ -78,4 +80,8 @@ export function NotificationPanel({
       )}
     </AnimatePresence>
   );
+
+  return typeof document === "undefined"
+    ? panel
+    : createPortal(panel, document.body);
 }

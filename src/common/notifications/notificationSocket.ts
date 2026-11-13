@@ -6,11 +6,11 @@ interface RawEvent {
   orderId?: string | number;
   orderType?: string;
   status?: string;
+  severity?: "success" | "error";
+  title?: string;
+  body?: string;
   [key: string]: unknown;
 }
-
-/** Rooms the backend broadcasts to per restaurant. */
-const ROOM_SUFFIXES = ["orders", "kitchen", "captain"] as const;
 
 function wsOrigin(): string {
   const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
@@ -20,7 +20,7 @@ function wsOrigin(): string {
   return `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`;
 }
 
-function prettifyStatus(status: string): string {
+export function prettifyStatus(status: string): string {
   return status
     .toLowerCase()
     .replace(/_/g, " ")
@@ -30,12 +30,44 @@ function prettifyStatus(status: string): string {
 type EventListener = (ev: RawEvent) => void;
 const eventListeners = new Set<EventListener>();
 
-/** Subscribe to raw events (e.g. ORDER_UPDATED) for live UI sync. Returns a
- * disposer. Fires for every restaurant room the socket is connected to. */
 export function subscribeNotificationEvents(cb: EventListener): () => void {
   eventListeners.add(cb);
   return () => {
     eventListeners.delete(cb);
+  };
+}
+
+export type NotificationConnectionStatus =
+  | "connected"
+  | "connecting"
+  | "disconnected";
+
+const openRooms = new Set<string>();
+const connectionListeners = new Set<
+  (status: NotificationConnectionStatus) => void
+>();
+let connectionStatus: NotificationConnectionStatus = "disconnected";
+
+function emitConnectionStatus(next: NotificationConnectionStatus) {
+  if (next === connectionStatus) return;
+  connectionStatus = next;
+  connectionListeners.forEach((listener) => listener(next));
+}
+
+export function getOpenRoomCount(): number {
+  return openRooms.size;
+}
+
+export function getNotificationConnectionStatus(): NotificationConnectionStatus {
+  return connectionStatus;
+}
+
+export function subscribeNotificationConnection(
+  cb: (status: NotificationConnectionStatus) => void,
+): () => void {
+  connectionListeners.add(cb);
+  return () => {
+    connectionListeners.delete(cb);
   };
 }
 
@@ -44,101 +76,97 @@ function toNotification(ev: RawEvent): {
   title: string;
   body: string;
 } | null {
-  switch (ev.event) {
-    case "ROOM_CONNECTED":
-    case "PONG":
-      return null;
-    case "ORDER_UPDATED": {
-      const orderType = (ev.orderType ?? "DINE_IN").toString();
-      const status = (ev.status ?? "").toString();
-      const orderId = (ev.orderId ?? "").toString();
-      const label = orderType === "TAKEAWAY" ? "Takeaway" : "Dine-in";
-      return {
-        type: "order",
-        title: `Order ${prettifyStatus(status)}`,
-        body: `${label} order #${orderId} is now ${status}.`,
-      };
-    }
-    default:
-      return {
-        type: "system",
-        title: ev.event ? String(ev.event) : "Update",
-        body: "New event received from the kitchen.",
-      };
-  }
+  if (ev.event !== "USER_ACTIVITY" || !ev.title) return null;
+  return {
+    type: "order",
+    title: ev.title,
+    body: ev.body ?? "",
+  };
 }
 
 /**
- * Opens a WebSocket per restaurant room and pushes incoming events into the
- * notification store. Auto-reconnects with a small backoff. Returns a disposer.
+ * Keeps restaurant-wide order events for live screen sync, while user activity
+ * alerts arrive only through the authenticated role-and-user notification room.
  */
-export function connectNotificationSocket(restaurantId: string): () => void {
-  if (!restaurantId) return () => {};
+export function connectNotificationSocket(
+  restaurantId: string,
+  accessToken: string,
+): () => void {
+  if (!restaurantId || !accessToken) return () => {};
   const origin = wsOrigin();
   const addNotification = useNotificationStore.getState().addNotification;
 
   let disposed = false;
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   const sockets = new Map<string, WebSocket>();
+  const rooms = ["orders", "notifications"] as const;
 
-  const scheduleReconnect = (suffix: string) => {
-    if (disposed || timers.has(suffix)) return;
-    const t = setTimeout(() => {
-      timers.delete(suffix);
-      open(suffix);
+  emitConnectionStatus("connecting");
+
+  const scheduleReconnect = (room: (typeof rooms)[number]) => {
+    if (disposed || timers.has(room)) return;
+    const timer = setTimeout(() => {
+      timers.delete(room);
+      open(room);
     }, 3000);
-    timers.set(suffix, t);
+    timers.set(room, timer);
   };
 
-  const open = (suffix: string) => {
+  const open = (room: (typeof rooms)[number]) => {
     if (disposed) return;
-    const roomId = `restaurant:${restaurantId}:${suffix}`;
-    const url = `${origin}/ws/webhook-room/${roomId}`;
+    const url = room === "notifications"
+      ? `${origin}/ws/notifications`
+      : `${origin}/ws/webhook-room/restaurant:${restaurantId}:orders`;
     let ws: WebSocket;
     try {
       ws = new WebSocket(url);
     } catch {
-      scheduleReconnect(suffix);
+      scheduleReconnect(room);
       return;
     }
-    sockets.set(suffix, ws);
+    sockets.set(room, ws);
+
+    ws.onopen = () => {
+      if (!disposed) ws.send(JSON.stringify({ event: "AUTH", token: accessToken }));
+    };
 
     ws.onmessage = (msg) => {
       try {
         const ev = JSON.parse(msg.data as string) as RawEvent;
-        eventListeners.forEach((l) => l(ev));
-        const n = toNotification(ev);
-        if (n) addNotification(n);
+        if (ev.event === "ROOM_CONNECTED") {
+          openRooms.add(room);
+          emitConnectionStatus("connected");
+          return;
+        }
+        eventListeners.forEach((listener) => listener(ev));
+        if (room === "notifications") {
+          const notification = toNotification(ev);
+          if (notification) addNotification(notification);
+        }
       } catch {
-        /* ignore malformed frames */
+        // Ignore malformed frames.
       }
     };
-    ws.onerror = () => {
-      try {
-        ws.close();
-      } catch {
-        /* noop */
-      }
-    };
+    ws.onerror = () => ws.close();
     ws.onclose = () => {
-      sockets.delete(suffix);
-      if (!disposed) scheduleReconnect(suffix);
+      sockets.delete(room);
+      openRooms.delete(room);
+      if (!disposed) {
+        emitConnectionStatus(openRooms.size > 0 ? "connected" : "connecting");
+        scheduleReconnect(room);
+      }
     };
   };
 
-  ROOM_SUFFIXES.forEach(open);
+  rooms.forEach(open);
 
   return () => {
     disposed = true;
-    timers.forEach((t) => clearTimeout(t));
+    timers.forEach(clearTimeout);
     timers.clear();
-    sockets.forEach((s) => {
-      try {
-        s.close();
-      } catch {
-        /* noop */
-      }
-    });
+    sockets.forEach((socket) => socket.close());
     sockets.clear();
+    openRooms.clear();
+    emitConnectionStatus("disconnected");
   };
 }
