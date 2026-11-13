@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, NavLink } from "react-router";
 import { useAuthStore } from "../../stores/auth-store";
-import { Button } from "../components";
+import { AppLogo, Button } from "../components";
 
 const PUBLIC_LINKS = [
   { to: "/", label: "Home", end: true },
@@ -14,13 +14,7 @@ function Brand() {
     <Link to="/" className="flex shrink-0 items-center">
       {/* Trimmed transparent padding so the artwork fills the optical height.
           The artwork is dark navy, so it gets a light plate on dark surfaces. */}
-      <img
-        src="/aharqr-logo-tight.png"
-        alt="AharQR"
-        width={512}
-        height={212}
-        className="h-10 w-auto object-contain sm:h-11 dark:rounded-xl dark:bg-white/95 dark:px-2 dark:py-1"
-      />
+      <AppLogo className="h-10 sm:h-11 dark:rounded-xl dark:bg-white/95 dark:px-2 dark:py-1" />
     </Link>
   );
 }

@@ -8,15 +8,29 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
+import { imageUrlToDataUrl } from "./image-data.util";
+
+/** App mark shown in each sticker's bottom branding strip. */
+const APP_LOGO_URL = "/aharqr-logo-tight.png";
 
 export interface TableQrData {
   qrUrl: string;
   tableNumber: string;
   tableName?: string;
+  /** Restaurant identity printed at the top of every sticker. */
   restaurantName?: string;
+  restaurantAddress?: string;
+  restaurantPhone?: string;
+  /** Remote restaurant logo URL (Cloudinary); embedded as a data URL. */
+  restaurantLogo?: string | null;
   capacity?: number;
   isTakeaway?: boolean;
 }
+
+const ACCENT = "#d97736";
+const INK = "#142238";
+const MUTED = "#64748b";
+const RULE = "#edf0f4";
 
 const styles = StyleSheet.create({
   page: {
@@ -34,17 +48,17 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 17,
     fontWeight: "bold",
-    color: "#142238",
+    color: INK,
   },
   pageSubtitle: {
     marginTop: 3,
     fontSize: 8,
-    color: "#64748b",
+    color: MUTED,
   },
   pageMeta: {
     fontSize: 8,
     fontWeight: "bold",
-    color: "#d97736",
+    color: ACCENT,
     letterSpacing: 1.1,
   },
   stickerGrid: {
@@ -66,94 +80,104 @@ const styles = StyleSheet.create({
   accent: {
     width: "100%",
     height: 7,
-    backgroundColor: "#d97736",
+    backgroundColor: ACCENT,
   },
   stickerContent: {
     width: "100%",
     flex: 1,
     alignItems: "center",
-    paddingHorizontal: 13,
-    paddingTop: 12,
-    paddingBottom: 10,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 8,
   },
-  brandRow: {
+
+  /* ---- 1. Restaurant identity (logo + name + address + phone) ---- */
+  restaurantRow: {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
   },
-  brand: {
-    maxWidth: "74%",
-    fontSize: 11,
+  restaurantLogo: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    marginRight: 8,
+    objectFit: "contain",
+  },
+  restaurantText: {
+    alignItems: "center",
+  },
+  restaurantName: {
+    fontSize: 12,
     fontWeight: "bold",
-    color: "#142238",
+    color: INK,
     letterSpacing: 0.2,
-  },
-  brandTag: {
-    fontSize: 6.5,
-    fontWeight: "bold",
-    color: "#9a552b",
-    letterSpacing: 0.8,
-  },
-  tableName: {
-    marginTop: 11,
-    fontSize: 17,
-    fontWeight: "bold",
-    color: "#142238",
     textAlign: "center",
   },
-  tableNumber: {
+  restaurantMeta: {
+    marginTop: 2,
+    fontSize: 6.8,
+    color: MUTED,
+    textAlign: "center",
+  },
+
+  /* ---- 2. Table identity ---- */
+  divider: {
+    width: "100%",
+    height: 1,
+    marginTop: 7,
+    backgroundColor: RULE,
+  },
+  tableName: {
+    marginTop: 7,
+    fontSize: 16,
+    fontWeight: "bold",
+    color: INK,
+    textAlign: "center",
+  },
+  tableMeta: {
     marginTop: 3,
     fontSize: 8,
     fontWeight: "bold",
-    color: "#64748b",
-    letterSpacing: 1.2,
+    color: "#9a552b",
+    letterSpacing: 1.1,
     textAlign: "center",
   },
+
+  /* ---- 3. Big QR ---- */
   qrFrame: {
-    marginTop: 10,
-    padding: 7,
+    marginTop: 8,
+    padding: 6,
     borderWidth: 1,
     borderColor: "#e5eaf0",
     borderRadius: 12,
     backgroundColor: "#ffffff",
   },
   qrImage: {
-    width: 164,
-    height: 164,
+    width: 180,
+    height: 180,
   },
-  scanCallout: {
-    marginTop: 9,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: "#142238",
-  },
-  scanText: {
-    fontSize: 8,
-    fontWeight: "bold",
-    color: "#ffffff",
-    letterSpacing: 1,
-    textAlign: "center",
-  },
+
+  /* ---- 4. AharQR branding ---- */
   footer: {
     width: "100%",
     marginTop: "auto",
-    paddingTop: 8,
+    paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: "#edf0f4",
-    flexDirection: "row",
-    justifyContent: "space-between",
+    borderTopColor: RULE,
     alignItems: "center",
+    justifyContent: "center",
   },
-  footerText: {
-    fontSize: 7,
-    color: "#64748b",
+  footerLogo: {
+    width: 30,
+    height: 12.4,
   },
-  footerCapacity: {
-    fontSize: 7,
+  footerFallback: {
+    fontSize: 8,
     fontWeight: "bold",
-    color: "#64748b",
+    color: "#9a552b",
+    letterSpacing: 1.2,
   },
   emptyCell: {
     width: "48.5%",
@@ -172,21 +196,30 @@ export async function downloadQrStickersPdf(
     pagesData.push(tablesList.slice(pageIdx * 4, (pageIdx + 1) * 4));
   }
 
-  const pagesWithQr = await Promise.all(
-    pagesData.map(async (pageTables) =>
-      Promise.all(
-        pageTables.map(async (item) => ({
-          ...item,
-          qrDataUrl: await QRCode.toDataURL(item.qrUrl, {
-            margin: 2,
-            width: 220,
-            errorCorrectionLevel: "H",
-            color: { dark: "#111827", light: "#ffffff" },
-          }),
-        })),
+  const restaurantLogoUrl =
+    tablesList.find((item) => item.restaurantLogo)?.restaurantLogo ?? null;
+
+  const [pagesWithQr, appLogo, restaurantLogo] = await Promise.all([
+    Promise.all(
+      pagesData.map(async (pageTables) =>
+        Promise.all(
+          pageTables.map(async (item) => ({
+            ...item,
+            qrDataUrl: await QRCode.toDataURL(item.qrUrl, {
+              margin: 2,
+              width: 260,
+              errorCorrectionLevel: "H",
+              color: { dark: "#111827", light: "#ffffff" },
+            }),
+          })),
+        ),
       ),
     ),
-  );
+    // Embed the app + restaurant logos as data URLs so the PDF renders
+    // without any network/CORS access; both degrade to text if unavailable.
+    imageUrlToDataUrl(APP_LOGO_URL),
+    restaurantLogoUrl ? imageUrlToDataUrl(restaurantLogoUrl) : null,
+  ]);
 
   const doc = (
     <Document title="AharQR Table QR Stickers" author="AharQR">
@@ -215,35 +248,62 @@ export async function downloadQrStickersPdf(
                 item.tableName?.trim() ||
                 (isTakeaway ? "Takeaway Counter" : `Table ${item.tableNumber}`);
               const restaurantName = item.restaurantName?.trim() || "Restaurant";
+              const address = item.restaurantAddress?.trim();
+              const phone = item.restaurantPhone?.trim();
+              const tableMeta = isTakeaway
+                ? "SCAN TO ORDER"
+                : [
+                    `TABLE ${item.tableNumber}`,
+                    item.capacity != null ? `${item.capacity} SEATS` : null,
+                  ]
+                    .filter(Boolean)
+                    .join("  ·  ");
 
               return (
                 <View key={item.qrUrl} style={styles.stickerCell}>
                   <View style={styles.accent} />
                   <View style={styles.stickerContent}>
-                    <View style={styles.brandRow}>
-                      <Text style={styles.brand}>{restaurantName}</Text>
-                      <Text style={styles.brandTag}>
-                        {isTakeaway ? "AHARQR · PICKUP" : "AHARQR · MENU"}
-                      </Text>
+                    {/* Restaurant identity */}
+                    <View style={styles.restaurantRow}>
+                      {restaurantLogo && (
+                        <Image
+                          src={restaurantLogo}
+                          style={styles.restaurantLogo}
+                        />
+                      )}
+                      <View
+                        style={[
+                          styles.restaurantText,
+                          restaurantLogo ? { maxWidth: 190 } : {},
+                        ]}
+                      >
+                        <Text style={styles.restaurantName}>{restaurantName}</Text>
+                        {address ? (
+                          <Text style={styles.restaurantMeta}>{address}</Text>
+                        ) : null}
+                        {phone ? (
+                          <Text style={styles.restaurantMeta}>{phone}</Text>
+                        ) : null}
+                      </View>
                     </View>
+
+                    <View style={styles.divider} />
+
+                    {/* Table identity */}
                     <Text style={styles.tableName}>{tableName}</Text>
-                    <Text style={styles.tableNumber}>
-                      {isTakeaway
-                        ? "SCAN TO ORDER"
-                        : `TABLE ${item.tableNumber}`}
-                    </Text>
+                    <Text style={styles.tableMeta}>{tableMeta}</Text>
+
+                    {/* Big scannable QR */}
                     <View style={styles.qrFrame}>
                       <Image src={item.qrDataUrl} style={styles.qrImage} />
                     </View>
-                    <View style={styles.scanCallout}>
-                      <Text style={styles.scanText}>SCAN TO VIEW MENU</Text>
-                    </View>
+
+                    {/* AharQR branding */}
                     <View style={styles.footer}>
-                      <Text style={styles.footerText}>Point your camera here</Text>
-                      {item.capacity != null && !isTakeaway && (
-                        <Text style={styles.footerCapacity}>
-                          {item.capacity} SEATS
-                        </Text>
+                      {appLogo ? (
+                        <Image src={appLogo} style={styles.footerLogo} />
+                      ) : (
+                        <Text style={styles.footerFallback}>AHARQR</Text>
                       )}
                     </View>
                   </View>

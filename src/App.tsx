@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation } from "react-router";
+import { Toaster } from "react-hot-toast";
 import { bootstrapSession } from "./services/api-client";
 import { useAuthStore } from "./stores/auth-store";
 import { ROLE_PATHS, type UserRole } from "./types";
@@ -67,33 +68,73 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
         <NotificationSocketProvider>
+          {/* Every `toast.*` call in the app renders here. Surface colours come
+              from CSS vars so the feed follows light/dark mode. */}
+          <Toaster
+            position="top-right"
+            gutter={10}
+            containerStyle={{ top: 16, right: 16 }}
+            toastOptions={{
+              duration: 4000,
+              className: "aharqr-toast",
+              style: {
+                background: "var(--toast-bg)",
+                color: "var(--toast-fg)",
+                border: "1px solid var(--toast-border)",
+                boxShadow: "var(--toast-shadow)",
+                borderRadius: "12px",
+                padding: "10px 14px",
+                fontSize: "13px",
+                lineHeight: "1.35",
+                maxWidth: "420px",
+              },
+              success: {
+                iconTheme: {
+                  primary: "var(--accent-600)",
+                  secondary: "#ffffff",
+                },
+              },
+              error: {
+                iconTheme: { primary: "#ef4444", secondary: "#ffffff" },
+              },
+              loading: {
+                iconTheme: {
+                  primary: "var(--accent-600)",
+                  secondary: "#ffffff",
+                },
+              },
+            }}
+          />
           <Routes>
-          {/* Public landing */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/help" element={<HelpPage />} />
+            {/* Public landing */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/help" element={<HelpPage />} />
 
-        {/* Public auth screens */}
-        <Route element={<PublicOnly />}>
-          <Route path="/auth" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-        </Route>
+            {/* Public auth screens */}
+            <Route element={<PublicOnly />}>
+              <Route path="/auth" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+            </Route>
 
-        {/* Authenticated staff workspaces, mounted under /app/<role> */}
-        <Route path="/app">
-          <Route index element={<NavigateToMyWorkspace />} />
-          {adminRoutes}
-          {captainRoutes}
-          {chefRoutes}
-        </Route>
+            {/* Authenticated staff workspaces, mounted under /app/<role>.
+                RequireAuth is the outer gate: it holds the boot loader while
+                the refresh cookie is being exchanged, and bounces to /auth the
+                moment the session ends (sign-out or rejected refresh token). */}
+            <Route path="/app" element={<RequireAuth />}>
+              <Route index element={<NavigateToMyWorkspace />} />
+              {adminRoutes}
+              {captainRoutes}
+              {chefRoutes}
+            </Route>
 
-        {/* Public QR guest flow */}
-        {customerRoutes}
+            {/* Public QR guest flow */}
+            {customerRoutes}
 
-        {/* Error fallbacks */}
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+            {/* Error fallbacks */}
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </NotificationSocketProvider>
       </ThemeProvider>
     </BrowserRouter>

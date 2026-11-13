@@ -2,23 +2,30 @@ import type { AuthSession, GoogleProfile, PublicUser } from "../types";
 import { api } from "./api-client";
 import { useAuthStore } from "../stores/auth-store";
 
+/** Roles that can sign in with an emailed one-time code. */
+export type OtpRole = "RESTAURANT_ADMIN" | "CAPTAIN" | "CHEF";
+
 /**
  * Login for any role using a Google OAuth authorization code obtained from
  * the GIS popup flow. The backend swaps the code for tokens server-side
  * (`postmessage`) and issues a session.
+ *
+ * The role must match an existing account: Google sign-in never creates
+ * accounts, so an unregistered email is rejected (the user must sign up or be
+ * added as staff first).
  */
-export async function loginWithGoogle(code: string): Promise<AuthSession> {
+export async function loginWithGoogle(
+  code: string,
+  role: OtpRole,
+): Promise<AuthSession> {
   const session = await api<AuthSession>("/api/auth/login/google", {
     method: "POST",
     auth: false,
-    body: { code, origin: window.location.origin },
+    body: { code, origin: window.location.origin, role },
   });
   useAuthStore.getState().setSession(session.user, session.accessToken);
   return session;
 }
-
-/** Roles that can sign in with an emailed one-time code. */
-export type OtpRole = "RESTAURANT_ADMIN" | "CAPTAIN" | "CHEF";
 
 export interface OtpRequestResult {
   email: string;

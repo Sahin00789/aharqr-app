@@ -18,6 +18,7 @@ import {
   type RestaurantProfile,
 } from "../../services/restaurant.services";
 import { ROLE_PATHS, type ProfileMenuItem } from "../../types";
+import { AppLogo } from "../components/AppLogo";
 import { ProfileEditModal } from "../components/ProfileEditModal";
 import { RestaurantEditModal } from "../components/RestaurantEditModal";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -368,12 +369,8 @@ function ProfilePage({
       </div>
 
       {/* App branding footer */}
-      <div className="flex items-center justify-center gap-1.5 pb-1 pt-1 text-[11px] text-zinc-400">
-        <QrCode size={12} className="text-accent-600" />
-        <span className="font-semibold text-zinc-500 dark:text-zinc-300">
-          AharQR
-        </span>
-        <span>·</span>
+      <div className="flex items-center justify-center gap-2 pb-1 pt-1 text-[11px] text-zinc-400">
+        <AppLogo className="h-4 dark:rounded dark:bg-white/95 dark:px-1 dark:py-0.5" />
         <span>QR restaurant management</span>
       </div>
     </motion.div>

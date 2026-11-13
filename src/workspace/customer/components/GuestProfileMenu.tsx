@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useTheme } from "../../../common/theme";
-import { Button, Input } from "../../../common/components";
+import { AppLogo, Button, Input } from "../../../common/components";
 import { useGuestProfileStore } from "../guest-profile-store";
 import toast from "react-hot-toast";
 
@@ -240,9 +240,12 @@ export function GuestProfileMenu({
               </button>
             </div>
 
-            <p className="pt-4 text-center text-[11px] text-zinc-400">
-              Powered by AharQR Smart Dining OS
-            </p>
+            <div className="flex flex-col items-center gap-1.5 pt-4">
+              <AppLogo className="h-4 dark:rounded dark:bg-white/95 dark:px-1 dark:py-0.5" />
+              <p className="text-center text-[11px] text-zinc-400">
+                Powered by AharQR Smart Dining OS
+              </p>
+            </div>
           </div>
           )}
         </motion.aside>

@@ -8,6 +8,7 @@ import {
   StyleSheet,
   pdf,
 } from "@react-pdf/renderer";
+import { imageUrlToDataUrl } from "./image-data.util";
 
 export interface BillItem {
   name: string;
@@ -449,20 +450,7 @@ export function BillPdfDocument({ bill }: { bill: BillData }) {
  * render time. Returns null if the image can't be fetched cleanly.
  */
 export async function logoToDataUrl(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url, { mode: 'cors', credentials: 'omit' });
-    if (!res.ok || !res.headers.get('content-type')?.startsWith('image/')) return null;
-    const blob = await res.blob();
-    const dataUrl = await new Promise<string | null>((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result ?? ''));
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-    return dataUrl;
-  } catch {
-    return null;
-  }
+  return imageUrlToDataUrl(url);
 }
 
 /** File name used for downloads/shares, e.g. `Bill_ORD-102.pdf`. */

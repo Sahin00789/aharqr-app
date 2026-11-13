@@ -19,7 +19,7 @@ import { useNotificationStore } from "../notifications/notificationStore";
 import { NotificationPanel } from "../notifications/NotificationPanel";
 import { ConnectionStatusBadge } from "../notifications/ConnectionStatusBadge";
 import { useOrderLiveSync } from "../notifications/useOrderLiveSync";
-import { BrandHeadline, Button } from "../components";
+import { AppLogo, BrandHeadline, Button } from "../components";
 import toast from "react-hot-toast";
 
 /** Header copy for the secondary (settings) screens, which are not nav tabs. */
@@ -257,16 +257,11 @@ function Sidebar({ items }: { items: NavItemConfig[] }) {
 
       <Link
         to="/"
-        className="mt-auto h-9 w-9 shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-black/5"
+        className="mt-auto flex w-[60px] shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-black/5 dark:bg-white/95"
         aria-label="AharQR home"
+        title="AharQR"
       >
-        <img
-          src="/logo.jpg"
-          alt=""
-          width={36}
-          height={36}
-          className="h-9 w-9 object-cover"
-        />
+        <AppLogo className="h-5" alt="" />
       </Link>
     </aside>
   );

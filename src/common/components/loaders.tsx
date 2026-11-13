@@ -1,5 +1,6 @@
 import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
+import { AppLogo } from "./AppLogo";
 
 /** Small inline spinner for buttons and tight spots. */
 export function Spinner({ size = 16 }: { size?: number }) {
@@ -9,8 +10,9 @@ export function Spinner({ size = 16 }: { size?: number }) {
 /** Centered full-height loader — page/route transitions. */
 export function PageLoader({ label }: { label?: string }) {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-zinc-400">
-      <Loader2 size={28} className="animate-spin text-accent-600" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-zinc-400">
+      <AppLogo className="h-8 dark:rounded-lg dark:bg-white/95 dark:px-2 dark:py-1" />
+      <Loader2 size={24} className="animate-spin text-accent-600" />
       {label && <p className="text-sm">{label}</p>}
     </div>
   );

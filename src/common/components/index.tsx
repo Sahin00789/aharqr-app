@@ -287,6 +287,7 @@ export function PagePlaceholder({
   );
 }
 
+export { AppLogo } from "./AppLogo";
 export * from "./loaders";
 export * from "./Modal";
 export * from "./ActionMenu";

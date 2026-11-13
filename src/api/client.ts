@@ -6,6 +6,12 @@ import { toast } from "react-hot-toast";
 import { useAuthStore } from "../stores/auth-store";
 import { getDeviceInfo } from "../utils/device.util";
 import { getDeviceId } from "../lib/device";
+import { expireSession } from "../lib/session";
+import {
+  NETWORK_MESSAGE,
+  OFFLINE_MESSAGE,
+  messageForStatus,
+} from "../utils/api-error-messages";
 
 declare module "axios" {
   export interface InternalAxiosRequestConfig {
@@ -75,9 +81,9 @@ api.interceptors.response.use(
      * No response received (Network failure / server down)
      */
     if (!error.response) {
-      toast.error(
-        "Unable to connect to the server. Please try again later."
-      );
+      const offline =
+        typeof navigator !== "undefined" && navigator.onLine === false;
+      toast.error(offline ? OFFLINE_MESSAGE : NETWORK_MESSAGE);
       return Promise.reject(error);
     }
 
@@ -137,9 +143,16 @@ api.interceptors.response.use(
                  throw new Error("Invalid token refresh response.");
                }
              })
-             .catch((refreshErr) => {
+             .catch((refreshErr: unknown) => {
                processQueue(refreshErr, null);
-               useAuthStore.getState().clearSession();
+               // Only a definitive auth rejection ends the session; a network
+               // blip or 5xx must not sign the user out.
+               const refreshStatus = (
+                 refreshErr as { response?: { status?: number } } | undefined
+               )?.response?.status;
+               if (refreshStatus === 401 || refreshStatus === 403) {
+                 expireSession();
+               }
                reject(refreshErr);
              })
             .finally(() => {
@@ -150,44 +163,52 @@ api.interceptors.response.use(
     }
 
     /**
+     * Still unauthorized after a refresh + replay: the session is unusable.
+     * (`isAuthActionEndpoint` returned earlier, so login/OTP 401s never end up
+     * here and never show a "session expired" notice.)
+     */
+    if (status === 401) {
+      expireSession();
+    }
+
+    const data = (error.response?.data as
+      | { message?: string; error?: string }
+      | undefined);
+    const serverMessage = data?.message ?? data?.error;
+
+    /**
      * Forbidden
      */
     if (status === 403) {
-      toast.error("Access denied.");
+      toast.error(serverMessage || messageForStatus(403));
     }
 
     /**
      * Validation error
      */
     if (status === 400 || status === 422) {
-      const data = (error.response?.data as { message?: string; error?: string } | undefined);
-      const msg = data?.message ?? data?.error;
-      toast.error(msg || "Invalid request.");
+      toast.error(serverMessage || messageForStatus(status));
     }
 
     /**
      * Not Found
      */
     if (status === 404) {
-      toast.error("Requested resource not found.");
+      toast.error(serverMessage || messageForStatus(404));
     }
 
     /**
      * Too Many Requests
      */
     if (status === 429) {
-      toast.error(
-        "Too many requests. Please try again shortly."
-      );
+      toast.error(serverMessage || messageForStatus(429));
     }
 
     /**
-     * Server Error
+     * Server Error (500 / 502 / 503 / 504 …)
      */
     if (status >= 500) {
-      const data = (error.response?.data as { message?: string; error?: string } | undefined);
-      const msg = data?.message ?? data?.error;
-      toast.error(msg || "Server error. Please try again later.");
+      toast.error(serverMessage || messageForStatus(status));
     }
 
     return Promise.reject(error);

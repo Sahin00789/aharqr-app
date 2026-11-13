@@ -84,9 +84,19 @@ interface AuthState {
   /** Access token lives in memory only — never persisted. */
   accessToken: string | null;
   booted: boolean;
+  /**
+   * True when the session was ended by the server (access token rejected and
+   * refresh failed). The login screen uses it to explain why the user is back
+   * at /auth; a successful sign-in or an explicit logout resets it.
+   */
+  sessionExpired: boolean;
 
   setSession: (user: PublicUser, accessToken: string) => void;
+  /** Explicit sign-out — no "session expired" notice. */
   clearSession: () => void;
+  /** Server rejected both access and refresh token. */
+  expireSession: () => void;
+  dismissSessionExpired: () => void;
   markBooted: () => void;
   updateUser: (user: PublicUser) => void;
 }
@@ -95,10 +105,30 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   accessToken: null,
   booted: false,
+  sessionExpired: false,
 
   setSession: (user, accessToken) =>
-    set({ user: normalizeUser(user), accessToken }),
-  clearSession: () => set({ user: null, accessToken: null, booted: true }),
+    set({
+      user: normalizeUser(user),
+      accessToken,
+      booted: true,
+      sessionExpired: false,
+    }),
+  clearSession: () =>
+    set({
+      user: null,
+      accessToken: null,
+      booted: true,
+      sessionExpired: false,
+    }),
+  expireSession: () =>
+    set({
+      user: null,
+      accessToken: null,
+      booted: true,
+      sessionExpired: true,
+    }),
+  dismissSessionExpired: () => set({ sessionExpired: false }),
   markBooted: () => set({ booted: true }),
   updateUser: (user) =>
     set({ user: normalizeUser(user) }),

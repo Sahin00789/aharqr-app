@@ -3,6 +3,12 @@ import { getDeviceId } from "../lib/device";
 import { getDeviceInfo } from "../utils/device.util";
 import { useAuthStore } from "../stores/auth-store";
 import { getGuestSessionCookie } from "../utils/guest-session.util";
+import { expireSession } from "../lib/session";
+import {
+  NETWORK_MESSAGE,
+  OFFLINE_MESSAGE,
+  messageForStatus,
+} from "../utils/api-error-messages";
 
 export class ApiError extends Error {
   status: number;
@@ -26,7 +32,31 @@ interface RequestOptions {
   signal?: AbortSignal;
 }
 
-let refreshInFlight: Promise<boolean> | null = null;
+let refreshInFlight: Promise<RefreshOutcome> | null = null;
+
+/**
+ * - `refreshed`   — new access token stored, safe to replay the request.
+ * - `rejected`    — the server said the refresh token is invalid/revoked.
+ * - `unreachable` — timeout / offline / 5xx: the session may still be valid.
+ */
+type RefreshOutcome = "refreshed" | "rejected" | "unreachable";
+
+/** Runs a fetch, converting transport failures into a readable ApiError. */
+async function fetchWithNetworkGuard(send: () => Promise<Response>): Promise<Response> {
+  try {
+    return await send();
+  } catch (error) {
+    // Let React Query abort handling work unchanged.
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    const offline =
+      typeof navigator !== "undefined" && navigator.onLine === false;
+    throw new ApiError(
+      0,
+      offline ? "OFFLINE" : "NETWORK_ERROR",
+      offline ? OFFLINE_MESSAGE : NETWORK_MESSAGE,
+    );
+  }
+}
 
 /**
  * Browser refresh relies on the httpOnly cookie the backend sets on
@@ -34,9 +64,12 @@ let refreshInFlight: Promise<boolean> | null = null;
  * The response body also carries a refresh token for mobile clients —
  * intentionally ignored here.
  */
-async function tryRefresh(): Promise<boolean> {
+async function tryRefresh(): Promise<RefreshOutcome> {
   if (!refreshInFlight) {
-    refreshInFlight = (async () => {
+    refreshInFlight = (async (): Promise<RefreshOutcome> => {
+      // Never let a hanging refresh block the app on "Restoring session…".
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10_000);
       try {
         const device = getDeviceInfo();
         const res = await fetch("/api/auth/refresh", {
@@ -48,14 +81,18 @@ async function tryRefresh(): Promise<boolean> {
             "content-type": "application/json",
           },
           body: "{}",
+          signal: controller.signal,
         });
-        if (!res.ok) return false;
+        // Only an auth rejection means the session is truly over.
+        if (res.status === 401 || res.status === 403) return "rejected";
+        if (!res.ok) return "unreachable";
         const session = (await res.json()) as AuthSession;
         useAuthStore.getState().setSession(session.user, session.accessToken);
-        return true;
+        return "refreshed";
       } catch {
-        return false;
+        return "unreachable";
       } finally {
+        clearTimeout(timeout);
         refreshInFlight = null;
       }
     })();
@@ -97,13 +134,20 @@ export async function api<T = unknown>(
     });
   };
 
-  let res = await send();
+  let res = await fetchWithNetworkGuard(send);
 
   // Access token expired: refresh once, replay the original request with the
-  // newly issued token.
-  if (res.status === 401 && auth && !path.startsWith("/api/auth/")) {
-    if (await tryRefresh()) {
-      res = await send();
+  // newly issued token. If the refresh token is rejected too, the session is
+  // unusable — end it so the route guards send the user back to /auth.
+  // A network failure ("unreachable") keeps the session intact: the user may
+  // simply be offline, and signing them out would be wrong.
+  let refreshOutcome: RefreshOutcome | null = null;
+  if (res.status === 401 && auth && !path.startsWith("/api/auth/refresh")) {
+    refreshOutcome = await tryRefresh();
+    if (refreshOutcome === "refreshed") {
+      res = await fetchWithNetworkGuard(send);
+    } else if (refreshOutcome === "rejected") {
+      expireSession();
     }
   }
 
@@ -114,13 +158,26 @@ export async function api<T = unknown>(
     | null;
 
   if (!res.ok) {
-    if (path.startsWith("/api/auth/") && res.status === 401) {
-      useAuthStore.getState().clearSession();
+    // Still unauthorized with a freshly issued token (or after a definitive
+    // refresh rejection): the session is gone, not just stale. Offline /
+    // 5xx refresh failures deliberately do not reach this branch.
+    if (
+      res.status === 401 &&
+      auth &&
+      (refreshOutcome === "refreshed" || refreshOutcome === "rejected")
+    ) {
+      expireSession();
     }
+    const serverMessage =
+      typeof data?.message === "string" && data.message.trim()
+        ? data.message
+        : typeof data?.error === "string" && data.error.trim()
+          ? data.error
+          : undefined;
     throw new ApiError(
       res.status,
       data?.error ?? "REQUEST_FAILED",
-      data?.message ?? data?.error ?? `Request failed (${res.status})`,
+      serverMessage ?? messageForStatus(res.status),
       data?.details,
     );
   }

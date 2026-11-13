@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import toast from "react-hot-toast";
 import {
@@ -14,8 +14,9 @@ import type { UserRole } from "../../../types";
 import { ROLE_PATHS } from "../../../types";
 import { loginWithGoogle, requestLoginOtp, verifyLoginOtp, type OtpRole } from "../../../services/auth.service";
 import { GoogleAuthButton } from "./GoogleAuthButton";
-import { Button, ErrorBanner, Input } from "../../components";
+import { AppLogo, Button, ErrorBanner, Input } from "../../components";
 import { useThemeStore } from "../../../stores/theme-store";
+import { useAuthStore } from "../../../stores/auth-store";
 
 /** Bi-color identity per role.
  *
@@ -112,6 +113,7 @@ const crossfade = {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [role, setRole] = useState<UserRole>("CAPTAIN");
   const [step, setStep] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
@@ -123,6 +125,10 @@ export function LoginPage() {
   const theme = ROLE_THEMES[role];
   const setPreviewRole = useThemeStore((s) => s.setPreviewRole);
   const otpRole = OTP_ROLES[role as keyof typeof OTP_ROLES];
+  // Set by lib/session.expireSession() when the server rejected both the
+  // access and refresh token — explains why the user landed back here.
+  const sessionExpired = useAuthStore((s) => s.sessionExpired);
+  const dismissSessionExpired = useAuthStore((s) => s.dismissSessionExpired);
 
   // Preview the selected role's REAL dual-color identity before sign-in.
   useEffect(() => {
@@ -143,11 +149,13 @@ export function LoginPage() {
     setOtp("");
     setDevOtp(null);
     setError("");
+    dismissSessionExpired();
   }
 
   async function sendCode(e?: React.FormEvent) {
     e?.preventDefault();
     setError("");
+    dismissSessionExpired();
     if (!email.trim()) {
       setError("Enter your work email.");
       return;
@@ -170,14 +178,33 @@ export function LoginPage() {
     }
   }
 
+  /**
+   * Guards stash the page the user was on when their session ended. Return
+   * there after sign-in — but only if it belongs to the role they just signed
+   * in as, otherwise land on that workspace's home tab.
+   */
+  function redirectTargetFor(signedInRole: UserRole): string {
+    const base = `/app/${ROLE_PATHS[signedInRole]}`;
+    const from = (
+      location.state as
+        | { from?: { pathname?: string; search?: string } }
+        | null
+    )?.from;
+    if (from?.pathname && from.pathname.startsWith(base)) {
+      return `${from.pathname}${from.search ?? ""}`;
+    }
+    return base;
+  }
+
   async function verifyCode(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    dismissSessionExpired();
     setLoading(true);
     try {
-      await verifyLoginOtp(email.trim(), otpRole, otp.trim());
+      const session = await verifyLoginOtp(email.trim(), otpRole, otp.trim());
       toast.success("Welcome back!");
-      navigate(`/app/${ROLE_PATHS[role]}`);
+      navigate(redirectTargetFor(session.user.role), { replace: true });
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Could not verify the code";
@@ -190,9 +217,12 @@ export function LoginPage() {
 
   async function handleGoogleCode(code: string) {
     setError("");
-    await loginWithGoogle(code);
+    dismissSessionExpired();
+    // Google sign-in only works for accounts that already exist for the
+    // selected role — it never registers a new user.
+    const session = await loginWithGoogle(code, otpRole);
     toast.success("Welcome back!");
-    navigate(`/app/${ROLE_PATHS[role]}`);
+    navigate(redirectTargetFor(session.user.role), { replace: true });
   }
 
   return (
@@ -223,16 +253,9 @@ export function LoginPage() {
           className="flex flex-col items-start text-left"
         >
           <div className="flex items-center gap-2.5">
-            <img
-              src="/logo.jpg"
-              alt="AharQR"
-              width={44}
-              height={44}
-              className={`h-11 w-11 shrink-0 rounded-2xl object-cover shadow-lg ring-1 ring-black/5 ${theme.glow}`}
+            <AppLogo
+              className={`h-9 sm:h-10 dark:rounded-xl dark:bg-white/95 dark:px-2 dark:py-1 ${theme.glow}`}
             />
-            <span className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-              AharQR
-            </span>
           </div>
           <div className="mt-8 max-w-lg space-y-3 md:mt-12">
             <p className={`text-xs font-bold tracking-[0.18em] uppercase ${theme.text}`}>
@@ -356,6 +379,30 @@ export function LoginPage() {
           </div>
 
           <div className="mt-5 space-y-4">
+            <AnimatePresence initial={false}>
+              {sessionExpired && (
+                <motion.div
+                  key="session-expired"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div
+                    role="status"
+                    className="flex items-start gap-2.5 rounded-xl border border-amber-200/80 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+                  >
+                    <Clock3 size={14} className="mt-0.5 shrink-0" />
+                    <p>
+                      <span className="font-semibold">Your session ended.</span>{" "}
+                      Sign in again to pick up where you left off.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <AnimatePresence initial={false}>
               {error && (
                 <motion.div

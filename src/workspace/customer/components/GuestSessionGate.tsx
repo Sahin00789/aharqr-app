@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useNavigate, useSearchParams } from "react-router";
-import { QrCode, ScanLine } from "lucide-react";
+import { QrCode } from "lucide-react";
 import { api, ApiError } from "../../../services/api-client";
-import { PageLoader } from "../../../common/components";
+import { AppLogo, PageLoader } from "../../../common/components";
 import {
   useGuestSessionStore,
   type GuestSession,
@@ -125,9 +125,9 @@ function ScanRequiredView({
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-100 p-4 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-zinc-200/70 dark:bg-zinc-900 dark:ring-zinc-800">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-600 to-accent2-600 text-white shadow-sm">
-          <ScanLine size={26} />
-        </span>
+        <div className="flex justify-center">
+          <AppLogo className="h-9 dark:rounded-xl dark:bg-white/95 dark:px-2 dark:py-1" />
+        </div>
         <h1 className="mt-5 text-lg font-bold tracking-tight">
           {occupied ? "This table is occupied" : "Scan to start ordering"}
         </h1>

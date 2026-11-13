@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Modal } from "./Modal";
 import { ActionMenuItem } from "./ActionMenu";
+import { AppLogo } from "./AppLogo";
 import { Button, ErrorBanner, Input } from "./index";
 import {
   billFileName,
@@ -255,9 +256,9 @@ export function BillView({ bill }: { bill: BillData }) {
               Thank you for dining with us!
             </p>
             <span className="mt-1.5 h-px w-24 bg-zinc-200 dark:bg-zinc-800" />
-            <p className="mt-1.5 text-[9px] font-bold tracking-widest text-accent-600 dark:text-accent-400">
-              AharQR
-            </p>
+            <div className="mt-2 flex justify-center">
+              <AppLogo className="h-3.5 dark:rounded dark:bg-white/95 dark:px-1.5 dark:py-0.5" />
+            </div>
           </div>
         </div>
       </div>

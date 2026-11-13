@@ -27,8 +27,10 @@ import {
   useRestaurantTables,
   useUpdateRestaurantTable,
 } from "../../../hooks/use-tables";
-import { useMyRestaurant } from "../../../hooks/use-restaurant";
-import toast from "react-hot-toast";
+import {
+  formatRestaurantAddress,
+  useMyRestaurant,
+} from "../../../hooks/use-restaurant";import toast from "react-hot-toast";
 
 /**
  * Admin-only secondary screen for floor & QR management. Reads/writes the
@@ -108,6 +110,11 @@ export function TablesScreen() {
         tableNumber: t.tableNumber,
         tableName: t.tableName,
         restaurantName: restaurant?.name,
+        restaurantAddress: restaurant
+          ? formatRestaurantAddress(restaurant)
+          : undefined,
+        restaurantPhone: restaurant?.phone ?? undefined,
+        restaurantLogo: restaurant?.logo ?? null,
         capacity: t.capacity,
         isTakeaway: t.isTakeaway,
       }));
