@@ -3,6 +3,12 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  /* AharQR type family — Inter, loaded in index.html (swap + preconnect).
+     Tailwind v4 preflight reads --font-sans as the default document font. */
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
   /* Dual-color sub-theme accents. Values resolve to runtime CSS variables
      (--accent-* / --accent2-*) set by the ThemeProvider, defaulting below.
      NOTE: each --color-accent-* points straight at the runtime var, whose value
@@ -33,8 +39,9 @@
   --color-accent2-950: var(--accent2-950);
 }
 
-/* Default sub-theme = Indigo (primary) + Violet (secondary). Overridden at
-   runtime by ThemeProvider via the selected preset. Values are full rgb() colors. */
+/* Fallback sub-theme = Restaurant Admin identity (Indigo + Emerald). This is
+   the pre-JS / logged-out default; the ThemeProvider swaps the scales at
+   runtime based on the active role + light/dark mode. */
 :root {
   --accent-50: rgb(238 242 255);
   --accent-100: rgb(224 231 255);
@@ -48,17 +55,55 @@
   --accent-900: rgb(49 46 129);
   --accent-950: rgb(30 27 75);
 
-  --accent2-50: rgb(245 243 255);
-  --accent2-100: rgb(237 233 254);
-  --accent2-200: rgb(221 214 254);
-  --accent2-300: rgb(196 181 253);
-  --accent2-400: rgb(167 139 250);
-  --accent2-500: rgb(139 92 246);
-  --accent2-600: rgb(124 58 237);
-  --accent2-700: rgb(109 40 217);
-  --accent2-800: rgb(91 33 182);
-  --accent2-900: rgb(76 29 149);
-  --accent2-950: rgb(46 16 101);
+  --accent2-50: rgb(236 253 245);
+  --accent2-100: rgb(209 250 229);
+  --accent2-200: rgb(167 243 208);
+  --accent2-300: rgb(110 231 183);
+  --accent2-400: rgb(52 211 153);
+  --accent2-500: rgb(16 185 129);
+  --accent2-600: rgb(5 150 105);
+  --accent2-700: rgb(4 120 87);
+  --accent2-800: rgb(6 95 70);
+  --accent2-900: rgb(6 78 59);
+  --accent2-950: rgb(2 44 34);
+
+  /* Fallback CSS variables for accent utilities — overridden at runtime by ThemeProvider */
+  --color-accent-50: var(--accent-50);
+  --color-accent-100: var(--accent-100);
+  --color-accent-200: var(--accent-200);
+  --color-accent-300: var(--accent-300);
+  --color-accent-400: var(--accent-400);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  --color-accent-700: var(--accent-700);
+  --color-accent-800: var(--accent-800);
+  --color-accent-900: var(--accent-900);
+  --color-accent-950: var(--accent-950);
+
+  --color-accent2-50: var(--accent2-50);
+  --color-accent2-100: var(--accent2-100);
+  --color-accent2-200: var(--accent2-200);
+  --color-accent2-300: var(--accent2-300);
+  --color-accent2-400: var(--accent2-400);
+  --color-accent2-500: var(--accent2-500);
+  --color-accent2-600: var(--accent2-600);
+  --color-accent2-700: var(--accent2-700);
+  --color-accent2-800: var(--accent2-800);
+  --color-accent2-900: var(--accent2-900);
+  --color-accent2-950: var(--accent2-950);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-zinc-100 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+    font-family: var(--font-sans);
+  }
 }
 
 @layer utilities {
