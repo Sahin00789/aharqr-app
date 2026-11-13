@@ -38,3 +38,38 @@ export async function updateKitchenOrderStatus(
   });
   return data;
 }
+
+export interface KitchenPrepDish {
+  dishId: string;
+  dishName: string;
+  accepted: number;
+  prepared: number;
+  pending: number;
+  avgPrepSeconds: number | null;
+  maxPrepSeconds: number | null;
+}
+
+export interface KitchenPrepReport {
+  success: boolean;
+  from: string;
+  to: string;
+  totals: {
+    accepted: number;
+    prepared: number;
+    pending: number;
+    avgPrepSeconds: number | null;
+    maxPrepSeconds: number | null;
+  };
+  dishes: KitchenPrepDish[];
+}
+
+/** Dishes accepted for cooking in a date window with prep-time stats. */
+export async function fetchKitchenPrepReport(
+  from?: string,
+  to?: string,
+): Promise<KitchenPrepReport> {
+  const { data } = await api.get('/kitchen/prep-report', {
+    params: from || to ? { from, to } : {},
+  });
+  return data;
+}

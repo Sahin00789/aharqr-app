@@ -11,7 +11,6 @@ export interface TakeawayOrder {
   totalAmount: number;
   paymentStatus: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'REFUNDED';
   currentStatus: 'CREATED' | 'APPROVED' | 'ACCEPTED_FOR_COOK' | 'PREPARED' | 'READY_FOR_PICKUP' | 'PICKED_UP' | 'COMPLETED' | 'CANCELLED';
-  inventoryDeducted: boolean;
   notes?: string;
   createdByType: 'CASHIER' | 'CAPTAIN' | 'ADMIN';
   createdAt: string;
@@ -21,7 +20,7 @@ export async function fetchTakeawayOrders(): Promise<{ success: boolean; orders:
   try {
     const { data } = await api.get('/takeaway/orders');
     return data;
-  } catch (error) {
+  } catch {
     return {
       success: true,
       orders: [
@@ -36,7 +35,6 @@ export async function fetchTakeawayOrders(): Promise<{ success: boolean; orders:
           totalAmount: 470,
           paymentStatus: 'PAID',
           currentStatus: 'READY_FOR_PICKUP',
-          inventoryDeducted: false,
           createdByType: 'CASHIER',
           createdAt: new Date().toISOString(),
         },
@@ -49,7 +47,7 @@ export async function createTakeawayOrder(payload: { customerName?: string; cust
   try {
     const { data } = await api.post('/takeaway/orders', payload);
     return data;
-  } catch (error: any) {
+  } catch {
     return { success: true, message: 'Takeaway Order created successfully' };
   }
 }
@@ -58,7 +56,7 @@ export async function updateTakeawayOrderStatus(orderId: string, status: Takeawa
   try {
     const { data } = await api.patch(`/takeaway/orders/${orderId}/status`, { status, remarks });
     return data;
-  } catch (error: any) {
+  } catch {
     return { success: true, message: `Status updated to ${status}` };
   }
 }
@@ -67,7 +65,7 @@ export async function fetchTakeawayOrderTimeline(orderId: string) {
   try {
     const { data } = await api.get(`/takeaway/orders/${orderId}/timeline`);
     return data;
-  } catch (error) {
+  } catch {
     return {
       success: true,
       timeline: [

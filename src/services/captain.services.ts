@@ -16,7 +16,6 @@ export interface CreateCaptainInput {
   email: string;
   phone?: string;
   employeeCode?: string;
-  initialPassword: string;
   joiningDate?: string;
 }
 

@@ -18,7 +18,6 @@ export interface CreateChefInput {
   phone?: string;
   employeeCode?: string;
   kitchenStation?: string;
-  initialPassword: string;
   joiningDate?: string;
 }
 

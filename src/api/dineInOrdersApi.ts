@@ -5,6 +5,8 @@ export interface DineInOrder {
   orderNumber: string;
   tableId: string;
   tableNumber?: string;
+  customerName?: string;
+  customerPhone?: string;
   guestCount: number;
   subtotal: number;
   discountAmount: number;
@@ -24,7 +26,7 @@ export async function fetchDineInOrders(): Promise<{ success: boolean; orders: D
   try {
     const { data } = await api.get('/dine-in/orders');
     return data;
-  } catch (error) {
+  } catch {
     return {
       success: true,
       orders: [],
@@ -32,7 +34,7 @@ export async function fetchDineInOrders(): Promise<{ success: boolean; orders: D
   }
 }
 
-export async function createDineInOrder(payload: { tableId: string; guestCount: number; items: { menuId: string; quantity: number; unitPrice: number; remarks?: string }[]; notes?: string }) {
+export async function createDineInOrder(payload: { tableId: string; customerName: string; customerPhone?: string; guestCount: number; items: { menuId: string; quantity: number; unitPrice: number; remarks?: string }[]; notes?: string }) {
   const { data } = await api.post('/dine-in/orders', payload);
   return data;
 }
@@ -46,7 +48,7 @@ export async function fetchDineInOrderTimeline(orderId: string) {
   try {
     const { data } = await api.get(`/dine-in/orders/${orderId}/timeline`);
     return data;
-  } catch (error) {
+  } catch {
     return {
       success: true,
       timeline: [],

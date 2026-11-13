@@ -7,12 +7,17 @@ export interface SessionDevice {
   userAgent: string | null;
   lastSeenAt: string;
   createdAt: string;
-  expiresAt: string;
+  expiresAt: string | null;
   current: boolean;
 }
 
-export function listSessions(): Promise<SessionDevice[]> {
-  return api<SessionDevice[]>("/api/auth/devices-sessions");
+export async function listSessions(): Promise<SessionDevice[]> {
+  const res = await api<{
+    success: boolean;
+    data?: { sessions: SessionDevice[] };
+  }>("/api/auth/devices-sessions");
+  if (Array.isArray(res)) return res as SessionDevice[];
+  return res.data?.sessions ?? [];
 }
 
 export function revokeSession(id: string): Promise<void> {

@@ -1,16 +1,20 @@
 import type { AuthSession } from "../types";
 import { getDeviceId } from "../lib/device";
+import { getDeviceInfo } from "../utils/device.util";
 import { useAuthStore } from "../stores/auth-store";
+import { getGuestSessionCookie } from "../utils/guest-session.util";
 
 export class ApiError extends Error {
-  constructor(
-    public status: number,
-    public code: string,
-    message: string,
-    public details?: unknown,
-  ) {
+  status: number;
+  code: string;
+  details?: unknown;
+
+  constructor(status: number, code: string, message: string, details?: unknown) {
     super(message);
     this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.details = details;
   }
 }
 
@@ -34,11 +38,13 @@ async function tryRefresh(): Promise<boolean> {
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
       try {
+        const device = getDeviceInfo();
         const res = await fetch("/api/auth/refresh", {
           method: "POST",
           credentials: "include",
           headers: {
             "x-device-id": getDeviceId(),
+            "x-device-fingerprint": device.fingerprint,
             "content-type": "application/json",
           },
           body: "{}",
@@ -72,11 +78,15 @@ export async function api<T = unknown>(
   // Build headers on every attempt so a refreshed token is picked up on replay.
   const send = () => {
     const token = auth ? useAuthStore.getState().accessToken : undefined;
+    const guestToken = getGuestSessionCookie();
+    const device = getDeviceInfo();
     const headers: Record<string, string> = {
       "x-device-id": getDeviceId(),
+      "x-device-fingerprint": device.fingerprint,
     };
     if (body !== undefined) headers["content-type"] = "application/json";
     if (token) headers.authorization = `Bearer ${token}`;
+    if (guestToken) headers["x-session-token"] = guestToken;
 
     return fetch(path, {
       method,
@@ -110,7 +120,7 @@ export async function api<T = unknown>(
     throw new ApiError(
       res.status,
       data?.error ?? "REQUEST_FAILED",
-      data?.message ?? `Request failed (${res.status})`,
+      data?.message ?? data?.error ?? `Request failed (${res.status})`,
       data?.details,
     );
   }

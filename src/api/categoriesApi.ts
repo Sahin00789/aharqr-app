@@ -4,22 +4,18 @@ export interface Category {
   id: string;
   name: string;
   description: string | null;
-  type: 'FOOD' | 'BEVERAGE' | 'OTHER';
   displayOrder: number;
   isActive: boolean;
 }
 
-export async function fetchCategories(
-  type?: string,
-): Promise<{ success: boolean; categories: Category[] }> {
-  const { data } = await api.get('/categories', { params: type ? { type } : {} });
+export async function fetchCategories(): Promise<{ success: boolean; categories: Category[] }> {
+  const { data } = await api.get('/categories');
   return data;
 }
 
 export async function createCategory(payload: {
   name: string;
   description?: string;
-  type?: 'FOOD' | 'BEVERAGE' | 'OTHER';
   displayOrder?: number;
 }): Promise<{ success: boolean; category: Category }> {
   const { data } = await api.post('/categories', payload);
@@ -31,7 +27,6 @@ export async function updateCategory(
   payload: Partial<{
     name: string;
     description?: string;
-    type: 'FOOD' | 'BEVERAGE' | 'OTHER';
     displayOrder: number;
   }>,
 ): Promise<{ success: boolean; category: Category }> {

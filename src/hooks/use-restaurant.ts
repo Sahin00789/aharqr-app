@@ -5,19 +5,43 @@ import {
   getRestaurantStaff,
   updateMyRestaurant,
 } from "../services/restaurant.services";
-import type { UpdateMyRestaurantInput } from "../services/restaurant.services";
+import type {
+  RestaurantProfile,
+  UpdateMyRestaurantInput,
+} from "../services/restaurant.services";
 
 export const restaurantKeys = {
   all: ["restaurant"] as const,
-  detail: () => [...restaurantKeys.all, "detail"] as const,
+  /** Shared with the dashboard layout / profile menu cache. */
+  detail: () => ["my-restaurant"] as const,
   staff: () => [...restaurantKeys.all, "staff"] as const,
   activeSessions: () => [...restaurantKeys.all, "active-sessions"] as const,
 };
 
-export function useMyRestaurant() {
+/** Single-line address for documents (skips empty parts). */
+export function formatRestaurantAddress(
+  restaurant: Partial<RestaurantProfile>,
+): string {
+  return [
+    restaurant.premisesName,
+    restaurant.street,
+    restaurant.locality,
+    restaurant.townCity,
+    restaurant.district,
+    restaurant.state,
+    restaurant.postalCode,
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
+export function useMyRestaurant(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: restaurantKeys.detail(),
     queryFn: getMyRestaurant,
+    enabled: options?.enabled ?? true,
+    retry: false,
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -27,6 +51,7 @@ export function useUpdateMyRestaurant() {
     mutationFn: (input: UpdateMyRestaurantInput) => updateMyRestaurant(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: restaurantKeys.all });
+      void queryClient.invalidateQueries({ queryKey: restaurantKeys.detail() });
     },
   });
 }

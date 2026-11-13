@@ -14,10 +14,14 @@ export interface RestaurantProfile {
   townCity?: string | null;
   villageWard?: string | null;
   locality?: string | null;
+  areaType?: "RURAL" | "URBAN" | null;
   street?: string | null;
   landmark?: string | null;
   premisesName?: string | null;
   postalCode?: string | null;
+  gstRate?: number;
+  taxMode?: "INCLUSIVE" | "EXCLUSIVE";
+  showTaxBreakdown?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -34,10 +38,14 @@ export interface UpdateMyRestaurantInput {
   townCity?: string;
   villageWard?: string;
   locality?: string;
+  areaType?: "RURAL" | "URBAN";
   street?: string;
   landmark?: string;
   premisesName?: string;
   postalCode?: string;
+  gstRate?: number;
+  taxMode?: "INCLUSIVE" | "EXCLUSIVE";
+  showTaxBreakdown?: boolean;
 }
 
 export interface RestaurantTeamMember {
@@ -58,6 +66,12 @@ export function updateMyRestaurant(
   input: UpdateMyRestaurantInput,
 ): Promise<{ success: boolean; restaurant: RestaurantProfile }> {
   return api("/api/restaurant/my-restaurant", { method: "PUT", body: input });
+}
+
+export function uploadRestaurantLogo(
+  logo: string,
+): Promise<{ success: boolean; restaurant: RestaurantProfile }> {
+  return api("/api/restaurant/logo", { method: "POST", body: { logo } });
 }
 
 export function getRestaurantStaff(): Promise<{

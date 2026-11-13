@@ -4,18 +4,28 @@ export interface Dish {
   id: string;
   name: string;
   description: string | null;
-  /** Stored in paise. */
   category: string;
+  categoryId?: string | null;
+  /** Stored in paise. */
   price: number;
   isVeg: boolean;
   isAvailable: boolean;
   imageUrl?: string | null;
   displayOrder?: number;
+  images?: DishImage[];
+}
+
+export interface DishImage {
+  id: string;
+  dishId: string;
+  url: string;
+  displayOrder: number;
 }
 
 export interface CreateDishInput {
   name: string;
   category: string;
+  categoryId?: string;
   price: number;
   isVeg?: boolean;
   description?: string | null;
@@ -52,5 +62,30 @@ export async function setDishAvailability(
 
 export async function deleteDish(id: string): Promise<{ success: boolean; message: string }> {
   const { data } = await api.delete(`/dishes/${id}`);
+  return data;
+}
+
+export async function uploadDishImages(id: string, files: File[]) {
+  const form = new FormData();
+  files.forEach((f) => form.append('images', f));
+  const { data } = await api.post(`/dishes/${id}/images`, form);
+  return data;
+}
+
+export async function removeDishImage(id: string, imageId: string) {
+  const { data } = await api.delete(`/dishes/${id}/images/${imageId}`);
+  return data;
+}
+
+export interface DishSalesStat {
+  dishId: string;
+  name: string;
+  soldToday: number;
+  soldYesterday: number;
+  delta: number;
+}
+
+export async function fetchDishSalesStats(): Promise<{ success: boolean; stats: DishSalesStat[] }> {
+  const { data } = await api.get('/internal/dish-stats');
   return data;
 }

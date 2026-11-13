@@ -4,6 +4,8 @@ import axios, {
 } from "axios";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "../stores/auth-store";
+import { getDeviceInfo } from "../utils/device.util";
+import { getDeviceId } from "../lib/device";
 
 declare module "axios" {
   export interface InternalAxiosRequestConfig {
@@ -23,10 +25,10 @@ export const api = axios.create({
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (token: string) => void;
-  reject: (error: any) => void;
+  reject: (error: unknown) => void;
 }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -36,8 +38,6 @@ const processQueue = (error: any, token: string | null = null) => {
   });
   failedQueue = [];
 };
-
-import { getDeviceInfo } from "../utils/device.util";
 
 /* --------------------------------------------------------
  * REQUEST INTERCEPTOR
@@ -51,6 +51,7 @@ api.interceptors.request.use(
     }
 
     const device = getDeviceInfo();
+    config.headers["X-Device-Id"] = getDeviceId();
     config.headers["X-Device-Fingerprint"] = device.fingerprint;
     config.headers["X-Device-Name"] = device.deviceName;
     config.headers["X-Device-Platform"] = device.platform;
@@ -90,6 +91,7 @@ api.interceptors.response.use(
       const isAuthActionEndpoint =
         url.includes("/auth/login") ||
         url.includes("/auth/google") ||
+        url.includes("/auth/otp") ||
         url.includes("/auth/register") ||
         url.includes("/auth/customer/qr-login") ||
         url.includes("/auth/refresh");
@@ -110,7 +112,7 @@ api.interceptors.response.use(
               originalRequest.headers.Authorization = `Bearer ${token}`;
               resolve(api(originalRequest));
             },
-            reject: (err: any) => {
+            reject: (err: unknown) => {
               reject(err);
             },
           });
@@ -157,11 +159,10 @@ api.interceptors.response.use(
     /**
      * Validation error
      */
-    if (status === 400) {
-      toast.error(
-        (error.response.data as any)?.message ??
-          "Invalid request."
-      );
+    if (status === 400 || status === 422) {
+      const data = (error.response?.data as { message?: string; error?: string } | undefined);
+      const msg = data?.message ?? data?.error;
+      toast.error(msg || "Invalid request.");
     }
 
     /**
@@ -184,9 +185,9 @@ api.interceptors.response.use(
      * Server Error
      */
     if (status >= 500) {
-      toast.error(
-        "Server error. Please try again later."
-      );
+      const data = (error.response?.data as { message?: string; error?: string } | undefined);
+      const msg = data?.message ?? data?.error;
+      toast.error(msg || "Server error. Please try again later.");
     }
 
     return Promise.reject(error);
