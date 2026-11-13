@@ -7,7 +7,6 @@ import {
   ChefHat,
   Check,
   Clock3,
-  QrCode,
   ShieldCheck,
   User,
 } from "lucide-react";
@@ -224,16 +223,13 @@ export function LoginPage() {
           className="flex flex-col items-start text-left"
         >
           <div className="flex items-center gap-2.5">
-            <span className={`relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl text-white shadow-lg ${theme.glow}`}>
-              <AnimatePresence initial={false}>
-                <motion.span
-                  key={role}
-                  {...crossfade}
-                  className={`absolute inset-0 bg-gradient-to-br ${theme.gradient}`}
-                />
-              </AnimatePresence>
-              <QrCode size={21} className="relative z-10" />
-            </span>
+            <img
+              src="/logo.jpg"
+              alt="AharQR"
+              width={44}
+              height={44}
+              className={`h-11 w-11 shrink-0 rounded-2xl object-cover shadow-lg ring-1 ring-black/5 ${theme.glow}`}
+            />
             <span className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
               AharQR
             </span>

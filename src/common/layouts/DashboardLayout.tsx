@@ -9,7 +9,7 @@ import {
 import { Link, NavLink, useLocation, useNavigate, useOutlet } from "react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { useIsFetching, useQuery, useQueryClient } from "@tanstack/react-query";
-import { QrCode, Sun, Moon, Bell, Settings, RefreshCw } from "lucide-react";
+import { Sun, Moon, Bell, Settings, RefreshCw } from "lucide-react";
 import type { NavItemConfig, PublicUser } from "../../types";
 import { ROLE_PATHS } from "../../types";
 import { getMyRestaurant, type RestaurantProfile } from "../../services/restaurant.services";
@@ -257,10 +257,16 @@ function Sidebar({ items }: { items: NavItemConfig[] }) {
 
       <Link
         to="/"
-        className="mt-auto flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-accent-600 to-accent2-600 text-white shadow-sm"
+        className="mt-auto h-9 w-9 shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-black/5"
         aria-label="AharQR home"
       >
-        <QrCode size={18} />
+        <img
+          src="/logo.jpg"
+          alt=""
+          width={36}
+          height={36}
+          className="h-9 w-9 object-cover"
+        />
       </Link>
     </aside>
   );
