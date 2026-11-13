@@ -1,33 +1,15 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  LogIn,
-  LogOut,
-  Zap,
-  Users,
-  Loader2,
-  ChevronRight,
-} from "lucide-react";
+import { Users } from "lucide-react";
 import {
   SectionTitle,
   EmptyState,
-  useCurrentUser,
   Button,
   Card,
   Badge,
-} from "../../../common/ui";
+  DashboardTabSkeleton,
+} from "../../../common/components";
+import { useCurrentUser } from "../../../hooks/use-current-user";
 import { fetchStaffRoster, type StaffMember } from "../../../api/staffApi";
-import type { OvertimeRecord } from "../../../api/overtimeApi";
-import {
-  fetchStaffAttendanceStatus,
-  type StaffAttendanceStatus,
-  type AttendanceStatusAction,
-} from "../../../api/attendanceApi";
-import { ShiftCheckInModal } from "../components/ShiftCheckInModal";
-import { ShiftCheckOutModal } from "../components/ShiftCheckOutModal";
-import { OvertimeCreationModal } from "../components/OvertimeCreationModal";
-import { OvertimeCheckInModal } from "../components/OvertimeCheckInModal";
-import { OvertimeCheckOutModal } from "../components/OvertimeCheckOutModal";
 
 const STATUS_META: Record<
   StaffMember["status"],
@@ -50,50 +32,6 @@ const STATUS_META: Record<
   },
 };
 
-type ModalKey =
-  | "checkIn"
-  | "checkOut"
-  | "overtimeCreate"
-  | "overtimeIn"
-  | "overtimeOut";
-
-interface ActiveModal {
-  modal: ModalKey;
-  staffId: string;
-  shiftId: string;
-  overtimeId: string;
-  attendanceId: string;
-  editingOvertime?: OvertimeRecord | null;
-}
-
-function formatTime(value?: string) {
-  if (!value) return "";
-  const [h, m] = value.split(":").map(Number);
-  if (Number.isNaN(h)) return value;
-  const period = h >= 12 ? "PM" : "AM";
-  const hour = ((h + 11) % 12) + 1;
-  return `${hour}:${String(m ?? 0).padStart(2, "0")} ${period}`;
-}
-
-function ActionMeta(action: AttendanceStatusAction): {
-  label: string;
-  icon: "in" | "out" | "zap";
-  primary: boolean;
-} {
-  switch (action) {
-    case "SHIFT_CHECK_IN":
-      return { label: "Check-in", icon: "in", primary: true };
-    case "SHIFT_CHECK_OUT":
-      return { label: "Check-out", icon: "out", primary: false };
-    case "OVERTIME_CHECK_IN":
-      return { label: "OT Check-in", icon: "zap", primary: false };
-    case "OVERTIME_CHECK_OUT":
-      return { label: "OT Check-out", icon: "out", primary: false };
-    case "CREATE_OVERTIME":
-      return { label: "Add Overtime", icon: "zap", primary: false };
-  }
-}
-
 function Avatar({ name, email }: { name: string; email: string }) {
   const initials = (name || email)
     .split(" ")
@@ -109,7 +47,7 @@ function Avatar({ name, email }: { name: string; email: string }) {
   );
 }
 
-/** Admin staff directory — backed by the live roster, with per-staff conditional actions. */
+/** Admin staff directory — backed by the live roster. */
 export function AdminStaffTab() {
   useCurrentUser();
   const { data, isLoading, isError, refetch } = useQuery({
@@ -120,30 +58,17 @@ export function AdminStaffTab() {
   const staff: StaffMember[] = (data as { allStaff?: StaffMember[] } | undefined)
     ?.allStaff ?? [];
 
-  const [active, setActive] = useState<ActiveModal | null>(null);
-
-  function open(staffer: StaffMember, status: StaffAttendanceStatus) {
-    setActive({
-      modal: actionToModal(status.action),
-      staffId: staffer.id,
-      shiftId: status.shift?.shiftTemplateId ?? "",
-      overtimeId: status.overtime?.id ?? "",
-      attendanceId: status.attendance?.id ?? "",
-      editingOvertime: null,
-    });
-  }
-
   return (
     <div className="space-y-6">
       <section className="flex items-start justify-between gap-3">
         <div>
           <SectionTitle>Team</SectionTitle>
           <h1 className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-            Attendance &amp; Overtime
+            Staff Directory
           </h1>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Each member&apos;s action is resolved from today&apos;s shift and
-            live attendance state. Tap it to open the QR they scan.
+            Everyone with access to this restaurant. Use Staff Management to
+            invite or update team members.
           </p>
         </div>
         <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 sm:flex dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
@@ -153,14 +78,7 @@ export function AdminStaffTab() {
       </section>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-20 animate-pulse rounded-xl bg-zinc-200 dark:bg-zinc-800"
-            />
-          ))}
-        </div>
+        <DashboardTabSkeleton label="Loading team" variant="list" />
       ) : isError ? (
         <EmptyState
           title="Couldn't load team"
@@ -179,109 +97,19 @@ export function AdminStaffTab() {
       ) : (
         <div className="grid gap-3">
           {staff.map((member) => (
-            <StaffCard key={member.id} member={member} onOpen={open} />
+            <StaffCard key={member.id} member={member} />
           ))}
         </div>
       )}
-
-      <ShiftCheckInModal
-        open={active?.modal === "checkIn"}
-        onClose={() => setActive(null)}
-        defaultShiftId={active?.shiftId}
-      />
-      <ShiftCheckOutModal
-        open={active?.modal === "checkOut"}
-        onClose={() => setActive(null)}
-        defaultShiftId={active?.shiftId}
-      />
-      <OvertimeCreationModal
-        key={`overtime-${active?.editingOvertime?.id ?? active?.staffId ?? "new"}`}
-        open={active?.modal === "overtimeCreate"}
-        onClose={() => setActive(null)}
-        defaultStaffId={active?.staffId}
-        defaultAttendanceId={active?.attendanceId}
-        initialRecord={active?.editingOvertime ?? null}
-      />
-      <OvertimeCheckInModal
-        open={active?.modal === "overtimeIn"}
-        onClose={() => setActive(null)}
-        defaultOvertimeId={active?.overtimeId}
-        onEdit={(record) =>
-          setActive({
-            modal: "overtimeCreate",
-            staffId: record.staffId,
-            shiftId: "",
-            overtimeId: record.id,
-            attendanceId: record.attendanceId ?? "",
-            editingOvertime: record,
-          })
-        }
-      />
-      <OvertimeCheckOutModal
-        open={active?.modal === "overtimeOut"}
-        onClose={() => setActive(null)}
-        defaultOvertimeId={active?.overtimeId}
-      />
     </div>
   );
 }
 
-function actionToModal(action: AttendanceStatusAction): ModalKey {
-  switch (action) {
-    case "SHIFT_CHECK_IN":
-      return "checkIn";
-    case "SHIFT_CHECK_OUT":
-      return "checkOut";
-    case "OVERTIME_CHECK_IN":
-      return "overtimeIn";
-    case "OVERTIME_CHECK_OUT":
-      return "overtimeOut";
-    case "CREATE_OVERTIME":
-      return "overtimeCreate";
-  }
-}
-
-function ActionIcon({ name }: { name: "in" | "out" | "zap" }) {
-  if (name === "in") return <LogIn className="h-4 w-4" />;
-  if (name === "out") return <LogOut className="h-4 w-4" />;
-  return <Zap className="h-4 w-4" />;
-}
-
-function StaffCard({
-  member,
-  onOpen,
-}: {
-  member: StaffMember;
-  onOpen: (member: StaffMember, status: StaffAttendanceStatus) => void;
-}) {
-  const { data: status, isLoading } = useQuery({
-    queryKey: ["staff-attendance-status", member.id],
-    queryFn: () => fetchStaffAttendanceStatus(member.id),
-    enabled: member.status === "ACTIVE",
-  });
-
-  const action = status?.action;
-  const hasOvertime =
-    action === "CREATE_OVERTIME" ||
-    action === "OVERTIME_CHECK_IN" ||
-    action === "OVERTIME_CHECK_OUT";
+function StaffCard({ member }: { member: StaffMember }) {
   const statusMeta = STATUS_META[member.status] ?? STATUS_META.INVITED;
 
-  const actionMeta = action ? ActionMeta(action) : null;
-  const shiftLabel = status?.shift
-    ? `${status.shift.name} · ${formatTime(status.shift.startTime)} – ${formatTime(
-        status.shift.endTime,
-      )}`
-    : null;
-
   return (
-    <Card
-      className={`flex flex-col gap-4 !p-4 sm:flex-row sm:items-center sm:justify-between md:!p-5 ${
-        hasOvertime
-          ? "ring-2 ring-amber-300 dark:ring-amber-500/60"
-          : ""
-      }`}
-    >
+    <Card className="flex flex-col gap-4 !p-4 sm:flex-row sm:items-center sm:justify-between md:!p-5">
       <div className="flex min-w-0 items-center gap-3.5">
         <Avatar name={member.name} email={member.email} />
         <div className="min-w-0">
@@ -298,40 +126,16 @@ function StaffCard({
             {member.email}
             {member.employeeCode ? ` · ${member.employeeCode}` : ""}
           </p>
-          <p className="mt-1 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-            {shiftLabel ? (
-              <>
-                <span className="truncate">{shiftLabel}</span>
-                {status?.inShiftWindow ? (
-                  <Badge tone="green">In shift</Badge>
-                ) : (
-                  <Badge tone="zinc">Outside shift</Badge>
-                )}
-              </>
-            ) : (
-              "No shift assigned today"
-            )}
-          </p>
+          {member.joiningDate && (
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              Joined {member.joiningDate}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
         <Badge tone="indigo">{member.role}</Badge>
-        {action && status && actionMeta ? (
-          <Button
-            size="sm"
-            variant={actionMeta.primary ? "primary" : "secondary"}
-            onClick={() => onOpen(member, status)}
-          >
-            <ActionIcon name={actionMeta.icon} />
-            {actionMeta.label}
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Button>
-        ) : isLoading ? (
-          <Button size="sm" variant="secondary" disabled>
-            <Loader2 className="mr-1 h-4 w-4 animate-spin" /> Loading…
-          </Button>
-        ) : null}
       </div>
     </Card>
   );

@@ -1,15 +1,13 @@
 import { Route } from "react-router";
-import { RequireRole } from "../../common/guards";
-import { Layout } from "../../common/layouts/Layout";
-import { AccountScreen } from "../../common/layouts/AccountScreen";
+import { RequireRole } from "../../App";
+import { Layout } from "../../common/layouts/DashboardLayout";
+import { ProfileMenu } from "../../common/layouts/ProfileMenu";
 
-import { EditProfileScreen } from "./secondary/EditProfileScreen";
-import { RestaurantDetailsScreen } from "./secondary/RestaurantDetailsScreen";
-import { AppearanceScreen } from "./secondary/AppearanceScreen";
-import { LoggedDevicesScreen } from "./secondary/LoggedDevicesScreen";
+import { LoggedDevicesScreen } from "../../common/pages/screensfordashboard/LoggedDevicesScreen";
 import { TablesScreen } from "./secondary/TablesScreen";
-import { SubscriptionScreen } from "./secondary/SubscriptionScreen";
 import { StaffManagementScreen } from "./secondary/StaffManagementScreen";
+import { TaxScreen } from "./secondary/TaxScreen";
+import { HelpScreen } from "../../common/pages/screensfordashboard/StaffProfileScreens";
 
 import type { NavItemConfig, ProfileMenuItem } from "../../types";
 import { ROLE_PATHS } from "../../types";
@@ -17,50 +15,38 @@ import { ROLE_PATHS } from "../../types";
 import { HomeTab } from "./tabs/HomeTab";
 import { AdminOrdersTab } from "./tabs/OrdersTab";
 import { AdminMenuTab } from "./tabs/MenuTab";
-import { AdminStaffTab } from "./tabs/StaffTab";
 import { AdminFinanceTab } from "./tabs/FinanceTab";
 import { AdminDishesTab as DishesScreen } from "./secondary/DishesScreen";
-import { AdminWorkingShiftsTab as WorkingShiftsScreen } from "./secondary/WorkingShiftsScreen";
-import { AdminPayrollTab as PayrollScreen } from "./secondary/PayrollScreen";
 import {
   ClipboardList,
-  CreditCard,
-  LayoutDashboard,
   Laptop,
+  LayoutDashboard,
   QrCode,
-  Settings,
-  Store,
-  UserRound,
   Users,
   UtensilsCrossed,
   Wallet,
-  Clock,
+  Percent,
 } from "lucide-react";
 
 /**
- * Five high-frequency operational tabs. Lower-frequency management surfaces
- * (dishes, shifts, payroll)
- * live as secondary screens under Settings so the dashboard stays focused.
+ * Four high-frequency operational tabs. Lower-frequency management surfaces
+ * (dishes, staff, tables) live as secondary screens under Settings so the
+ * dashboard stays focused.
  */
 const navItems: NavItemConfig[] = [
-  { routeUrl: "", name: "Home", icon: LayoutDashboard, element: <HomeTab />, subtitle: "Live snapshot of your restaurant" },
-  { routeUrl: "orders", name: "Orders", icon: ClipboardList, element: <AdminOrdersTab />, subtitle: "Live floor & kitchen orders" },
-  { routeUrl: "menu", name: "Menu", icon: UtensilsCrossed, element: <AdminMenuTab />, subtitle: "Dishes, categories & recipes" },
-  { routeUrl: "staff", name: "Staff", icon: Users, element: <AdminStaffTab />, subtitle: "Team, shifts & payroll" },
-  { routeUrl: "finance", name: "Finance", icon: Wallet, element: <AdminFinanceTab />, subtitle: "Revenue overview and ledger" },
+  { routeUrl: "", name: "Overview", headline: "Monthly Overview", icon: LayoutDashboard, element: <HomeTab />, subtitle: "Sales, dishes and live floor" },
+  { routeUrl: "orders", name: "Orders", headline: "Order Management", icon: ClipboardList, element: <AdminOrdersTab />, subtitle: "Dine-in floor and takeaway queue" },
+  { routeUrl: "menu", name: "Menu", headline: "Menu Preview", icon: UtensilsCrossed, element: <AdminMenuTab />, subtitle: "Dishes, availability and today's sales" },
+  { routeUrl: "finance", name: "Finance", headline: "Finance Overview", icon: Wallet, element: <AdminFinanceTab />, subtitle: "Revenue and ledger activity" },
 ];
 
+/** Low-frequency management tasks reachable from the mobile-style ProfileMenu. */
 const profileMenuListItems: ProfileMenuItem[] = [
-  { icon: UserRound, name: "Edit profile", subtexts: "Name, phone & password", routeUrl: "settings/profile" },
-  { icon: Store, name: "Restaurant details", subtexts: "Name, phone & address", routeUrl: "settings/restaurant" },
-  { icon: Laptop, name: "Logged devices", subtexts: "Sessions on other devices", routeUrl: "settings/devices" },
-  { icon: Settings, name: "Appearance", subtexts: "Theme & display", routeUrl: "settings/appearance" },
-  { icon: QrCode, name: "Tables & QR", subtexts: "Manage floor & stickers", routeUrl: "settings/tables" },
-  { icon: CreditCard, name: "Subscription", subtexts: "Plan, billing & renewals", routeUrl: "settings/subscription" },
-  { icon: UtensilsCrossed, name: "Dishes", subtexts: "Menu, categories & recipes", routeUrl: "settings/dishes" },
-  { icon: Clock, name: "Working shifts", subtexts: "Restaurant shift windows", routeUrl: "settings/working-shifts" },
-  { icon: Wallet, name: "Payroll", subtexts: "Generate and pay salaries", routeUrl: "settings/payroll" },
-  { icon: Users, name: "Staff management", subtexts: "Team, roles & access", routeUrl: "settings/staff-management" },
+  { icon: Laptop, name: "Logged Devices", subtexts: "Active sessions & seats", routeUrl: "settings/devices" },
+  { icon: QrCode, name: "Tables & QR", subtexts: "Add tables, print QR stickers", routeUrl: "settings/tables" },
+  { icon: Percent, name: "Tax & GST", subtexts: "GST rate & guest billing", routeUrl: "settings/tax" },
+  { icon: UtensilsCrossed, name: "Dishes", subtexts: "Categories, dishes & photos", routeUrl: "settings/dishes" },
+  { icon: Users, name: "Staff Management", subtexts: "Invite & manage staff", routeUrl: "settings/staff-management" },
 ];
 
 /** ADMIN workspace route tree, guarded by role and exposing the secondary screens. */
@@ -84,19 +70,15 @@ export const adminRoutes = (
     ))}
 
     <Route path="settings">
-      <Route index element={<AccountScreen items={profileMenuListItems} />} />
-      <Route path="profile" element={<EditProfileScreen />} />
+      <Route index element={<ProfileMenu items={profileMenuListItems} />} />
       <Route path="devices" element={<LoggedDevicesScreen />} />
-      <Route path="appearance" element={<AppearanceScreen />} />
-      <Route path="restaurant" element={<RestaurantDetailsScreen />} />
       <Route path="tables" element={<TablesScreen />} />
-      <Route path="subscription" element={<SubscriptionScreen />} />
+      <Route path="tax" element={<TaxScreen />} />
       <Route path="dishes" element={<DishesScreen />} />
-      <Route path="working-shifts" element={<WorkingShiftsScreen />} />
-      <Route path="payroll" element={<PayrollScreen />} />
       <Route path="staff-management">
         <Route index element={<StaffManagementScreen />} />
       </Route>
+      <Route path="help" element={<HelpScreen />} />
     </Route>
   </Route>
 );

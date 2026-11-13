@@ -1,4 +1,4 @@
-import { Modal, Badge } from "../../../common/ui";
+import { Modal, Badge } from "../../../common/components";
 import {
   Mail,
   Phone,
@@ -9,14 +9,13 @@ import {
 } from "lucide-react";
 import type { StaffMember } from "../../../api/staffApi";
 
-export const ROLE_LABEL: Record<StaffMember["role"], string> = {
+const ROLE_LABEL: Record<StaffMember["role"], string> = {
   CAPTAIN: "Captain",
   CHEF: "Chef",
-  OBSERVER: "Observer",
   RESTAURANT_ADMIN: "Admin",
 };
 
-export const STATUS_TONE: Record<
+const STATUS_TONE: Record<
   StaffMember["status"],
   "green" | "amber" | "red"
 > = {
@@ -28,11 +27,10 @@ export const STATUS_TONE: Record<
 const AVATAR_TONE: Record<StaffMember["role"], string> = {
   CAPTAIN: "bg-sky-100 text-sky-700",
   CHEF: "bg-orange-100 text-orange-700",
-  OBSERVER: "bg-emerald-100 text-emerald-700",
   RESTAURANT_ADMIN: "bg-accent-100 text-accent-700",
 };
 
-export function initials(name: string): string {
+function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "U";
 }

@@ -1,317 +1,241 @@
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Leaf, Plus, Beef, UtensilsCrossed, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Search, UtensilsCrossed, X } from "lucide-react";
 import {
-  SectionTitle,
+  Badge,
+  Card,
+  DashboardTabSkeleton,
   EmptyState,
-  useCurrentUser,
-} from "../../../common/ui";
-import { Button, Card, Input, Badge, Modal } from "../../../common/ui";
-import { ContentHeaderAction } from "../../../common/layouts/Layout";
+  SectionTitle,
+  Toggle,
+  TrendChip,
+} from "../../../common/components";
 import {
-  createDish,
-  deleteDish,
-  fetchDishes,
-  setDishAvailability,
-  updateDish,
-  type Dish,
-} from "../../../api/menuApi";
-import toast from "react-hot-toast";
+  useDishes,
+  useDishSalesStats,
+  useToggleDishAvailability,
+} from "../../../hooks/use-menu";
 
 function formatINR(paise: number): string {
   return `₹${(paise / 100).toFixed(0)}`;
 }
 
-/** Admin menu management — backed by the live dishes module. */
+/** Admin menu preview — dishes grouped by category with today's sales. */
 export function AdminMenuTab() {
-  useCurrentUser();
-  const qc = useQueryClient();
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin-dishes"],
-    queryFn: fetchDishes,
-  });
-  const dishes: Dish[] = data?.dishes ?? [];
+  const { data, isLoading, isError } = useDishes();
+  const { data: sales } = useDishSalesStats();
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<string>("ALL");
 
-  const [adding, setAdding] = useState(false);
-  const [editing, setEditing] = useState<Dish | null>(null);
+  const dishes = useMemo(() => data ?? [], [data]);
+  const stats = useMemo(
+    () => new Map((sales?.stats ?? []).map((s) => [s.dishId, s])),
+    [sales],
+  );
+  const toggle = useToggleDishAvailability();
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-dishes"] });
+  const categories = useMemo(
+    () => Array.from(new Set(dishes.map((d) => d.category))),
+    [dishes],
+  );
 
-  const createMutation = useMutation({
-    mutationFn: (payload: {
-      name: string;
-      category: string;
-      price: number;
-      isVeg: boolean;
-    }) => createDish(payload),
-    onSuccess: () => {
-      toast.success("Dish added");
-      setAdding(false);
-      invalidate();
-    },
-    onError: () => toast.error("Could not add dish"),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: (payload: { id: string; name: string; category: string; price: number; isVeg: boolean }) =>
-      updateDish(payload.id, {
-        name: payload.name,
-        category: payload.category,
-        price: payload.price,
-        isVeg: payload.isVeg,
-      }),
-    onSuccess: () => {
-      toast.success("Dish updated");
-      setEditing(null);
-      invalidate();
-    },
-    onError: () => toast.error("Could not update dish"),
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: (d: Dish) => setDishAvailability(d.id, !d.isAvailable),
-    onSuccess: invalidate,
-    onError: () => toast.error("Could not update availability"),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteDish(id),
-    onSuccess: () => {
-      toast.success("Dish removed");
-      invalidate();
-    },
-    onError: () => toast.error("Could not remove dish"),
-  });
-
-  const categories = Array.from(new Set(dishes.map((d) => d.category)));
+  const filtered = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    return dishes.filter(
+      (d) =>
+        (category === "ALL" || d.category === category) &&
+        (!needle ||
+          d.name.toLowerCase().includes(needle) ||
+          (d.description ?? "").toLowerCase().includes(needle)),
+    );
+  }, [dishes, category, search]);
 
   if (isLoading) {
-    return <p className="text-sm text-zinc-400">Loading menu…</p>;
+    return <DashboardTabSkeleton label="Loading menu" variant="menu" />;
+  }
+
+  if (isError) {
+    return (
+      <EmptyState
+        title="Couldn't load menu"
+        description="Check your connection and try again."
+      />
+    );
+  }
+
+  if (dishes.length === 0) {
+    return (
+      <EmptyState
+        title="No dishes yet"
+        description="Add your first dish from Settings → Dishes to start building the menu."
+      />
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <ContentHeaderAction>
-        <Button size="sm" onClick={() => setAdding(true)}>
-          <Plus size={14} /> Add dish
-        </Button>
-      </ContentHeaderAction>
+    <div className="space-y-3">
+      {/* Search + category chips */}
+      <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200/80 bg-white p-2.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:flex-row sm:items-center">
+        <div className="relative w-full shrink-0 sm:max-w-xs">
+          <Search
+            size={15}
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-zinc-400"
+          />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search dishes"
+            className="w-full rounded-lg border border-zinc-300 bg-white py-1.5 pr-9 pl-9 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-accent-500 focus:ring-2 focus:ring-accent-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+          />
+          {search && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => setSearch("")}
+              className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
 
-      {isError ? (
+        <div className="no-scrollbar flex min-w-0 flex-nowrap gap-1.5 overflow-x-auto sm:flex-1">
+          {["ALL", ...categories].map((cat) => {
+            const active = category === cat;
+            const count =
+              cat === "ALL"
+                ? dishes.length
+                : dishes.filter((d) => d.category === cat).length;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setCategory(cat)}
+                className={`flex h-7 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[11px] font-semibold transition ${
+                  active
+                    ? "bg-accent-600 text-white shadow-sm"
+                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                }`}
+              >
+                {cat === "ALL" ? "All dishes" : cat}
+                <span
+                  className={`rounded px-1 text-[10px] ${
+                    active
+                      ? "bg-white/20 text-white"
+                      : "bg-white text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
         <EmptyState
-          title="Couldn't load menu"
-          description="Check your connection and try again."
+          title="No matching dishes"
+          description="Try another search term or category."
         />
       ) : (
-        <>
-          {dishes.length === 0 ? (
-            <EmptyState
-              title="No dishes"
-              description="Add your first dish to start building the menu."
-              action={
-                <Button size="sm" onClick={() => setAdding(true)}>
-                  <Plus size={14} /> Add dish
-                </Button>
-              }
-            />
-          ) : (
-            categories.map((cat) => (
-              <div key={cat} className="space-y-3">
+        categories
+          .filter((cat) =>
+            filtered.some((d) => d.category === cat),
+          )
+          .map((cat) => (
+            <div key={cat} className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
                 <SectionTitle>{cat}</SectionTitle>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {dishes
-                    .filter((d) => d.category === cat)
-                    .map((dish) => (
-                      <Card key={dish.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`flex h-7 w-7 items-center justify-center rounded-full ${
-                              dish.isVeg
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {dish.isVeg ? <Leaf size={14} /> : <Beef size={14} />}
-                          </span>
-                          <div>
-                            <p className="text-sm font-medium text-zinc-900">
+                <span className="text-[11px] font-medium text-zinc-400">
+                  {filtered.filter((d) => d.category === cat).length} dishes
+                </span>
+              </div>
+              <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                {filtered
+                  .filter((d) => d.category === cat)
+                  .map((dish) => {
+                    const stat = stats.get(dish.id);
+                    return (
+                      <Card
+                        key={dish.id}
+                        className={`flex items-center gap-3 !p-3 transition hover:shadow-md ${
+                          dish.isAvailable ? "" : "opacity-70"
+                        }`}
+                      >
+                        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+                          {dish.imageUrl ? (
+                            <img
+                              src={dish.imageUrl}
+                              alt={dish.name}
+                              loading="lazy"
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-zinc-400">
+                              <UtensilsCrossed size={20} />
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] border ${
+                                dish.isVeg ? "border-emerald-600" : "border-red-600"
+                              }`}
+                            >
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${
+                                  dish.isVeg ? "bg-emerald-600" : "bg-red-600"
+                                }`}
+                              />
+                            </span>
+                            <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                               {dish.name}
                             </p>
-                            <p className="text-xs text-zinc-400">
-                              {formatINR(dish.price)}
+                          </div>
+                          {dish.description && (
+                            <p className="mt-0.5 truncate text-xs text-zinc-500">
+                              {dish.description}
                             </p>
+                          )}
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                              {formatINR(dish.price)}
+                            </span>
+                            {!dish.isAvailable && <Badge tone="zinc">Hidden</Badge>}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge tone={dish.isAvailable ? "green" : "zinc"}>
-                            {dish.isAvailable ? "Available" : "Hidden"}
-                          </Badge>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => setEditing(dish)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => toggleMutation.mutate(dish)}
-                            loading={toggleMutation.isPending}
-                          >
-                            {dish.isAvailable ? "Hide" : "Show"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => deleteMutation.mutate(dish.id)}
-                            loading={deleteMutation.isPending}
-                          >
-                            <X size={14} />
-                          </Button>
+
+                        <div className="flex shrink-0 flex-col items-end gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                              Today
+                            </span>
+                            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                              {stat?.soldToday ?? 0}
+                            </span>
+                            <TrendChip delta={stat?.delta ?? 0} />
+                          </div>
+                          <Toggle
+                            checked={dish.isAvailable}
+                            onChange={() => toggle.mutate(dish)}
+                            label={dish.isAvailable ? "Hide dish" : "Show dish"}
+                          />
                         </div>
                       </Card>
-                    ))}
-                </div>
+                    );
+                  })}
               </div>
-            ))
-          )}
-        </>
+            </div>
+          ))
       )}
 
-      <p className="flex items-center gap-2 text-xs text-zinc-400">
-        <UtensilsCrossed size={14} /> Toggle availability or add new dishes
-        anytime.
+      <p className="flex items-start gap-2 text-[11px] leading-relaxed text-zinc-400">
+        <UtensilsCrossed size={14} className="mt-0.5 shrink-0" />
+        Toggle availability here — dishes, prices and categories are managed
+        under Settings → Dishes.
       </p>
-
-      <Modal
-        open={adding}
-        onClose={() => setAdding(false)}
-        title="Add dish"
-        footer={
-          <>
-            <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              form="add-dish-form"
-              type="submit"
-              loading={createMutation.isPending}
-            >
-              Save dish
-            </Button>
-          </>
-        }
-      >
-        <DishForm onSubmit={(p) => createMutation.mutate(p)} />
-      </Modal>
-
-      <Modal
-        open={editing !== null}
-        onClose={() => setEditing(null)}
-        title="Edit dish"
-        footer={
-          <>
-            <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              form="edit-dish-form"
-              type="submit"
-              loading={updateMutation.isPending}
-            >
-              Save
-            </Button>
-          </>
-        }
-      >
-        {editing && (
-          <DishForm
-            initial={editing}
-            onSubmit={(p) =>
-              updateMutation.mutate({
-                id: editing.id,
-                name: p.name,
-                category: p.category,
-                price: p.price,
-                isVeg: p.isVeg,
-              })
-            }
-          />
-        )}
-      </Modal>
     </div>
-  );
-}
-
-function DishForm({
-  initial,
-  onSubmit,
-}: {
-  initial?: Dish;
-  onSubmit: (payload: {
-    name: string;
-    category: string;
-    price: number;
-    isVeg: boolean;
-  }) => void;
-}) {
-  const [name, setName] = useState(initial?.name ?? "");
-  const [category, setCategory] = useState(initial?.category ?? "");
-  const [price, setPrice] = useState(
-    initial ? String(initial.price / 100) : "",
-  );
-  const [isVeg, setIsVeg] = useState(initial?.isVeg ?? true);
-
-  return (
-    <form
-      id={initial ? "edit-dish-form" : "add-dish-form"}
-      className="grid gap-3 sm:grid-cols-2"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const paise = Math.round(parseFloat(price) * 100);
-        if (!name.trim() || !category.trim() || !paise || paise <= 0) {
-          toast.error("Name, category and a valid price are required");
-          return;
-        }
-        onSubmit({
-          name: name.trim(),
-          category: category.trim(),
-          price: paise,
-          isVeg,
-        });
-      }}
-    >
-      <Input
-        label="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Paneer Butter Masala"
-      />
-      <Input
-        label="Category"
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        placeholder="Main"
-      />
-      <Input
-        label="Price (₹)"
-        type="number"
-        value={price}
-        onChange={(e) => setPrice(e.target.value)}
-        placeholder="250"
-      />
-      <label className="flex items-center gap-2 self-end pb-2 text-sm text-zinc-700">
-        <input
-          type="checkbox"
-          checked={isVeg}
-          onChange={(e) => setIsVeg(e.target.checked)}
-          className="h-4 w-4 rounded border-zinc-300 text-accent-600 focus:ring-accent-500"
-        />
-        Vegetarian
-      </label>
-    </form>
   );
 }

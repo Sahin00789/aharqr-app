@@ -1,18 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, UserPlus, Star, ChefHat, Eye } from "lucide-react";
-import { Input, Button, ErrorBanner, Modal } from "../../../common/ui";
+import { Pencil, Star, ChefHat } from "lucide-react";
+import { Input, Button, ErrorBanner, Modal } from "../../../common/components";
 import {
   createStaffMember,
   updateStaffMember,
-  type StaffRole,
   type CreateStaffInput,
   type StaffMember,
   type UpdateStaffInput,
 } from "../../../api/staffApi";
 import toast from "react-hot-toast";
 
-type RoleMode = "CAPTAIN" | "CHEF" | "OBSERVER";
+type RoleMode = "CAPTAIN" | "CHEF";
 
 interface RoleMeta {
   label: string;
@@ -40,14 +39,6 @@ const META: Record<RoleMode, RoleMeta> = {
     hasKitchenStation: true,
     icon: ChefHat,
   },
-  OBSERVER: {
-    label: "Observer",
-    addTitle: "Add Observer",
-    editTitle: "Edit Observer",
-    description: "Read-only view of the workspace — no floor or kitchen actions.",
-    hasKitchenStation: false,
-    icon: Eye,
-  },
 };
 
 const STATUSES: StaffMember["status"][] = ["ACTIVE", "INVITED", "SUSPENDED"];
@@ -56,10 +47,6 @@ interface FormState {
   name: string;
   email: string;
   phone: string;
-  initialPassword: string;
-  confirmPassword: string;
-  newPassword: string;
-  confirmNewPassword: string;
   joiningDate: string;
   address: string;
   voterId: string;
@@ -72,10 +59,6 @@ function fromStaff(staff: StaffMember): FormState {
     name: staff.name ?? "",
     email: staff.email ?? "",
     phone: staff.phone ?? "",
-    initialPassword: "",
-    confirmPassword: "",
-    newPassword: "",
-    confirmNewPassword: "",
     joiningDate: staff.joiningDate ? String(staff.joiningDate).slice(0, 10) : "",
     address: staff.address ?? "",
     voterId: staff.voterId ?? "",
@@ -88,10 +71,6 @@ const EMPTY: FormState = {
   name: "",
   email: "",
   phone: "",
-  initialPassword: "",
-  confirmPassword: "",
-  newPassword: "",
-  confirmNewPassword: "",
   joiningDate: "",
   address: "",
   voterId: "",
@@ -118,12 +97,18 @@ function RoleStaffModal({
     {},
   );
 
-  useEffect(() => {
+  // Reset the form when the modal opens or targets a different staff member.
+  // Adjusting state during render (instead of an effect) avoids a cascading
+  // render and is the React-recommended pattern for prop-derived resets.
+  const resetKey = `${open}|${staff?.id ?? ""}`;
+  const [prevResetKey, setPrevResetKey] = useState(resetKey);
+  if (resetKey !== prevResetKey) {
+    setPrevResetKey(resetKey);
     if (open) {
       setForm(staff ? fromStaff(staff) : EMPTY);
       setErrors({});
     }
-  }, [open, staff]);
+  }
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -162,15 +147,6 @@ function RoleStaffModal({
     if (!isEdit) {
       if (!form.email.trim()) next.email = "Email is required";
       if (!form.joiningDate) next.joiningDate = "Joining date is required";
-      if (form.initialPassword.length < 8)
-        next.initialPassword = "Password must be at least 8 characters";
-      if (form.confirmPassword !== form.initialPassword)
-        next.confirmPassword = "Passwords do not match";
-    } else if (form.newPassword) {
-      if (form.newPassword.length < 8)
-        next.newPassword = "Password must be at least 8 characters";
-      if (form.confirmNewPassword !== form.newPassword)
-        next.confirmNewPassword = "Passwords do not match";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -190,7 +166,6 @@ function RoleStaffModal({
         joiningDate: form.joiningDate || undefined,
         address: form.address.trim() || undefined,
         voterId: form.voterId.trim() || undefined,
-        newPassword: form.newPassword || undefined,
       });
     } else {
       createMutation.mutate({
@@ -199,7 +174,6 @@ function RoleStaffModal({
         phone: form.phone.trim() || undefined,
         role,
         kitchenStation: form.kitchenStation.trim() || undefined,
-        initialPassword: form.initialPassword,
         joiningDate: form.joiningDate,
         address: form.address.trim() || undefined,
         voterId: form.voterId.trim() || undefined,
@@ -337,49 +311,9 @@ function RoleStaffModal({
         </div>
 
         {!isEdit && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              id="initialPassword"
-              label="Initial Password *"
-              type="password"
-              value={form.initialPassword}
-              onChange={(e) => set("initialPassword", e.target.value)}
-              placeholder="Min 8 characters"
-              error={errors.initialPassword}
-            />
-            <Input
-              id="confirmPassword"
-              label="Confirm Password *"
-              type="password"
-              value={form.confirmPassword}
-              onChange={(e) => set("confirmPassword", e.target.value)}
-              placeholder="Re-enter password"
-              error={errors.confirmPassword}
-            />
-          </div>
-        )}
-
-        {isEdit && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              id="newPassword"
-              label="New Password"
-              type="password"
-              value={form.newPassword}
-              onChange={(e) => set("newPassword", e.target.value)}
-              placeholder="Optional — min 8 characters"
-              error={errors.newPassword}
-            />
-            <Input
-              id="confirmNewPassword"
-              label="Confirm New Password"
-              type="password"
-              value={form.confirmNewPassword}
-              onChange={(e) => set("confirmNewPassword", e.target.value)}
-              placeholder="Re-enter new password"
-              error={errors.confirmNewPassword}
-            />
-          </div>
+          <p className="rounded-lg bg-zinc-50 px-3 py-2 text-xs text-zinc-500 dark:bg-zinc-800/60 dark:text-zinc-400">
+            Staff sign in with Google or a one-time code sent to this email.
+          </p>
         )}
 
         <ErrorBanner
@@ -410,13 +344,4 @@ export function StaffChefModal(props: {
   staff?: StaffMember | null;
 }) {
   return <RoleStaffModal role="CHEF" {...props} />;
-}
-
-/** Dedicated modal for managing observers. */
-export function StaffObserverModal(props: {
-  open: boolean;
-  onClose: () => void;
-  staff?: StaffMember | null;
-}) {
-  return <RoleStaffModal role="OBSERVER" {...props} />;
 }
