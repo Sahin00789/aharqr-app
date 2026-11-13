@@ -12,10 +12,14 @@ const PUBLIC_LINKS = [
 function Brand() {
   return (
     <Link to="/" className="flex shrink-0 items-center">
+      {/* Trimmed transparent padding so the artwork fills the optical height.
+          The artwork is dark navy, so it gets a light plate on dark surfaces. */}
       <img
-        src="/aharqr-logo.png"
+        src="/aharqr-logo-tight.png"
         alt="AharQR"
-        className="h-12 w-auto object-contain sm:h-14"
+        width={512}
+        height={212}
+        className="h-10 w-auto object-contain sm:h-11 dark:rounded-xl dark:bg-white/95 dark:px-2 dark:py-1"
       />
     </Link>
   );
