@@ -29,7 +29,7 @@ export async function createRestaurantTable(payload: { tableNumber: string; tabl
   return data;
 }
 
-export async function updateRestaurantTable(tableId: string, payload: { tableNumber?: string; tableName?: string; capacity?: number; isTakeaway?: boolean }) {
+export async function updateRestaurantTable(tableId: string, payload: { tableNumber?: string; tableName?: string; capacity?: number; isTakeaway?: boolean; isActive?: boolean }) {
   const { data } = await api.put(`/restaurant/tables/${tableId}`, payload);
   return data;
 }

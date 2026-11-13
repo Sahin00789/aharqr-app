@@ -9,6 +9,8 @@ export interface GuestSession {
   shortAddress: string | null;
   tableId: string;
   tableNumber: string;
+  /** True when the QR belongs to the takeaway counter (no physical table). */
+  isTakeaway?: boolean;
 }
 
 interface GuestSessionState {

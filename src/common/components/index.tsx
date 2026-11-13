@@ -292,6 +292,7 @@ export * from "./loaders";
 export * from "./Modal";
 export * from "./ActionMenu";
 export * from "./MonthSelector";
+export * from "./DaySelector";
 export * from "./Stepper";
 export * from "./fields";
 export * from "./OrderStatusTimeline";
@@ -403,12 +404,16 @@ export function StatCard({
 
   if (compact) {
     return (
-      <div className="flex items-center justify-between gap-2 rounded-xl border border-zinc-200/90 bg-white px-3 py-2.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="truncate text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+      <div className="flex items-center justify-between gap-2 rounded-xl border border-zinc-200/90 bg-white px-2.5 py-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <p className="min-w-0 truncate text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
           {label}
         </p>
         <p className={`shrink-0 text-sm font-bold ${toneClass}`}>{value}</p>
-        {hint && <p className="shrink-0 text-[11px] text-zinc-400">{hint}</p>}
+        {hint && (
+          <p className="hidden shrink-0 text-[11px] text-zinc-400 sm:block">
+            {hint}
+          </p>
+        )}
       </div>
     );
   }

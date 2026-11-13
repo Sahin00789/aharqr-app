@@ -28,17 +28,21 @@ function useInvalidateTables() {
   return () => queryClient.invalidateQueries({ queryKey: tableKeys.list });
 }
 
-export function useCreateRestaurantTable(opts?: Hooks) {
+export function useCreateRestaurantTable(opts?: {
+  onSuccess?: (isTakeaway: boolean) => void;
+  onError?: () => void;
+}) {
   const invalidate = useInvalidateTables();
   return useMutation({
     mutationFn: (payload: {
       tableNumber: string;
       tableName: string;
       capacity: number;
+      isTakeaway?: boolean;
     }) => createRestaurantTable(payload),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       void invalidate();
-      opts?.onSuccess?.();
+      opts?.onSuccess?.(Boolean(variables.isTakeaway));
     },
     onError: () => opts?.onError?.(),
   });
@@ -52,11 +56,15 @@ export function useUpdateRestaurantTable(opts?: Hooks) {
       tableNumber?: string;
       tableName?: string;
       capacity?: number;
+      isActive?: boolean;
+      isTakeaway?: boolean;
     }) =>
       updateRestaurantTable(payload.id, {
         tableNumber: payload.tableNumber,
         tableName: payload.tableName,
         capacity: payload.capacity,
+        isActive: payload.isActive,
+        isTakeaway: payload.isTakeaway,
       }),
     onSuccess: () => {
       void invalidate();

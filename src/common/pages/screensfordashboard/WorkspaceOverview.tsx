@@ -7,7 +7,6 @@ import {
   Loader2,
   TrendingUp,
 } from "lucide-react";
-import toast from "react-hot-toast";
 import {
   Button,
   Card,
@@ -29,6 +28,7 @@ import { useDashboardAnalytics } from "../../../hooks/use-reports";
 import { useMyRestaurant } from "../../../hooks/use-my-restaurant";
 import { formatRestaurantAddress } from "../../../hooks/use-restaurant";
 import { useAuthStore } from "../../../stores/auth-store";
+import { MonthlyReportPreviewModal } from "./MonthlyReportPreviewModal";
 
 const ACCENT = "var(--accent-600)";
 const ACCENT2 = "var(--accent2-600)";
@@ -101,7 +101,7 @@ export function WorkspaceOverview() {
   const user = useAuthStore((s) => s.user);
   /** Monthly PDF report is a management document — admins only. */
   const canDownloadReport = user?.role === "ADMIN";
-  const [downloading, setDownloading] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const currentMonth = monthKey(new Date());
 
   const months = (() => {
@@ -132,35 +132,6 @@ export function WorkspaceOverview() {
       { key: "", revenue: 0, orders: 0 },
     );
   }, [data?.salesTrend]);
-
-  /**
-   * Build the monthly report PDF in the browser (same approach as the table
-   * QR sticker sheet) from the analytics already loaded for this month.
-   */
-  async function downloadReport() {
-    if (!data) return;
-    setDownloading(true);
-    try {
-      const { downloadMonthlyReportPdf } = await import(
-        "../../../utils/monthlyReportPdfGenerator"
-      );
-      await downloadMonthlyReportPdf({
-        data,
-        monthLabel: monthLabel(month),
-        restaurantName: restaurant?.name ?? "Restaurant",
-        restaurantAddress: formatRestaurantAddress(restaurant ?? {}),
-        restaurantPhone: restaurant?.phone,
-        generatedBy: [user?.firstName, user?.lastName]
-          .filter(Boolean)
-          .join(" "),
-      });
-      toast.success("Monthly report downloaded");
-    } catch {
-      toast.error("Could not generate the report PDF");
-    } finally {
-      setDownloading(false);
-    }
-  }
 
   if (isLoading && !data)
     return (
@@ -221,13 +192,13 @@ export function WorkspaceOverview() {
 
   return (
     <div className="space-y-3 md:space-y-4">
-      {/* Month rail — registration month → current month */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200/80 bg-white/90 p-2.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80 md:flex-row md:items-center md:justify-between md:px-3">
-        <div className="flex min-w-0 items-center gap-2.5">
+      {/* Month rail — title + PDF on top, scrolling SEP2026 pills full width below */}
+      <div className="rounded-2xl border border-zinc-200/80 bg-white/90 p-2.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
+        <div className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent-50 text-accent-600 dark:bg-accent-500/15 dark:text-accent-300">
             <CalendarRange size={15} />
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
               {monthLabel(month)}
             </p>
@@ -239,24 +210,14 @@ export function WorkspaceOverview() {
                 : "Monthly performance"}
             </p>
           </div>
-        </div>
-        <div className="flex min-w-0 items-center gap-2 md:flex-1 md:justify-end">
-          <MonthSelector
-            months={months}
-            value={month}
-            onChange={setSelectedMonth}
-            className="min-w-0 flex-1 md:max-w-[min(56%,40rem)]"
-          />
           {canDownloadReport && (
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => void downloadReport()}
-              loading={downloading}
-              loadingText="Building…"
+              onClick={() => setPreviewing(true)}
               disabled={!data}
-              title={`Download the ${monthLabel(month)} report as PDF`}
-              aria-label="Download monthly report as PDF"
+              title={`Preview and download the ${monthLabel(month)} report`}
+              aria-label="Preview monthly report PDF"
               className="shrink-0"
             >
               <Download size={14} />
@@ -265,6 +226,13 @@ export function WorkspaceOverview() {
             </Button>
           )}
         </div>
+        <MonthSelector
+          months={months}
+          value={month}
+          onChange={setSelectedMonth}
+          compact
+          className="mt-2"
+        />
       </div>
 
       {/* Headline KPIs */}
@@ -274,38 +242,38 @@ export function WorkspaceOverview() {
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <OverviewMetric
-          label={`Revenue (${monthLabel(month).split(" ")[0]})`}
-          value={formatINR(k?.revenue ?? 0)}
-          hint={deltaHint(k?.revenueChangePct)}
+            label={`Revenue (${monthLabel(month).split(" ")[0]})`}
+            value={formatINR(k?.revenue ?? 0)}
+            hint={deltaHint(k?.revenueChangePct)}
           />
           <OverviewMetric
-          label="Orders"
-          value={(k?.orders ?? 0).toLocaleString("en-IN")}
-          hint={`${closed} closed · ${
-            k?.avgOrderValue ? formatINR(k.avgOrderValue) : "₹0"
-          } avg`}
+            label="Orders"
+            value={(k?.orders ?? 0).toLocaleString("en-IN")}
+            hint={`${closed} closed · ${
+              k?.avgOrderValue ? formatINR(k.avgOrderValue) : "₹0"
+            } avg`}
           />
           {isCurrentMonth ? (
             <OverviewMetric
-            label="Today's sales"
-            value={formatINR(k?.todayRevenue ?? 0)}
-            hint={`${k?.todayOrders ?? 0} orders so far`}
+              label="Today's sales"
+              value={formatINR(k?.todayRevenue ?? 0)}
+              hint={`${k?.todayOrders ?? 0} orders so far`}
             />
           ) : (
             <OverviewMetric
-            label="Best day"
-            value={formatINR(bestDay.revenue)}
-            hint={
-              bestDay.key
-                ? `${dayLabel(bestDay.key, false)} · ${bestDay.orders} orders`
-                : "No orders this month"
-            }
+              label="Best day"
+              value={formatINR(bestDay.revenue)}
+              hint={
+                bestDay.key
+                  ? `${dayLabel(bestDay.key, false)} · ${bestDay.orders} orders`
+                  : "No orders this month"
+              }
             />
           )}
           <OverviewMetric
-          label="Completion rate"
-          value={k ? `${Math.round(k.completionRate)}%` : "—"}
-          hint={k ? `${k.cancelled} cancelled` : undefined}
+            label="Completion rate"
+            value={k ? `${Math.round(k.completionRate)}%` : "—"}
+            hint={k ? `${k.cancelled} cancelled` : undefined}
           />
         </div>
       </section>
@@ -318,20 +286,20 @@ export function WorkspaceOverview() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
           <OverviewMetric label="Active orders" value={k?.activeOrders ?? "—"} />
           <OverviewMetric
-          label="Tables open"
-          value={k?.totalTables ? `${k.openTables}/${k.totalTables}` : "—"}
-          hint="Occupied / total"
+            label="Tables open"
+            value={k?.totalTables ? `${k.openTables}/${k.totalTables}` : "—"}
+            hint="Occupied / total"
           />
           <OverviewMetric label="Team" value={k?.staffTotal ?? "—"} hint="Members" />
           <OverviewMetric
-          label="Dine-in"
-          value={`${dine?.orders ?? 0} orders`}
-          hint={formatINR(dine?.revenue ?? 0)}
+            label="Dine-in"
+            value={`${dine?.orders ?? 0} orders`}
+            hint={formatINR(dine?.revenue ?? 0)}
           />
           <OverviewMetric
-          label="Takeaway"
-          value={`${takeaway?.orders ?? 0} orders`}
-          hint={formatINR(takeaway?.revenue ?? 0)}
+            label="Takeaway"
+            value={`${takeaway?.orders ?? 0} orders`}
+            hint={formatINR(takeaway?.revenue ?? 0)}
           />
         </div>
       </section>
@@ -447,6 +415,21 @@ export function WorkspaceOverview() {
         <p className="flex items-center gap-2 text-xs text-zinc-400">
           <Loader2 size={13} className="animate-spin" /> Refreshing live data…
         </p>
+      )}
+
+      {canDownloadReport && data && (
+        <MonthlyReportPreviewModal
+          open={previewing}
+          onClose={() => setPreviewing(false)}
+          month={month}
+          monthLabel={monthLabel(month)}
+          restaurantName={restaurant?.name ?? "Restaurant"}
+          restaurantAddress={formatRestaurantAddress(restaurant ?? {})}
+          restaurantPhone={restaurant?.phone}
+          generatedBy={[user?.firstName, user?.lastName]
+            .filter(Boolean)
+            .join(" ")}
+        />
       )}
     </div>
   );

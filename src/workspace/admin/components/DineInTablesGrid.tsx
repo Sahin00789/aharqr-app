@@ -97,7 +97,9 @@ export function DineInTablesGrid({
     );
   }
 
-  if (tables.length === 0) {
+  const floorTables = tables.filter((table) => !table.isTakeaway);
+
+  if (floorTables.length === 0) {
     return (
       <EmptyState
         title="No tables configured"
@@ -107,8 +109,8 @@ export function DineInTablesGrid({
   }
 
   const displayTables = showAvailableTables
-    ? tables
-    : tables.filter((table) =>
+    ? floorTables
+    : floorTables.filter((table) =>
         orders.some(
           (order) =>
             order.orderType === "DINE_IN" &&

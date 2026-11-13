@@ -26,6 +26,7 @@ interface GuestProfileMenuProps {
   shortAddress: string | null;
   ordersTo: string;
   tableNumber?: string;
+  isTakeaway?: boolean;
 }
 
 export function GuestProfileMenu({
@@ -35,6 +36,7 @@ export function GuestProfileMenu({
   shortAddress,
   ordersTo,
   tableNumber,
+  isTakeaway,
 }: GuestProfileMenuProps) {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
@@ -177,7 +179,11 @@ export function GuestProfileMenu({
                       {savedName.trim() || "Dining as Guest"}
                     </p>
                     <p className="truncate text-xs text-white/75">
-                      {tableNumber ? `Table ${tableNumber}` : "Guest"}
+                      {isTakeaway
+                        ? "Takeaway · pickup at counter"
+                        : tableNumber
+                          ? `Table ${tableNumber}`
+                          : "Guest"}
                       {savedPhone.trim() ? ` · ${savedPhone}` : ""}
                     </p>
                     <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur">

@@ -1,11 +1,14 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   fetchDashboardAnalytics,
+  fetchMonthlyReport,
   type DashboardAnalytics,
+  type MonthlyReport,
 } from "../api/reportsApi";
 
 export const reportsKeys = {
   analytics: (month: string) => ["reports-analytics", month] as const,
+  monthly: (month: string) => ["reports-monthly", month] as const,
 };
 
 /**
@@ -21,5 +24,18 @@ export function useDashboardAnalytics(month?: string, enabled = true) {
     enabled,
     refetchInterval: 60_000,
     placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Complete monthly document data (summary stats, every order with items and
+ * staff performance). Loaded only when the PDF preview modal opens.
+ */
+export function useMonthlyReport(month: string, enabled = true) {
+  return useQuery({
+    queryKey: reportsKeys.monthly(month),
+    queryFn: async (): Promise<MonthlyReport> => fetchMonthlyReport(month),
+    enabled: enabled && Boolean(month),
+    staleTime: 60_000,
   });
 }

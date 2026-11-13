@@ -11,6 +11,8 @@ import { useRestaurantTables } from "../../../hooks/use-tables";
 /** Live floor view for captains — reads tables straight from the backend. */
 export function CaptainTablesTab() {
   const { data: tables = [], isLoading, isError } = useRestaurantTables();
+  // The takeaway channel is a counter, not a physical floor table.
+  const floorTables = tables.filter((t) => !t.isTakeaway);
 
   return (
     <div className="space-y-4">
@@ -24,31 +26,31 @@ export function CaptainTablesTab() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-            <StatCard label="Total" value={tables.length} />
+            <StatCard label="Total" value={floorTables.length} />
             <StatCard
               label="Active"
-              value={tables.filter((t) => t.isActive).length}
+              value={floorTables.filter((t) => t.isActive).length}
             />
             <StatCard
               label="Hidden"
-              value={tables.filter((t) => !t.isActive).length}
+              value={floorTables.filter((t) => !t.isActive).length}
             />
             <StatCard
               label="Seats"
-              value={tables.reduce((sum, t) => sum + t.capacity, 0)}
+              value={floorTables.reduce((sum, t) => sum + t.capacity, 0)}
             />
           </div>
 
           <SectionTitle>Tables</SectionTitle>
 
-          {tables.length === 0 ? (
+          {floorTables.length === 0 ? (
             <EmptyState
               title="No tables yet"
               description="Ask an admin to add tables and generate QR stickers."
             />
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-              {tables.map((t) => (
+              {floorTables.map((t) => (
                 <Card key={t.id}>
                   <div className="flex items-start justify-between">
                     <div>

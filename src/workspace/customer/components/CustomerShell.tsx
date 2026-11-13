@@ -69,7 +69,11 @@ export function CustomerShell({ navItems }: { navItems: NavItemConfig[] }) {
           <div className="min-w-0 leading-tight">
             <p className="truncate text-sm font-semibold">{displayName}</p>
             <p className="truncate text-[11px] text-zinc-500 dark:text-zinc-400">
-              {session?.tableNumber ? `Table ${session.tableNumber}` : (shortAddress ?? "Guest ordering")}
+              {session?.isTakeaway
+                ? "Takeaway · pickup at counter"
+                : session?.tableNumber
+                  ? `Table ${session.tableNumber}`
+                  : (shortAddress ?? "Guest ordering")}
             </p>
           </div>
         </div>
@@ -141,7 +145,11 @@ export function CustomerShell({ navItems }: { navItems: NavItemConfig[] }) {
                 {guestName.trim() || "Guest"}
               </span>
               <span className="block text-[11px] text-zinc-400">
-                {session?.tableNumber ? `Table ${session.tableNumber}` : "Profile"}
+                {session?.isTakeaway
+                  ? "Takeaway"
+                  : session?.tableNumber
+                    ? `Table ${session.tableNumber}`
+                    : "Profile"}
               </span>
             </span>
           </button>
@@ -234,6 +242,7 @@ export function CustomerShell({ navItems }: { navItems: NavItemConfig[] }) {
         shortAddress={shortAddress}
         ordersTo={linkTo("orders")}
         tableNumber={session?.tableNumber}
+        isTakeaway={session?.isTakeaway}
       />
     </div>
   );

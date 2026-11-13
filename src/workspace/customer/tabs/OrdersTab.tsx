@@ -22,6 +22,8 @@ const STATUS_LABEL: Record<string, string> = {
   ACCEPTED_FOR_COOK: "In the kitchen",
   PREPARED: "Prepared",
   COLLECTED_FROM_KITCHEN: "Picked up",
+  READY_FOR_PICKUP: "Ready for pickup",
+  PICKED_UP: "Picked up",
   SERVED: "Served",
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
@@ -30,7 +32,15 @@ const STATUS_LABEL: Record<string, string> = {
 function statusTone(status: string): "green" | "amber" | "red" | "zinc" {
   if (status === "COMPLETED") return "green";
   if (status === "CANCELLED") return "red";
-  if (["CREATED", "APPROVED", "ACCEPTED_FOR_COOK", "PREPARED"].includes(status))
+  if (
+    [
+      "CREATED",
+      "APPROVED",
+      "ACCEPTED_FOR_COOK",
+      "PREPARED",
+      "READY_FOR_PICKUP",
+    ].includes(status)
+  )
     return "amber";
   return "zinc";
 }
@@ -49,9 +59,21 @@ const DINE_IN_FLOW = [
   "COMPLETED",
 ] as const;
 
+const TAKEAWAY_FLOW = [
+  "CREATED",
+  "APPROVED",
+  "ACCEPTED_FOR_COOK",
+  "PREPARED",
+  "READY_FOR_PICKUP",
+  "PICKED_UP",
+  "COMPLETED",
+] as const;
+
 /** Builds an e-commerce style tracking timeline from the order trail. */
 function buildTimeline(o: GuestOrder): OrderTimelineStep[] {
-  const flow: string[] = [...DINE_IN_FLOW];
+  const flow: string[] = [
+    ...(o.orderType === "TAKEAWAY" ? TAKEAWAY_FLOW : DINE_IN_FLOW),
+  ];
   if (o.status === "CANCELLED") flow.push("CANCELLED");
 
   const reached: {
@@ -211,7 +233,7 @@ function OrderCard({
             bill={{
               orderNumber: o.orderNumber,
               status: o.status,
-              orderType: "DINE_IN",
+              orderType: o.orderType ?? "DINE_IN",
               restaurant,
               items: o.items.map((it) => ({
                 name: it.name,
@@ -252,7 +274,10 @@ export function OrdersPage() {
             My orders
           </h2>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Table {session?.tableNumber ?? "—"} · live updates
+            {session?.isTakeaway
+              ? "Takeaway · pickup at counter"
+              : `Table ${session?.tableNumber ?? "—"}`}{" "}
+            · live updates
           </p>
         </div>
         {restaurant && (
@@ -271,7 +296,11 @@ export function OrdersPage() {
         />
       ) : orders.length === 0 ? (
         <EmptyState
-          title="No orders on this table yet"
+          title={
+            session?.isTakeaway
+              ? "No takeaway orders yet"
+              : "No orders on this table yet"
+          }
           description="Place an order and track it live right here."
           action={
             <Link

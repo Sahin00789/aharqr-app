@@ -20,7 +20,7 @@ import {
 
 const navItems: NavItemConfig[] = [
   { routeUrl: "", name: "Orders", headline: "Floor Orders", icon: ClipboardList, element: <CaptainOrdersTab />, subtitle: "Dine-in tables and takeaway orders" },
-  { routeUrl: "payments", name: "Payments", headline: "Payment Details", icon: Wallet, element: <CaptainPaymentsTab />, subtitle: "Revenue and ledger activity" },
+  { routeUrl: "payments", name: "Payments", headline: "Payment Details", icon: Wallet, element: <CaptainPaymentsTab />, subtitle: "Monthly earnings and daily payments" },
 ];
 
 /** Low-frequency personal tasks reachable from the mobile-style ProfileMenu. */

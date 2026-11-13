@@ -37,7 +37,7 @@ const navItems: NavItemConfig[] = [
   { routeUrl: "", name: "Overview", headline: "Monthly Overview", icon: LayoutDashboard, element: <HomeTab />, subtitle: "Sales, dishes and live floor" },
   { routeUrl: "orders", name: "Orders", headline: "Order Management", icon: ClipboardList, element: <AdminOrdersTab />, subtitle: "Dine-in floor and takeaway queue" },
   { routeUrl: "menu", name: "Menu", headline: "Menu Preview", icon: UtensilsCrossed, element: <AdminMenuTab />, subtitle: "Dishes, availability and today's sales" },
-  { routeUrl: "finance", name: "Finance", headline: "Finance Overview", icon: Wallet, element: <AdminFinanceTab />, subtitle: "Revenue and ledger activity" },
+  { routeUrl: "finance", name: "Finance", headline: "Finance Overview", icon: Wallet, element: <AdminFinanceTab />, subtitle: "Monthly earnings and daily payments" },
 ];
 
 /** Low-frequency management tasks reachable from the mobile-style ProfileMenu. */

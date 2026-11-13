@@ -72,3 +72,70 @@ export async function fetchDashboardAnalytics(params?: {
   });
   return data;
 }
+
+/* ------------------------------------------------------------------ */
+/*  Full monthly report (summary + every order + staff performance)   */
+/* ------------------------------------------------------------------ */
+
+export interface MonthlyReportOrderItem {
+  name: string;
+  quantity: number;
+  totalPrice: number;
+}
+
+export interface MonthlyReportOrder {
+  id: string;
+  orderNumber: string;
+  orderType: "DINE_IN" | "TAKEAWAY";
+  status: string;
+  paymentStatus: string;
+  createdAt: string;
+  customerName: string | null;
+  customerPhone: string | null;
+  tableNumber: string | null;
+  tableName: string | null;
+  createdByType: string;
+  guestCount: number | null;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  items: MonthlyReportOrderItem[];
+}
+
+export interface MonthlyStaffPerformance {
+  staffId: string | null;
+  name: string;
+  role: "ADMIN" | "CAPTAIN" | "CHEF" | string;
+  ordersCreated: number;
+  ordersAccepted: number;
+  ordersPrepared: number;
+  itemsPrepared: number;
+  ordersServed: number;
+  ordersCompleted: number;
+  ordersCancelled: number;
+  revenueHandled: number;
+  avgPrepSeconds: number | null;
+  avgServeSeconds: number | null;
+}
+
+export interface MonthlyReportStats extends DashboardKpis {
+  bestDay: AnalyticsPoint | null;
+  peakHour: HourPoint | null;
+  channelSplit: ChannelBucket[];
+  sourceSplit: SourceBucket[];
+  topDishes: TopDish[];
+}
+
+export interface MonthlyReport {
+  success: boolean;
+  range: DashboardAnalytics["range"];
+  stats: MonthlyReportStats;
+  orders: MonthlyReportOrder[];
+  staff: MonthlyStaffPerformance[];
+}
+
+export async function fetchMonthlyReport(month: string): Promise<MonthlyReport> {
+  const { data } = await api.get('/reports/monthly', { params: { month } });
+  return data;
+}

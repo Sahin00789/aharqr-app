@@ -23,7 +23,8 @@ const ACCENT = "var(--accent-600)";
 const ACCENT2 = "var(--accent2-600)";
 
 /** Vertical bar chart (div-based). `value` drives height, `sub` an optional
- *  secondary number shown beside the label. Highlights the last bar. */
+ *  secondary number shown beside the label. Highlights the last bar, or
+ *  `activeKey` when provided. Pass `onSelect` to make the bars clickable. */
 export function VerticalBars({
   items,
   height = 180,
@@ -31,6 +32,8 @@ export function VerticalBars({
   valueFormatter = (n) => formatINR(n),
   labelFormatter = (label) => label,
   maxLabelEvery = 1,
+  activeKey,
+  onSelect,
 }: {
   items: Array<{ key: string; label: string; value: number; sub?: number }>;
   height?: number;
@@ -38,6 +41,10 @@ export function VerticalBars({
   valueFormatter?: (value: number) => string;
   labelFormatter?: (label: string) => string;
   maxLabelEvery?: number;
+  /** Bar to highlight instead of the last one. */
+  activeKey?: string;
+  /** Called with the item key when a bar is clicked. */
+  onSelect?: (key: string) => void;
 }) {
   const max = Math.max(1, ...items.map((i) => chartValue(i.value)));
   return (
@@ -48,27 +55,48 @@ export function VerticalBars({
       >
         {items.map((item, idx) => {
           const h = Math.max(2, (chartValue(item.value) / max) * 100);
-          const isLast = idx === items.length - 1;
-          return (
-            <div
-              key={item.key}
-              className="group relative flex h-full flex-1 flex-col justify-end"
-              title={`${labelFormatter(item.label)} · ${valueFormatter(item.value)}`}
-            >
+          const isActive =
+            activeKey !== undefined
+              ? item.key === activeKey
+              : idx === items.length - 1;
+          const title = `${labelFormatter(item.label)} · ${valueFormatter(item.value)}`;
+          const bar = (
+            <>
               <div
                 className={`mx-auto w-full max-w-7 rounded-t-sm transition-opacity hover:opacity-80 ${
-                  isLast ? "opacity-90" : "opacity-55"
+                  isActive ? "opacity-100" : "opacity-55"
                 }`}
                 style={{
                   height: `${h}%`,
-                  background: isLast ? ACCENT2 : color,
+                  background: isActive ? ACCENT2 : color,
                 }}
               />
-              {isLast && (
+              {isActive && (
                 <span className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full rounded bg-zinc-900 px-1 py-0.5 text-[10px] font-medium whitespace-nowrap text-white dark:bg-zinc-100 dark:text-zinc-900">
                   {valueFormatter(item.value)}
                 </span>
               )}
+            </>
+          );
+
+          return onSelect ? (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onSelect(item.key)}
+              aria-pressed={isActive}
+              title={title}
+              className="group relative flex h-full flex-1 cursor-pointer flex-col justify-end rounded-md border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-accent-500/40"
+            >
+              {bar}
+            </button>
+          ) : (
+            <div
+              key={item.key}
+              className="group relative flex h-full flex-1 flex-col justify-end"
+              title={title}
+            >
+              {bar}
             </div>
           );
         })}
@@ -79,14 +107,17 @@ export function VerticalBars({
             items.length <= 7 ||
             idx % maxLabelEvery === 0 ||
             idx === items.length - 1;
-          const isLast = idx === items.length - 1;
+          const isActive =
+            activeKey !== undefined
+              ? item.key === activeKey
+              : idx === items.length - 1;
           return (
             <div
               key={item.key}
               className="min-w-0 flex-1 text-center text-[10px] leading-tight text-zinc-400"
             >
               {show ? (
-                <span className={isLast ? "font-semibold" : ""}>
+                <span className={isActive ? "font-semibold" : ""}>
                   {labelFormatter(item.label)}
                 </span>
               ) : (

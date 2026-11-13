@@ -16,6 +16,16 @@ export function monthLabel(key: string): string {
   });
 }
 
+/** Compact pill label for a `YYYY-MM` key — e.g. `SEP2026`. */
+export function monthPillLabel(key: string): string {
+  const [year, month] = key.split("-").map(Number);
+  if (!year || !month) return key.toUpperCase();
+  const name = new Date(year, month - 1, 1)
+    .toLocaleDateString("en-US", { month: "short" })
+    .toUpperCase();
+  return `${name}${year}`;
+}
+
 /** Every month from `from` to `to`, inclusive, oldest first. */
 export function monthsBetween(from: Date, to: Date): string[] {
   const start = new Date(from.getFullYear(), from.getMonth(), 1);
@@ -35,6 +45,8 @@ interface MonthSelectorProps {
   value: string;
   onChange: (month: string) => void;
   className?: string;
+  /** Render short `SEP2026` pills instead of `Sept 2026`. */
+  compact?: boolean;
 }
 
 /**
@@ -46,6 +58,7 @@ export function MonthSelector({
   value,
   onChange,
   className = "",
+  compact = false,
 }: MonthSelectorProps) {
   const activeRef = useRef<HTMLButtonElement>(null);
 
@@ -63,7 +76,7 @@ export function MonthSelector({
     <div
       role="group"
       aria-label="Report month"
-      className={`flex max-w-full items-center gap-1 overflow-x-auto p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
+      className={`flex w-full min-w-0 max-w-full items-center gap-1 overflow-x-auto overscroll-x-contain p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
     >
       {months.map((month) => {
         const active = month === value;
@@ -80,7 +93,7 @@ export function MonthSelector({
                 : "border border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-800 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
             }`}
           >
-            {monthLabel(month)}
+            {compact ? monthPillLabel(month) : monthLabel(month)}
           </button>
         );
       })}

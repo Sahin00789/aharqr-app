@@ -53,6 +53,7 @@ export function computeGst(
 
 export interface PlacedOrder {
   id: string;
+  orderType?: "DINE_IN" | "TAKEAWAY";
   orderNumber: string;
   status: string;
   tableNumber: string;
@@ -74,6 +75,7 @@ export interface GuestOrderItem {
 
 export interface GuestOrder {
   id: string;
+  orderType?: "DINE_IN" | "TAKEAWAY";
   orderNumber: string;
   status: string;
   subtotal: string;
@@ -122,6 +124,7 @@ export function placeGuestOrder(input: {
 export function getGuestOrders(): Promise<{
   success: boolean;
   tableNumber: string;
+  isTakeaway?: boolean;
   tax?: GuestTaxConfig;
   orders: GuestOrder[];
 }> {

@@ -136,6 +136,7 @@ export function useRecordOrderPayment(opts?: {
       void queryClient.invalidateQueries({ queryKey: orderKeys.guest });
       void queryClient.invalidateQueries({ queryKey: ["finance-summary"] });
       void queryClient.invalidateQueries({ queryKey: ["ledger"] });
+      void queryClient.invalidateQueries({ queryKey: ["finance-payments"] });
       opts?.onSuccess?.();
     },
     onError: () => opts?.onError?.(),

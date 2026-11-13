@@ -11,9 +11,12 @@ import {
 import { cartTotal, useCartStore } from "../../../workspace/customer/cart-store";
 import { Button, EmptyState, ErrorBanner, Input } from "../../../common/components";
 import { useGuestProfileStore } from "../guest-profile-store";
+import { useGuestSessionStore } from "../guest-session-store";
 
 export function CartPage() {
   const navigate = useNavigate();
+  const session = useGuestSessionStore((s) => s.session);
+  const isTakeaway = Boolean(session?.isTakeaway);
 
   const items = useCartStore((s) => s.items);
   const setQty = useCartStore((s) => s.setQty);
@@ -41,6 +44,11 @@ export function CartPage() {
 
   async function submit() {
     if (items.length === 0) return;
+    if (isTakeaway && !profileName.trim()) {
+      setError("Please add your name so we can call your order at the counter.");
+      toast.error("Add your name for pickup");
+      return;
+    }
     setError("");
     setSubmitting(true);
     try {
@@ -52,7 +60,11 @@ export function CartPage() {
       });
       useCartStore.getState().clear();
       sessionStorage.setItem("aharqr-last-order", JSON.stringify(order));
-      toast.success("Order placed — the kitchen is on it!");
+      toast.success(
+        isTakeaway
+          ? "Takeaway order placed — pick it up at the counter!"
+          : "Order placed — the kitchen is on it!",
+      );
       navigate("/customer/orders");
     } catch (err) {
       const message =
@@ -169,8 +181,22 @@ export function CartPage() {
           onChange={(e) =>
             setProfile({ name: e.target.value, phone: profilePhone })
           }
-          placeholder="Helps the captain find you"
+          placeholder={
+            isTakeaway ? "Name we call at the counter" : "Helps the captain find you"
+          }
         />
+        {isTakeaway && (
+          <Input
+            id="guestPhone"
+            label="Phone (optional)"
+            type="tel"
+            value={profilePhone}
+            onChange={(e) =>
+              setProfile({ name: profileName, phone: e.target.value })
+            }
+            placeholder="For pickup updates"
+          />
+        )}
         <Input
           id="note"
           label="Note for kitchen (optional)"
@@ -205,11 +231,12 @@ export function CartPage() {
           loadingText="Placing your order…"
           className="w-full bg-gradient-to-r from-accent-600 to-accent2-600 py-3 text-white shadow-sm hover:brightness-105"
         >
-          Place order
+          {isTakeaway ? "Place takeaway order" : "Place order"}
         </Button>
         <p className="text-center text-[11px] text-zinc-400">
-          Pay at the table after your meal. The kitchen starts as soon as the
-          order is accepted.
+          {isTakeaway
+            ? "Pay at the counter when you pick up. The kitchen starts as soon as the order is accepted."
+            : "Pay at the table after your meal. The kitchen starts as soon as the order is accepted."}
         </p>
       </div>
       </div>

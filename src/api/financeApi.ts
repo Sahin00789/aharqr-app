@@ -50,3 +50,66 @@ export async function fetchFinanceSummary(): Promise<{
   const { data } = await api.get('/finance/summary');
   return data;
 }
+
+export type PaymentMethodKey = 'CASH' | 'UPI' | 'BANK_TRANSFER' | 'OTHER';
+
+export interface PaymentDayPoint {
+  /** `YYYY-MM-DD` (server-local day). */
+  date: string;
+  orders: number;
+  items: number;
+  earned: number;
+  cash: number;
+  upi: number;
+  bankTransfer: number;
+  other: number;
+  paymentCount: number;
+}
+
+export interface PaymentRecord {
+  id: string;
+  orderId: string | null;
+  orderNumber: string | null;
+  orderType: 'DINE_IN' | 'TAKEAWAY' | null;
+  tableNumber: string | null;
+  method: PaymentMethodKey;
+  methodLabel: string;
+  amount: number;
+  paidAt: string;
+  /** `YYYY-MM-DD` server-local day — matches the `daily` series keys. */
+  day: string;
+}
+
+export interface PaymentTotals {
+  successOrders: number;
+  cancelledOrders: number;
+  items: number;
+  earned: number;
+  cash: number;
+  upi: number;
+  bankTransfer: number;
+  other: number;
+  paymentCount: number;
+  billed: number;
+  unpaidAmount: number;
+  avgOrderValue: number;
+}
+
+export interface PaymentAnalytics {
+  success: boolean;
+  month: string;
+  range: { since: string; until: string; days: number };
+  totals: PaymentTotals;
+  daily: PaymentDayPoint[];
+  payments: PaymentRecord[];
+}
+
+/** Monthly payments report for the finance tab (`YYYY-MM`, defaults to now). */
+export async function fetchPaymentAnalytics(
+  month?: string,
+): Promise<PaymentAnalytics> {
+  const { data } = await api.get('/finance/payments', {
+    params: month ? { month } : {},
+  });
+  return data;
+}
