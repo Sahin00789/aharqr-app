@@ -4,6 +4,7 @@ import { Layout } from "../../common/layouts/DashboardLayout";
 import { ProfileMenu } from "../../common/layouts/ProfileMenu";
 
 import { LoggedDevicesScreen } from "../../common/pages/screensfordashboard/LoggedDevicesScreen";
+import { PerformanceScreen } from "../../common/pages/screensfordashboard/PerformanceScreen";
 import { TablesScreen } from "./secondary/TablesScreen";
 import { StaffManagementScreen } from "./secondary/StaffManagementScreen";
 import { TaxScreen } from "./secondary/TaxScreen";
@@ -26,6 +27,7 @@ import {
   UtensilsCrossed,
   Wallet,
   Percent,
+  ChartNoAxesColumn,
 } from "lucide-react";
 
 /**
@@ -43,6 +45,7 @@ const navItems: NavItemConfig[] = [
 /** Low-frequency management tasks reachable from the mobile-style ProfileMenu. */
 const profileMenuListItems: ProfileMenuItem[] = [
   { icon: Laptop, name: "Logged Devices", subtexts: "Active sessions & seats", routeUrl: "settings/devices" },
+  { icon: ChartNoAxesColumn, name: "Performance", subtexts: "Your stats & team leaderboard", routeUrl: "settings/performance" },
   { icon: QrCode, name: "Tables & QR", subtexts: "Add tables, print QR stickers", routeUrl: "settings/tables" },
   { icon: Percent, name: "Tax & GST", subtexts: "GST rate & guest billing", routeUrl: "settings/tax" },
   { icon: UtensilsCrossed, name: "Dishes", subtexts: "Categories, dishes & photos", routeUrl: "settings/dishes" },
@@ -72,6 +75,7 @@ export const adminRoutes = (
     <Route path="settings">
       <Route index element={<ProfileMenu items={profileMenuListItems} />} />
       <Route path="devices" element={<LoggedDevicesScreen />} />
+      <Route path="performance" element={<PerformanceScreen />} />
       <Route path="tables" element={<TablesScreen />} />
       <Route path="tax" element={<TaxScreen />} />
       <Route path="dishes" element={<DishesScreen />} />

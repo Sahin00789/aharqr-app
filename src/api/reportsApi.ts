@@ -139,3 +139,23 @@ export async function fetchMonthlyReport(month: string): Promise<MonthlyReport> 
   const { data } = await api.get('/reports/monthly', { params: { month } });
   return data;
 }
+
+/* ------------------------------------------------------------------ */
+/*  Per-staff performance screen (admin, captain, chef)               */
+/* ------------------------------------------------------------------ */
+
+export interface PerformanceReport {
+  success: boolean;
+  range: DashboardAnalytics["range"];
+  /** The signed-in staff member's own roll-up (null before first activity). */
+  me: MonthlyStaffPerformance | null;
+  /** Whole-team roll-up; the screen narrows it by the viewer's role. */
+  staff: MonthlyStaffPerformance[];
+}
+
+export async function fetchPerformanceReport(
+  month: string,
+): Promise<PerformanceReport> {
+  const { data } = await api.get('/reports/performance', { params: { month } });
+  return data;
+}

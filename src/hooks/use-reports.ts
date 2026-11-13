@@ -2,13 +2,16 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   fetchDashboardAnalytics,
   fetchMonthlyReport,
+  fetchPerformanceReport,
   type DashboardAnalytics,
   type MonthlyReport,
+  type PerformanceReport,
 } from "../api/reportsApi";
 
 export const reportsKeys = {
   analytics: (month: string) => ["reports-analytics", month] as const,
   monthly: (month: string) => ["reports-monthly", month] as const,
+  performance: (month: string) => ["reports-performance", month] as const,
 };
 
 /**
@@ -35,6 +38,20 @@ export function useMonthlyReport(month: string, enabled = true) {
   return useQuery({
     queryKey: reportsKeys.monthly(month),
     queryFn: async (): Promise<MonthlyReport> => fetchMonthlyReport(month),
+    enabled: enabled && Boolean(month),
+    staleTime: 60_000,
+  });
+}
+
+/**
+ * Per-staff performance for one month: the signed-in user's own roll-up plus
+ * the team leaderboard (order-trail derived, same source as the monthly report).
+ */
+export function usePerformanceReport(month: string, enabled = true) {
+  return useQuery({
+    queryKey: reportsKeys.performance(month),
+    queryFn: async (): Promise<PerformanceReport> =>
+      fetchPerformanceReport(month),
     enabled: enabled && Boolean(month),
     staleTime: 60_000,
   });

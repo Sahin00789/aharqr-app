@@ -3,6 +3,7 @@ import { RequireRole } from "../../App";
 import { Layout } from "../../common/layouts/DashboardLayout";
 import { ProfileMenu } from "../../common/layouts/ProfileMenu";
 import { LoggedDevicesScreen } from "../../common/pages/screensfordashboard/LoggedDevicesScreen";
+import { PerformanceScreen } from "../../common/pages/screensfordashboard/PerformanceScreen";
 import {
   SecurityScreen,
   HelpScreen,
@@ -14,6 +15,7 @@ import { ChefHistoryTab } from "./tabs/HistoryTab";
 import { ChefDishesTab } from "./tabs/DishesTab";
 import { KitchenPrepReportScreen } from "./secondary/KitchenPrepReportScreen";
 import {
+  ChartNoAxesColumn,
   ChefHat,
   ClipboardList,
   History,
@@ -30,6 +32,7 @@ const navItems: NavItemConfig[] = [
 
 /** Low-frequency personal tasks reachable from the mobile-style ProfileMenu. */
 const profileMenuListItems: ProfileMenuItem[] = [
+  { icon: ChartNoAxesColumn, name: "Performance", subtexts: "Your stats & kitchen leaderboard", routeUrl: "settings/performance" },
   { icon: ShieldCheck, name: "Security", subtexts: "Login & sessions", routeUrl: "settings/security" },
   { icon: ChefHat, name: "Kitchen Prep Report", subtexts: "Dishes accepted & prep time", routeUrl: "settings/prep-report" },
   { icon: Settings, name: "Devices & Sessions", subtexts: "Logged-in devices", routeUrl: "settings/devices" },
@@ -58,6 +61,7 @@ export const chefRoutes = (
     <Route path="settings">
       <Route index element={<ProfileMenu items={profileMenuListItems} />} />
       <Route path="devices" element={<LoggedDevicesScreen />} />
+      <Route path="performance" element={<PerformanceScreen />} />
       <Route path="security" element={<SecurityScreen />} />
       <Route path="prep-report" element={<KitchenPrepReportScreen />} />
       <Route path="help" element={<HelpScreen />} />

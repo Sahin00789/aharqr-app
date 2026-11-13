@@ -3,6 +3,7 @@ import { RequireRole } from "../../App";
 import { Layout } from "../../common/layouts/DashboardLayout";
 import { ProfileMenu } from "../../common/layouts/ProfileMenu";
 import { LoggedDevicesScreen } from "../../common/pages/screensfordashboard/LoggedDevicesScreen";
+import { PerformanceScreen } from "../../common/pages/screensfordashboard/PerformanceScreen";
 import {
   SecurityScreen,
   HelpScreen,
@@ -12,6 +13,7 @@ import { ROLE_PATHS } from "../../types";
 import { CaptainOrdersTab } from "./tabs/OrdersTab";
 import { CaptainPaymentsTab } from "./tabs/PaymentsTab";
 import {
+  ChartNoAxesColumn,
   ClipboardList,
   Settings,
   ShieldCheck,
@@ -25,6 +27,7 @@ const navItems: NavItemConfig[] = [
 
 /** Low-frequency personal tasks reachable from the mobile-style ProfileMenu. */
 const profileMenuListItems: ProfileMenuItem[] = [
+  { icon: ChartNoAxesColumn, name: "Performance", subtexts: "Your stats & captain leaderboard", routeUrl: "settings/performance" },
   { icon: ShieldCheck, name: "Security", subtexts: "Login & sessions", routeUrl: "settings/security" },
   { icon: Settings, name: "Devices & Sessions", subtexts: "Logged-in devices", routeUrl: "settings/devices" },
 ];
@@ -52,6 +55,7 @@ export const captainRoutes = (
     <Route path="settings">
       <Route index element={<ProfileMenu items={profileMenuListItems} />} />
       <Route path="devices" element={<LoggedDevicesScreen />} />
+      <Route path="performance" element={<PerformanceScreen />} />
       <Route path="security" element={<SecurityScreen />} />
       <Route path="help" element={<HelpScreen />} />
     </Route>
