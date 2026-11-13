@@ -1,26 +1,16 @@
 import { create } from "zustand";
-import type { PublicUser, UserRole } from "../types";
+import { normalizeUserRole, type PublicUser, type UserRole } from "../types";
 
 /**
  * The backend issues roles using its own vocabulary
  * (RESTAURANT_ADMIN / CAPTAIN / CHEF / CUSTOMER).
  * The frontend workspace router only understands the narrower UserRole set
- * (ADMIN / CAPTAIN / CHEF). Normalize at the boundary so routing, guards and
- * role-pill theming keep working regardless of backend wording.
+ * (ADMIN / CAPTAIN / CHEF). `normalizeUserRole` (types) does the mapping so
+ * routing, guards and role-pill theming keep working regardless of backend
+ * wording.
  */
-const ROLE_MAP: Record<string, UserRole> = {
-  RESTAURANT_ADMIN: "ADMIN",
-  ADMIN: "ADMIN",
-  CAPTAIN: "CAPTAIN",
-  CHEF: "CHEF",
-  // Customers never enter the staff workspace; fall back to ADMIN so the
-  // session can at least be inspected before being redirected to /customer.
-  CUSTOMER: "ADMIN",
-};
-
 function normalizeRole(role: string | undefined): UserRole {
-  if (!role) return "ADMIN";
-  return ROLE_MAP[role] ?? "ADMIN";
+  return normalizeUserRole(role);
 }
 
 /** Split a single display name ("Sahin Molla") into first/last parts. */

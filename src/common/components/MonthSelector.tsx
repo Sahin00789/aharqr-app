@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components -- month helpers are shared with the analytics page. */
 import { useEffect, useRef } from "react";
+import { useHorizontalWheel } from "../hooks/use-horizontal-wheel";
 
 /** `YYYY-MM` key for a date (local time). */
 export function monthKey(date: Date): string {
@@ -61,6 +62,8 @@ export function MonthSelector({
   compact = false,
 }: MonthSelectorProps) {
   const activeRef = useRef<HTMLButtonElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
+  useHorizontalWheel(railRef);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({
@@ -74,6 +77,7 @@ export function MonthSelector({
 
   return (
     <div
+      ref={railRef}
       role="group"
       aria-label="Report month"
       className={`flex w-full min-w-0 max-w-full items-center gap-1 overflow-x-auto overscroll-x-contain p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}

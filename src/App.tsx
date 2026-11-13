@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation } from "rea
 import { Toaster } from "react-hot-toast";
 import { bootstrapSession } from "./services/api-client";
 import { useAuthStore } from "./stores/auth-store";
-import { ROLE_PATHS, type UserRole } from "./types";
+import { rolePath, type UserRole } from "./types";
 import { PageLoader } from "./common/components";
 
 import LandingPage from "./common/pages/publicpage/LandingPage";
@@ -38,7 +38,7 @@ export function RequireRole({ role, children }: { role: UserRole; children?: Rea
   const booted = useAuthStore((s) => s.booted);
   if (!booted) return <PageLoader label="Restoring session…" />;
   if (user?.role !== role) {
-    const target = user ? `/app/${ROLE_PATHS[user.role]}` : "/auth";
+    const target = user ? `/app/${rolePath(user.role)}` : "/auth";
     return <Navigate to={target} replace />;
   }
   return <>{children}</>;
@@ -48,7 +48,7 @@ export function RequireRole({ role, children }: { role: UserRole; children?: Rea
 export function NavigateToMyWorkspace() {
   const user = useAuthStore((s) => s.user);
   if (!user) return <Navigate to="/auth" replace />;
-  return <Navigate to={`/app/${ROLE_PATHS[user.role]}`} replace />;
+  return <Navigate to={`/app/${rolePath(user.role)}`} replace />;
 }
 
 /** Auth pages: an already-signed-in visitor is sent to their workspace. */
@@ -126,6 +126,9 @@ export default function App() {
               {adminRoutes}
               {captainRoutes}
               {chefRoutes}
+              {/* Stale/unknown workspace URLs (e.g. an old `/app/undefined`
+                  bookmark) self-heal to the signed-in role's home. */}
+              <Route path="*" element={<NavigateToMyWorkspace />} />
             </Route>
 
             {/* Public QR guest flow */}

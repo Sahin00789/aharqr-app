@@ -11,7 +11,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useIsFetching, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sun, Moon, Bell, Settings, RefreshCw } from "lucide-react";
 import type { NavItemConfig, PublicUser } from "../../types";
-import { ROLE_PATHS } from "../../types";
+import { rolePath } from "../../types";
 import { getMyRestaurant, type RestaurantProfile } from "../../services/restaurant.services";
 import { useAuthStore } from "../../stores/auth-store";
 import { useTheme } from "../theme";
@@ -89,7 +89,7 @@ function initials(name: string): string {
 /** Absolute workspace base ("/app/<role>"). */
 function useWorkspaceBase(): string {
   const user = useAuthStore((s) => s.user);
-  return `/app/${user ? ROLE_PATHS[user.role] : ""}`;
+  return `/app/${user ? rolePath(user.role) : ""}`;
 }
 
 /**

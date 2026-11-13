@@ -449,11 +449,14 @@ export function OrderTrailButton({
   order,
   className = "",
   menuItem = false,
+  iconOnly = false,
 }: {
   order: StaffOrder;
   className?: string;
   /** Render as a row inside a kebab/ActionMenu instead of a standalone button. */
   menuItem?: boolean;
+  /** Icon-only trigger for tight rows (title + aria-label still explain it). */
+  iconOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -469,10 +472,12 @@ export function OrderTrailButton({
           size="sm"
           variant="secondary"
           title="View order trail"
+          aria-label="View order trail"
           onClick={() => setOpen(true)}
           className={className}
         >
-          <History size={13} /> Trail
+          <History size={13} />
+          {!iconOnly && "Trail"}
         </Button>
       )}
       <OrderTrailModal

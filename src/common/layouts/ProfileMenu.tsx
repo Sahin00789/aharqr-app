@@ -17,7 +17,7 @@ import {
   getMyRestaurant,
   type RestaurantProfile,
 } from "../../services/restaurant.services";
-import { ROLE_PATHS, type ProfileMenuItem } from "../../types";
+import { rolePath, type ProfileMenuItem } from "../../types";
 import { AppLogo } from "../components/AppLogo";
 import { ProfileEditModal } from "../components/ProfileEditModal";
 import { RestaurantEditModal } from "../components/RestaurantEditModal";
@@ -54,12 +54,12 @@ function restaurantAddress(restaurant: RestaurantProfile): string {
 }
 
 function isWorkspaceAdmin(role: string): boolean {
-  return ROLE_PATHS[role as keyof typeof ROLE_PATHS] === "admin";
+  return rolePath(role) === "admin";
 }
 
 function useWorkspaceBase(): string {
   const user = useAuthStore((s) => s.user);
-  return user ? `/app/${ROLE_PATHS[user.role]}` : "/app";
+  return user ? `/app/${rolePath(user.role)}` : "/app";
 }
 
 /** Eyebrow section header with an optional count and a trailing divider. */

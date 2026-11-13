@@ -10,8 +10,7 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import type { UserRole } from "../../../types";
-import { ROLE_PATHS } from "../../../types";
+import { rolePath, type UserRole } from "../../../types";
 import { loginWithGoogle, requestLoginOtp, verifyLoginOtp, type OtpRole } from "../../../services/auth.service";
 import { GoogleAuthButton } from "./GoogleAuthButton";
 import { AppLogo, Button, ErrorBanner, Input } from "../../components";
@@ -183,8 +182,8 @@ export function LoginPage() {
    * there after sign-in — but only if it belongs to the role they just signed
    * in as, otherwise land on that workspace's home tab.
    */
-  function redirectTargetFor(signedInRole: UserRole): string {
-    const base = `/app/${ROLE_PATHS[signedInRole]}`;
+  function redirectTargetFor(signedInRole: string): string {
+    const base = `/app/${rolePath(signedInRole)}`;
     const from = (
       location.state as
         | { from?: { pathname?: string; search?: string } }

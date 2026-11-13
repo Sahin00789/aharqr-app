@@ -53,6 +53,30 @@ export const ROLE_PATHS: Record<UserRole, string> = {
   CUSTOMER: "customer",
 };
 
+/**
+ * Backend roles use their own vocabulary (`RESTAURANT_ADMIN`), while the
+ * workspace router only knows `UserRole`. Normalize at every boundary so a raw
+ * API payload can never produce `/app/undefined`.
+ */
+const ROLE_ALIASES: Record<string, UserRole> = {
+  RESTAURANT_ADMIN: "ADMIN",
+  ADMIN: "ADMIN",
+  CAPTAIN: "CAPTAIN",
+  CHEF: "CHEF",
+  // Customers never enter the staff workspace; the session is still routable.
+  CUSTOMER: "ADMIN",
+};
+
+export function normalizeUserRole(role: string | null | undefined): UserRole {
+  if (!role) return "ADMIN";
+  return ROLE_ALIASES[role] ?? "ADMIN";
+}
+
+/** Safe `/app` segment for any role value (raw or normalized). */
+export function rolePath(role: string | null | undefined): string {
+  return ROLE_PATHS[normalizeUserRole(role)];
+}
+
 /** One high-frequency destination in the sidebar / bottom nav (5 slots). */
 export interface NavItemConfig {
   /** Display label shown in the rail and bottom bar — keep short. */

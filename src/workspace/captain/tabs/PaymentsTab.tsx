@@ -10,7 +10,7 @@ export function CaptainPaymentsTab() {
   return (
     <PaymentReport
       renderTrail={(order) => (
-        <OrderTrailButton order={order} className="!px-2" />
+        <OrderTrailButton order={order} iconOnly className="!px-2" />
       )}
     />
   );

@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components -- day label helpers are shared with the finance tab. */
 import { useEffect, useRef } from "react";
+import { useHorizontalWheel } from "../hooks/use-horizontal-wheel";
 
 /** `YYYY-MM-DD` → `13 Fri Nov` inline label. */
 export function dayPillLabel(key: string): string {
@@ -56,6 +57,8 @@ export function DaySelector({
   ariaLabel = "Report day",
 }: DaySelectorProps) {
   const activeRef = useRef<HTMLButtonElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
+  useHorizontalWheel(railRef);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({
@@ -69,6 +72,7 @@ export function DaySelector({
 
   return (
     <div
+      ref={railRef}
       role="group"
       aria-label={ariaLabel}
       className={`flex w-full min-w-0 max-w-full items-stretch gap-1 overflow-x-auto overscroll-x-contain p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}

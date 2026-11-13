@@ -315,7 +315,7 @@ export function PaymentReport({
               return (
                 <li
                   key={payment.id}
-                  className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 px-3 py-2 transition hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40"
+                  className="flex items-center gap-2.5 px-3 py-2 transition hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
                     {payment.method === "UPI" ? (
@@ -328,8 +328,8 @@ export function PaymentReport({
                   </span>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                      <p className="truncate text-xs font-bold text-zinc-800 dark:text-zinc-100">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <p className="min-w-0 truncate text-xs font-bold text-zinc-800 dark:text-zinc-100">
                         {payment.orderNumber
                           ? `#${payment.orderNumber}`
                           : "Payment"}
@@ -346,7 +346,7 @@ export function PaymentReport({
                         {payment.methodLabel}
                       </Badge>
                     </div>
-                    <p className="mt-0.5 truncate text-[10px] text-zinc-400">
+                    <p className="truncate text-[10px] text-zinc-400">
                       {formatTime(payment.paidAt)}
                       {payment.orderType === "DINE_IN"
                         ? ` · Dine-in${payment.tableNumber ? ` · T${payment.tableNumber}` : ""}`
@@ -361,7 +361,7 @@ export function PaymentReport({
                   </span>
 
                   {order && (
-                    <div className="flex w-full items-center justify-end gap-1 sm:w-auto">
+                    <div className="flex shrink-0 items-center gap-1">
                       <BillButton
                         iconOnly
                         bill={toBill(order)}
