@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { SectionTitle } from "../../../common/ui";
-import { Button, Card, Input } from "../../../common/ui";
-import { useCurrentUser } from "../../../common/ui";
+import { SectionTitle } from "../../../common/components";
+import { Button, Card, Input } from "../../../common/components";
+import { useCurrentUser } from "../../../hooks/use-current-user";
 import toast from "react-hot-toast";
 
 export function ChefProfileTab() {

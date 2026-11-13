@@ -1,37 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
-import { Armchair, Download, QrCode, Users } from "lucide-react";
-import { SectionTitle, StatCard, EmptyState } from "../../../common/ui";
-import { Button, Card, Badge } from "../../../common/ui";
-import { ContentHeaderAction } from "../../../common/layouts/Layout";
+import { Armchair, QrCode, Users } from "lucide-react";
 import {
-  downloadTableQrPdf,
-  fetchRestaurantTables,
-  type RestaurantTable,
-} from "../../../api/tablesApi";
+  SectionTitle,
+  StatCard,
+  EmptyState,
+  DashboardTabSkeleton,
+} from "../../../common/components";
+import { Card, Badge } from "../../../common/components";
+import { useRestaurantTables } from "../../../hooks/use-tables";
 
 /** Live floor view for captains — reads tables straight from the backend. */
 export function CaptainTablesTab() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["captain-tables"],
-    queryFn: fetchRestaurantTables,
-  });
-  const tables: RestaurantTable[] = data?.tables ?? [];
-
-  function downloadAll() {
-    if (tables.length === 0) return;
-    void downloadTableQrPdf(tables.map((t) => t.id));
-  }
+  const { data: tables = [], isLoading, isError } = useRestaurantTables();
 
   return (
-    <div className="space-y-6">
-      <ContentHeaderAction>
-        <Button size="sm" variant="secondary" onClick={downloadAll}>
-          <Download size={14} /> QR PDF
-        </Button>
-      </ContentHeaderAction>
-
+    <div className="space-y-4">
       {isLoading ? (
-        <p className="text-sm text-zinc-400">Loading tables…</p>
+        <DashboardTabSkeleton label="Loading tables" variant="tables" />
       ) : isError ? (
         <EmptyState
           title="Couldn't load tables"
@@ -39,7 +23,7 @@ export function CaptainTablesTab() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
             <StatCard label="Total" value={tables.length} />
             <StatCard
               label="Active"
@@ -63,7 +47,7 @@ export function CaptainTablesTab() {
               description="Ask an admin to add tables and generate QR stickers."
             />
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {tables.map((t) => (
                 <Card key={t.id}>
                   <div className="flex items-start justify-between">
@@ -85,16 +69,6 @@ export function CaptainTablesTab() {
                     <Badge tone={t.isActive ? "green" : "zinc"}>
                       {t.isActive ? "Active" : "Hidden"}
                     </Badge>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => void downloadTableQrPdf([t.id])}
-                    >
-                      <Download size={14} /> QR
-                    </Button>
                   </div>
                 </Card>
               ))}

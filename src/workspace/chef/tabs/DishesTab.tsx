@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { UtensilsCrossed, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, UtensilsCrossed } from "lucide-react";
 import {
+  Badge,
   Button,
   Card,
-  Badge,
+  DashboardTabSkeleton,
   EmptyState,
   SectionTitle,
   StatCard,
-} from "../../../common/ui";
+} from "../../../common/components";
 import {
   fetchDishes,
   setDishAvailability,
@@ -34,7 +35,7 @@ export function ChefDishesTab() {
     queryKey: ["chef-dishes"],
     queryFn: fetchDishes,
   });
-  const dishes: Dish[] = data?.dishes ?? [];
+  const dishes = useMemo<Dish[]>(() => data?.dishes ?? [], [data]);
 
   const toggle = useMutation({
     mutationFn: (d: Dish) => setDishAvailability(d.id, !d.isAvailable),
@@ -51,87 +52,148 @@ export function ChefDishesTab() {
     return dishes;
   }, [dishes, filter]);
 
-  const stats = useMemo(
-    () => [
-      { label: "Total", value: dishes.length },
-      { label: "Available", value: dishes.filter((d) => d.isAvailable).length },
-      { label: "Unavailable", value: dishes.filter((d) => !d.isAvailable).length },
-    ],
-    [dishes]
-  );
+  const available = dishes.filter((d) => d.isAvailable).length;
+  const unavailable = dishes.length - available;
 
-  if (isLoading) return <p className="text-sm text-zinc-400">Loading dishes…</p>;
+  if (isLoading)
+    return <DashboardTabSkeleton label="Loading dishes" variant="menu" />;
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-4">
-        {stats.map((s) => (
-          <StatCard key={s.label} label={s.label} value={s.value} />
-        ))}
+    <div className="space-y-3 md:space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="Total dishes" value={dishes.length} hint="On the menu" />
+        <StatCard
+          label="Available"
+          value={available}
+          tone="green"
+          hint="Orderable now"
+        />
+        <StatCard
+          label="Unavailable"
+          value={unavailable}
+          tone={unavailable > 0 ? "amber" : "default"}
+          hint="Hidden from guests"
+        />
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <SectionTitle>
-          <span className="inline-flex items-center gap-2">
-            <UtensilsCrossed size={16} /> Dishes
-          </span>
-        </SectionTitle>
+      <div className="flex flex-col gap-2.5 rounded-2xl border border-zinc-200/80 bg-white p-2.5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between">
+        <SectionTitle>Menu availability</SectionTitle>
         <div className="flex flex-wrap gap-1.5">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                filter === f.key
-                  ? "bg-accent-600 text-white"
-                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+          {FILTERS.map((f) => {
+            const count =
+              f.key === "ALL"
+                ? dishes.length
+                : f.key === "AVAILABLE"
+                  ? available
+                  : unavailable;
+            const selected = filter === f.key;
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setFilter(f.key)}
+                className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition ${
+                  selected
+                    ? "bg-accent-600 text-white shadow-sm"
+                    : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100"
+                }`}
+              >
+                {f.label}
+                <span
+                  className={`rounded px-1 text-[10px] ${
+                    selected
+                      ? "bg-white/20 text-white"
+                      : "bg-white text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {isError ? (
-        <EmptyState title="Couldn't load dishes" description="Try again shortly." />
+        <EmptyState
+          title="Couldn't load dishes"
+          description="Try again shortly."
+        />
       ) : visible.length === 0 ? (
-        <EmptyState title="No dishes" description="No dishes match this filter." />
+        <EmptyState
+          title="No dishes"
+          description="No dishes match this filter."
+        />
       ) : (
-        <div className="space-y-3">
+        <div className="grid items-start gap-2.5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {visible.map((d) => (
-            <Card key={d.id}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 font-medium text-zinc-900 dark:text-zinc-100">
+            <Card
+              key={d.id}
+              className={`flex items-center gap-3 !p-3 ${
+                d.isAvailable ? "" : "opacity-70"
+              }`}
+            >
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+                {d.imageUrl ? (
+                  <img
+                    src={d.imageUrl}
+                    alt={d.name}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-zinc-400">
+                    <UtensilsCrossed size={18} />
+                  </span>
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] border ${
+                      d.isVeg ? "border-emerald-600" : "border-red-600"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        d.isVeg ? "bg-emerald-600" : "bg-red-600"
+                      }`}
+                    />
+                  </span>
+                  <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                     {d.name}
-                    {d.isVeg ? (
-                      <Badge tone="green">Veg</Badge>
-                    ) : (
-                      <Badge tone="red">Non-veg</Badge>
-                    )}
-                  </div>
-                  <p className="mt-0.5 text-xs text-zinc-400">
-                    {d.category} · {inr(d.price)}
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  variant={d.isAvailable ? "secondary" : "primary"}
-                  onClick={() => toggle.mutate(d)}
-                  disabled={toggle.isPending}
-                >
+                <p className="mt-0.5 truncate text-[11px] text-zinc-400">
+                  {d.category} · {inr(d.price)}
+                </p>
+                <div className="mt-1">
                   {d.isAvailable ? (
-                    <>
-                      <EyeOff className="mr-1 h-4 w-4" /> Hide
-                    </>
+                    <Badge tone="green">Available</Badge>
                   ) : (
-                    <>
-                      <Eye className="mr-1 h-4 w-4" /> Show
-                    </>
+                    <Badge tone="zinc">Hidden</Badge>
                   )}
-                </Button>
+                </div>
               </div>
+
+              <Button
+                size="sm"
+                variant={d.isAvailable ? "secondary" : "primary"}
+                onClick={() => toggle.mutate(d)}
+                disabled={toggle.isPending}
+                className="shrink-0"
+              >
+                {d.isAvailable ? (
+                  <>
+                    <EyeOff size={13} /> Hide
+                  </>
+                ) : (
+                  <>
+                    <Eye size={13} /> Show
+                  </>
+                )}
+              </Button>
             </Card>
           ))}
         </div>

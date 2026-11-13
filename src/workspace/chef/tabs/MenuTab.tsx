@@ -1,6 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { SectionTitle, EmptyState } from "../../../common/ui";
-import { Badge } from "../../../common/ui";
+import {
+  SectionTitle,
+  EmptyState,
+  DashboardTabSkeleton,
+} from "../../../common/components";
+import { Badge } from "../../../common/components";
 import { fetchDishes, type Dish } from "../../../api/menuApi";
 
 function formatINR(paise: number): string {
@@ -16,7 +20,7 @@ export function ChefMenuTab() {
   const dishes: Dish[] = data?.dishes ?? [];
 
   if (isLoading) {
-    return <p className="text-sm text-zinc-400">Loading menu…</p>;
+    return <DashboardTabSkeleton label="Loading menu" variant="menu" />;
   }
 
   const categories = Array.from(new Set(dishes.map((d) => d.category)));

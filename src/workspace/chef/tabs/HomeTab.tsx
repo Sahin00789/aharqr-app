@@ -1,4 +1,4 @@
-import { WorkspaceOverview } from "../../../common/ui";
+import { WorkspaceOverview } from "../../../common/pages/screensfordashboard/WorkspaceOverview";
 
 export function HomeTab() {
   return <WorkspaceOverview />;

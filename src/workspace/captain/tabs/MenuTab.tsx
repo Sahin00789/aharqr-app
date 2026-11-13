@@ -1,8 +1,12 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Leaf, UtensilsCrossed } from "lucide-react";
-import { SectionTitle, EmptyState } from "../../../common/ui";
-import { Card, Badge } from "../../../common/ui";
+import {
+  SectionTitle,
+  EmptyState,
+  DashboardTabSkeleton,
+} from "../../../common/components";
+import { Card, Badge } from "../../../common/components";
 import { fetchDishes, type Dish } from "../../../api/menuApi";
 
 function formatINR(paise: number): string {
@@ -15,7 +19,7 @@ export function CaptainMenuTab() {
     queryKey: ["captain-dishes"],
     queryFn: fetchDishes,
   });
-  const dishes: Dish[] = data?.dishes ?? [];
+  const dishes = useMemo<Dish[]>(() => data?.dishes ?? [], [data]);
 
   const groups = useMemo(() => {
     const map = new Map<string, Dish[]>();
@@ -28,11 +32,11 @@ export function CaptainMenuTab() {
   }, [dishes]);
 
   if (isLoading) {
-    return <p className="text-sm text-zinc-400">Loading menu…</p>;
+    return <DashboardTabSkeleton label="Loading menu" variant="menu" />;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {isError ? (
         <EmptyState
           title="Couldn't load menu"
@@ -47,7 +51,7 @@ export function CaptainMenuTab() {
         groups.map(([category, items]) => (
           <div key={category} className="space-y-3">
             <SectionTitle>{category}</SectionTitle>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {items.map((d) => (
                 <Card key={d.id}>
                   <div className="flex items-start justify-between gap-3">

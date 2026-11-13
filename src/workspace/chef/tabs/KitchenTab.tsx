@@ -1,43 +1,38 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
 import { ChefHat } from "lucide-react";
-import { SectionTitle, EmptyState } from "../../../common/ui";
-import { Button, Card, Badge } from "../../../common/ui";
 import {
-  fetchOrders,
-  nextOrderStatus,
+  SectionTitle,
+  EmptyState,
+  DashboardTabSkeleton,
+  OrderStatusConfirmButton,
+} from "../../../common/components";
+import { Card, Badge } from "../../../common/components";
+import {
+  nextActionForRole,
   orderStatusLabel,
   ORDER_STATUS_TONE,
-  updateOrderStatus,
   type StaffOrder,
 } from "../../../api/ordersApi";
+import { useStaffOrders, useUpdateOrderStatus } from "../../../hooks/use-orders";
 import toast from "react-hot-toast";
 
-export function ChefKitchenTab() {
-  const qc = useQueryClient();
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["staff-orders"],
-    queryFn: fetchOrders,
-  });
-  const orders: StaffOrder[] = data?.orders ?? [];
+const ROLE = "CHEF" as const;
 
-  const mutate = useMutation({
-    mutationFn: (o: StaffOrder & { next: string }) =>
-      updateOrderStatus(o.id, o.orderType, o.next),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["staff-orders"] }),
+export function ChefKitchenTab() {
+  const { data: orders = [], isLoading, isError } = useStaffOrders();
+
+  const mutate = useUpdateOrderStatus({
+    onSuccess: () => toast.success("Order updated"),
     onError: () => toast.error("Could not update order"),
   });
 
   function advance(o: StaffOrder) {
-    const next = nextOrderStatus(o);
+    const next = nextActionForRole(o, ROLE);
     if (!next) return;
-    mutate.mutate({ ...o, next });
+    mutate.mutate({ id: o.id, orderType: o.orderType, status: next });
   }
 
-  if (isLoading) return <p className="text-sm text-zinc-400">Loading tickets…</p>;
+  if (isLoading)
+    return <DashboardTabSkeleton label="Loading kitchen tickets" variant="orders" />;
 
   // Chef's active kitchen tickets: not yet served/completed.
   const tickets = orders.filter(
@@ -45,7 +40,7 @@ export function ChefKitchenTab() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <SectionTitle>Active Tickets ({tickets.length})</SectionTitle>
 
       {isError ? (
@@ -56,9 +51,9 @@ export function ChefKitchenTab() {
           description="New orders will appear here as captains place them."
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {tickets.map((order) => {
-            const next = nextOrderStatus(order);
+            const next = nextActionForRole(order, ROLE);
             return (
               <Card key={order.id} className="flex flex-col gap-3">
                 <div className="flex items-start justify-between gap-2">
@@ -89,11 +84,13 @@ export function ChefKitchenTab() {
                 </ul>
 
                 {next && (
-                  <Button
+                  <OrderStatusConfirmButton
                     size="sm"
-                    variant="primary"
                     className="mt-auto"
-                    onClick={() => advance(order)}
+                    orderNumber={order.orderNumber}
+                    statusLabel={orderStatusLabel(next)}
+                    onConfirm={() => advance(order)}
+                    loading={mutate.isPending}
                   >
                     {next === "ACCEPTED_FOR_COOK" ? (
                       <>
@@ -102,7 +99,7 @@ export function ChefKitchenTab() {
                     ) : (
                       orderStatusLabel(next)
                     )}
-                  </Button>
+                  </OrderStatusConfirmButton>
                 )}
               </Card>
             );

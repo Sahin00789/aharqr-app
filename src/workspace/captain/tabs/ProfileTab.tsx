@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { UserCog, Save } from "lucide-react";
-import { SectionTitle, useCurrentUser } from "../../../common/ui";
-import { Button, Card, Input } from "../../../common/ui";
+import { SectionTitle } from "../../../common/components";
+import { useCurrentUser } from "../../../hooks/use-current-user";
+import { Button, Card, Input } from "../../../common/components";
 import toast from "react-hot-toast";
 
 export function CaptainProfileTab() {
